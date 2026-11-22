@@ -32,7 +32,7 @@ struct ConverterTests {
     @Test func reportsSkippedBlocks() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("BW", "001"))
         let skipped = Set(result.diagnostics.filter { $0.kind == .skipped }.compactMap(\.block))
-        #expect(skipped == [.light, .selectiveColor, .blackAndWhite, .grain])
+        #expect(skipped == [.light, .blackAndWhite, .grain])
     }
 
     @Test func convertsRGBLevels() throws {
@@ -42,8 +42,8 @@ struct ConverterTests {
         #expect(abs(levels.master[1].x - 0.009124071608744393) < 1e-12)
         #expect(levels.master[1].y == 0)
         #expect(levels.master[2] == NitroCurvePoint(x: 1, y: 1, isWhitePoint: true))
-        // PT800 also has curves → both adjustments are written.
-        #expect(try contents(result).count == 2)
+        // PT800 also has curves and selective color → three adjustments are written.
+        #expect(try result.preset?.adjustments.map(\.id) == ["Levels", "Curves", "HSL"])
     }
 
     @Test func warnsAboutUncentredLevelsMidtones() throws {
