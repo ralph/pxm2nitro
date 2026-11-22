@@ -100,7 +100,26 @@ struct NitroPresetTests {
         #expect(adjustment.json["numeric"]?["exposure"] == 0.5)
     }
 
-    @Test func rejectsMalformedPresets() {
-        #expect(throws: NitroError.self) { try NitroPreset(data: Data(#"{"name": "x"}"#.utf8)) }
+    @Test func builtPresetRoundTrips() throws {
+        let preset = NitroPreset(name: "T", adjustments: [
+            NitroAdjustment(.hsl(NitroHSL(values: [.red: .init(hueDelta: 10)]))),
+        ])
+        #expect(try NitroPreset(data: preset.encoded()) == preset)
+    }
+
+    @Test func unknownHSLVersionStaysRaw() {
+        let adjustment = NitroAdjustment(id: "HSL", json: ["version": 2, "numeric": ["hueDelta_red": 1]])
+        guard case .other = adjustment.content else { Issue.record("expected .other"); return }
+    }
+
+    @Test(arguments: [
+        #"{"name": "x"}"#,
+        #"not json"#,
+        #"{"name":"x","editModel":{"currentVersionIndex":"0","versions":[{"adjDataArr":[]}]}}"#,
+        #"{"name":"x","editModel":{"versions":[{"adjDataArr":[{"id":"Tone","json":"{broken"}]}]}}"#,
+        #"{"name":"x","editModel":{"versions":[{"adjDataArr":[{"id":"Tone","json":"[1]"}]}]}}"#,
+    ])
+    func rejectsMalformedPresets(json: String) {
+        #expect(throws: NitroError.self) { try NitroPreset(data: Data(json.utf8)) }
     }
 }

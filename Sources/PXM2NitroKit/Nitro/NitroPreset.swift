@@ -34,12 +34,25 @@ public struct NitroPreset: Sendable, Equatable {
 
     /// Parses a `.nitropreset` file. Uses the current edit version (`currentVersionIndex`).
     public init(data: Data) throws {
-        let root = try JSONValue(data: data)
+        func parse(_ data: Data, _ what: String) throws -> JSONValue {
+            do { return try JSONValue(data: data) } catch {
+                throw NitroError.malformedPreset("\(what) is not valid JSON")
+            }
+        }
+        let root = try parse(data, "file")
         guard let name = root["name"]?.stringValue,
               let editModel = root["editModel"],
               let versions = editModel["versions"]?.arrayValue
         else { throw NitroError.malformedPreset("missing name or editModel.versions") }
-        let index = editModel["currentVersionIndex"]?.intValue ?? 0
+        let index: Int
+        if let rawIndex = editModel["currentVersionIndex"] {
+            guard let value = rawIndex.intValue else {
+                throw NitroError.malformedPreset("currentVersionIndex is not an integer")
+            }
+            index = value
+        } else {
+            index = 0
+        }
         guard versions.indices.contains(index), let entries = versions[index]["adjDataArr"]?.arrayValue else {
             throw NitroError.malformedPreset("missing adjDataArr")
         }
@@ -47,7 +60,11 @@ public struct NitroPreset: Sendable, Equatable {
             guard let id = entry["id"]?.stringValue, let json = entry["json"]?.stringValue else {
                 throw NitroError.malformedPreset("adjDataArr entry without id/json")
             }
-            return NitroAdjustment(id: id, json: try JSONValue(data: Data(json.utf8)))
+            let inner = try parse(Data(json.utf8), "\(id) adjustment")
+            guard inner.objectValue != nil else {
+                throw NitroError.malformedPreset("\(id) adjustment is not a JSON object")
+            }
+            return NitroAdjustment(id: id, json: inner)
         }
         self.init(name: name, adjustments: adjustments,
                   decoderVersion: versions[index]["decoderVersionString"]?.stringValue ?? Self.currentDecoderVersion)

@@ -64,7 +64,8 @@ public struct NitroAdjustment: Sendable, Equatable {
             json["levelsCurvesData"].flatMap(NitroLevelsCurves.init(json:))
                 .flatMap { $0.isCurves == (id == "Curves") ? .levelsCurves($0) : nil }
         case "ChannelMixer": json["numeric"]?.objectValue.map { .channelMixer(NitroChannelMixer(numeric: $0)) }
-        case "HSL": json["numeric"]?.objectValue.map { .hsl(NitroHSL(numeric: $0)) }
+        case "HSL" where (json["version"]?.intValue ?? 1) == 1:
+            json["numeric"]?.objectValue.map { .hsl(NitroHSL(numeric: $0)) }
         default: nil
         }
         self.init(content ?? .other(id: id, json: json),
@@ -262,6 +263,11 @@ public struct NitroHSL: Sendable, Equatable {
 
     public init(values: [NitroHSLColor: Values] = [:]) {
         self.values = values
+    }
+
+    /// Compares the effective values: a missing colour equals an explicit neutral one.
+    public static func == (lhs: NitroHSL, rhs: NitroHSL) -> Bool {
+        NitroHSLColor.allCases.allSatisfy { lhs[$0] == rhs[$0] }
     }
 
     public subscript(color: NitroHSLColor) -> Values {
