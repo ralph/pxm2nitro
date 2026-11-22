@@ -1,0 +1,59 @@
+import Foundation
+@testable import PXM2NitroKit
+import Testing
+
+struct PresetExporterTests {
+    private func temporaryDirectory() -> URL {
+        FileManager.default.temporaryDirectory.appending(path: "pxm2nitro-export-\(UUID().uuidString)")
+    }
+
+    @Test func writesConvertiblePresets() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var exporter = PresetExporter(outputDirectory: directory)
+
+        let entry = try exporter.export(try Fixtures.photomatorPreset("BW", "001"))
+        let file = directory.appending(path: "BW 001.nitropreset")
+        #expect(entry.outcome == .written(file))
+        #expect(try NitroPreset(data: Data(contentsOf: file)).name == "BW 001")
+        #expect(!entry.diagnostics.isEmpty)
+    }
+
+    @Test func respectsExistingFilesUnlessOverwriting() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let preset = try Fixtures.photomatorPreset("BW", "001")
+        let file = directory.appending(path: "BW 001.nitropreset")
+
+        var first = PresetExporter(outputDirectory: directory)
+        _ = try first.export(preset)
+        var second = PresetExporter(outputDirectory: directory)
+        #expect(try second.export(preset).outcome == .fileExists(file))
+        var third = PresetExporter(outputDirectory: directory, overwrite: true)
+        #expect(try third.export(preset).outcome == .written(file))
+    }
+
+    @Test func keepsNamesUniqueWithinOneExport() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var exporter = PresetExporter(outputDirectory: directory)
+        let preset = try Fixtures.photomatorPreset("BW", "001")
+
+        _ = try exporter.export(preset)
+        #expect(try exporter.export(preset).outcome == .written(directory.appending(path: "BW 001 2.nitropreset")))
+    }
+
+    @Test func skipsPresetsWithNothingToConvert() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var exporter = PresetExporter(outputDirectory: directory)
+        let preset = PhotomatorPreset(id: "x", name: "Empty", collectionName: nil,
+                                      adjustments: nil, otherPropertyKeys: [])
+        #expect(try exporter.export(preset).outcome == .nothingToConvert)
+        #expect(!FileManager.default.fileExists(atPath: directory.path))
+    }
+
+    @Test func sanitisesFileNames() {
+        #expect(PresetExporter.fileName(for: "A/B: C") == "A-B- C.nitropreset")
+    }
+}

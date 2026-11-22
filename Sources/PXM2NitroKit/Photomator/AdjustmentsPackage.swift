@@ -24,8 +24,11 @@ public struct PhotomatorPreset: Sendable, Equatable {
     public let otherPropertyKeys: [String]
 
     /// "Collection / Name", or just the name.
-    public var title: String {
-        [collectionName, name].compactMap { $0 }.joined(separator: " / ")
+    public var title: String { title(separator: " / ") }
+
+    /// Collection and preset name joined by `separator`, or just the name.
+    public func title(separator: String) -> String {
+        [collectionName, name].compactMap { $0 }.joined(separator: separator)
     }
 }
 

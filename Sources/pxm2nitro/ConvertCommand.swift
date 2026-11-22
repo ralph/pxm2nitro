@@ -23,11 +23,9 @@ struct ConvertCommand: ParsableCommand {
     var overwrite = false
 
     func run() throws {
-        let outputDirectory = URL(filePath: output, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
-
-        var written = 0, skipped = 0, failed = false
-        var usedFileNames = Set<String>()
+        var exporter = PresetExporter(outputDirectory: URL(filePath: output, directoryHint: .isDirectory),
+                                      overwrite: overwrite)
+        var written = 0, nothingToConvert = 0, existing = 0, failed = false
         for path in packages {
             let package: LoadedPackage
             do {
@@ -43,48 +41,26 @@ struct ConvertCommand: ParsableCommand {
                 failed = true
             }
             for preset in package.presets {
-                let result = Converter.convert(preset)
-                guard let nitro = result.preset else {
+                let entry = try exporter.export(preset)
+                switch entry.outcome {
+                case .written(let file):
+                    print("  ✓ \(preset.title) → \(file.lastPathComponent)")
+                    written += 1
+                case .fileExists(let file):
+                    printError("  \(preset.title): \(file.lastPathComponent) exists (use --overwrite)")
+                    existing += 1
+                case .nothingToConvert:
                     print("  – \(preset.title): nothing to convert")
-                    printDiagnostics(result.diagnostics)
-                    skipped += 1
-                    continue
+                    nothingToConvert += 1
                 }
-                let fileName = uniqueFileName(for: nitro.name, used: &usedFileNames)
-                let file = outputDirectory.appending(path: fileName)
-                if !overwrite, FileManager.default.fileExists(atPath: file.path) {
-                    printError("  \(preset.title): \(fileName) exists (use --overwrite)")
-                    skipped += 1
-                    continue
+                for diagnostic in entry.diagnostics {
+                    print("      \(diagnostic)")
                 }
-                try nitro.encoded().write(to: file, options: .atomic)
-                print("  ✓ \(preset.title) → \(fileName)")
-                printDiagnostics(result.diagnostics)
-                written += 1
             }
         }
-        print("\(written) preset(s) written to \(outputDirectory.path), \(skipped) skipped.")
+        print("\(written) written to \(exporter.outputDirectory.path), "
+              + "\(nothingToConvert) with nothing to convert, \(existing) already existing.")
         if failed { throw ExitCode.failure }
-    }
-
-    private func printDiagnostics(_ diagnostics: [ConversionDiagnostic]) {
-        for diagnostic in diagnostics {
-            print("      \(diagnostic)")
-        }
-    }
-
-    /// A file name from the preset name, made safe and unique within this run.
-    private func uniqueFileName(for name: String, used: inout Set<String>) -> String {
-        let base = name
-            .replacingOccurrences(of: "/", with: "-")
-            .replacingOccurrences(of: ":", with: "-")
-        var candidate = "\(base).\(NitroPreset.fileExtension)"
-        var counter = 2
-        while !used.insert(candidate.lowercased()).inserted {
-            candidate = "\(base) \(counter).\(NitroPreset.fileExtension)"
-            counter += 1
-        }
-        return candidate
     }
 }
 

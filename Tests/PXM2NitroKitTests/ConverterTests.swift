@@ -109,8 +109,7 @@ struct ConverterTests {
     }
 
     @Test func convertedPresetsAreValidNitroFiles() throws {
-        let package = try AdjustmentsPackage.load(from: Fixtures.photomatorPackage("filmic"))
-        for preset in package.presets {
+        for preset in try Fixtures.photomatorPresets("filmic") {
             let nitro = try #require(Converter.convert(preset).preset)
             #expect(try NitroPreset(data: nitro.encoded()) == nitro)
         }
