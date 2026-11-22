@@ -27,7 +27,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Photomator block | → Nitro | quality | notes |
 |---|---|---|---|
 | `l` Light: exposure | `Tone.exposure` | 🟢 likely good | scale ❓ (EV vs %) |
-| `l` Light: highlights | `Tone.highlights` (or `Tone.recovery` for negative values) | 🟡 | Nitro neutral looks like 1 ❓ |
+| `l` Light: highlights | `Tone.highlights` (or `Tone.recovery` for negative values) | 🟡 | ✅ Nitro neutral is 1.0. Scale ❓ |
 | `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
 | `l` Light: brightness | `Enhance.lighten` (+) / `Enhance.deepen` (−) **or** `Tone.midtones` | 🟠 | decide after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
@@ -35,11 +35,11 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
 | `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | semantics ❓ |
-| `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | Nitro uses absolute Kelvin (manual), Photomator a relative shift. A preset cannot know the as-shot value. ❓ N-1 `WB jpg` shows whether Nitro is relative on non-RAW files |
+| `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ❓ N-1 `WB jpg` shows whether Nitro behaves relatively on non-RAW files |
 | `hS` saturation | `Enhance.saturation` = 1 + k·s | 🟢 | |
 | `hS` vibrancy | `Enhance.vibrancy` | 🟢 | scale ❓ |
 | `hS` hue | default: **skip and warn**. Opt-in: the same `HSL.hueDelta_*` shift on all 9 colours | 🟠 | approximation of a global hue rotation |
-| `L` Levels | Nitro `Levels` | 🟡 | Nitro Levels shape ❓. Opt-in fallback: bake into curves |
+| `L` Levels | Nitro `Levels` (black/white input only) | 🟠 | ✅ Nitro Levels stores only the black and white input handles per channel, with no gamma or output values. Photomator's gray, quarter and output handles have no target, so: black/white → Levels, the rest skipped with a warning. Opt-in: bake into curves |
 | `C` Curves (rgb, r, g, b, l) | `Curves.levelsCurvesData.pointsArray` | 🟢 | see §2.1 |
 | `S` Sharpen | `Detail.sharpen` | 🟡 | radius is dropped |
 | `cl` Selective clarity | default: **skip and warn**. Opt-in: `Detail.clarity` (midtones value) | 🟠 | never used in the samples |

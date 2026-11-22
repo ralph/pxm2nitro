@@ -20,7 +20,12 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 
 ## Nitro
 
-### N-0 Baseline (P1)
+> **Status 2026-11-22:** `N0 defaults` and `N1 all` were created via computer use (see
+> [sample-log.md](sample-log.md)). N-0 and N-1 are **done**, except for `WB jpg` and Grain;
+> Nitro has no Grain panel. Still open: N-1 `WB jpg`, N-2 (curve slots and the 1|2 toggle),
+> N-3, N-4.2, and N-6.
+
+### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.
 2. Same with the JPEG: `N0 jpg`.
 3. If the save dialog lets you pick which adjustments to include, **select all**.

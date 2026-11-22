@@ -1,9 +1,10 @@
 # Nitro preset format (`.nitropreset`)
 
-Status: reverse-engineered from 3 sample presets (`nitro_sample_presets/`), from the
-string and Swift-reflection data in `Nitro.app` (2026.09.01, build 247), and from UI
-screenshots. Nitro is made by Gentlemen Coders (the RAW Power team). Its edit model comes
-from RAW Power.
+Status: reverse-engineered from 5 sample presets in `nitro_sample_presets/`, the strings and
+Swift reflection data in `Nitro.app` (2026.09.01, build 247), and the UI itself. `N0 defaults`
+and `N1 all` were created on purpose with known UI values; see
+[sample-log.md](sample-log.md) for every value that was set. Nitro is made by Gentlemen
+Coders (the RAW Power team), and its edit model comes from RAW Power.
 
 Confidence markers: ✅ confirmed · 🟡 inferred · ❓ unknown (see [sample-requests.md](sample-requests.md)).
 
@@ -13,313 +14,320 @@ User presets live in:
 ~/Library/Group Containers/group.com.gentlemencoders.nitro/Library/Application Support/My Preset/
 ```
 
-(This folder is protected by macOS privacy controls (TCC). By decision, the converter writes to a
-user-chosen folder, and the user copies the files here and restarts Nitro.)
+This folder is protected by macOS privacy controls (TCC). By decision, the converter writes to
+a folder the user chooses; the user then copies the files into the folder above and
+restarts Nitro.
 
-Official docs (no file-format documentation exists; behaviour only):
+Official docs exist only for behaviour, not for the file format:
 Nitro manual <https://www.gentlemencoders.com/nitro/user-manual/index.html>, RAW Power 3 help
 <https://www.gentlemencoders.com/manuals/RAW-Power-3.0-for-Mac-Help.pdf>, CIRAWFilter
 <https://developer.apple.com/documentation/coreimage/cirawfilter>.
 
-Documented behaviour that matters for the converter:
+## 0. Behaviour that matters for the converter
 
-- **Presets merge per adjustment:** applying a preset replaces each adjustment block it contains
-  completely, and leaves blocks it does not contain untouched (no per-slider merge).
-- **Processing order is fixed.** The panel order in the UI does not change the order in which
-  adjustments are processed, so the order of `adjDataArr` is irrelevant.
-- Nitro reads the "My Presets" folder only **at launch**.
-- Per-image edits are stored in XMP sidecars (namespace `http://com.gentlemencoders/xmp/nitro/1.0/`).
+- **Presets merge per adjustment** (manual): applying a preset replaces every adjustment block
+  it contains completely and leaves the other blocks untouched. Sliders are never merged
+  individually.
+- **Processing order is fixed** (manual). The order of `adjDataArr` does not matter; samples
+  store blocks in edit order.
+- Nitro reads the preset folder **only at launch**.
+- **Only changed adjustments are saved** ✅ (observed). The save dialog lists only adjustments
+  whose values differ from neutral. An adjustment switched on at its defaults is not offered,
+  and a preset without any edit cannot be saved at all.
+- **Save dialog defaults** ✅ (observed): there is one switch per adjustment. Tone, Enhance and
+  Detail are switched **off** by default; every other adjustment is switched on.
+- Per-image edits live in XMP sidecars (namespace `http://com.gentlemencoders/xmp/nitro/1.0/`).
 
 ---
 
-## 1. File structure
+## 1. File structure ✅
 
-One preset = one file, `<Preset Name>.nitropreset`, UTF-8 JSON on a single line. The file name
-uses the preset name verbatim (umlauts kept, NFD/NFC ❓).
+One preset is one file, `<Preset Name>.nitropreset`, containing UTF-8 JSON on a single line.
+The file name is the preset name, including spaces and umlauts.
 
 ```jsonc
 {
-  "name": "Lebendig",                 // display name ✅
-  "version": 1,                       // preset file version ✅
+  "name": "N1 all",
+  "version": 1,
   "editModel": {
-    "formatVersion": 1,               // ✅
-    "currentVersionIndex": 0,         // index into versions ✅
+    "formatVersion": 1,
+    "currentVersionIndex": 0,
     "defaultOrientation": 1,          // EXIF/TIFF orientation 🟡
-    "lowResMask": false,              // 🟡
-    "editingJPEGHalf": false,         // 🟡
-    "versions": [                     // "EditVersion" objects (edit history snapshots / alt versions)
+    "lowResMask": false,
+    "editingJPEGHalf": false,
+    "versions": [
       {
-        "decoderVersionString": "9.dng",   // CIRAWFilter decoder version 🟡 (UI shows decoder "8"/"9")
-        "masks": [],                        // local adjustments (not used by the converter)
-        "adjDataArr": [                     // ordered adjustment list ✅
-          { "id": "Tone",    "json": "<JSON string>" },
-          { "id": "Enhance", "json": "<JSON string>" }
-        ]
+        "decoderVersionString": "8",  // RAW decoder: "9.dng" = UI "v9", "8" = UI "v8" ✅
+        "masks": [],
+        "adjDataArr": [ { "id": "Tone", "json": "<JSON string>" }, … ]
       }
     ]
   }
 }
 ```
 
-### 1.1 Double encoding ✅
+- **Double encoding** ✅: `adjDataArr[].json` is a *string* that contains JSON. The converter
+  has to build the inner object, serialise it, and store the resulting string.
+- **Decoder version** ✅: the RAW Tuning panel's v8/v9 choice is written to
+  `decoderVersionString`. The sliders on offer also depend on it: v8 adds Moiré, Color Noise
+  and Noise Detail (§3.1, §3.4).
 
-`adjDataArr[].json` is a **string containing JSON**, so every adjustment is JSON-encoded twice.
-The converter must build the inner object, serialise it, and store that string.
-
-### 1.2 Adjustments may be omitted 🟡
-
-`Lebendig` has no `RAW` entry, while `Entsättigen` has `RAW` with `enabled:false`. Missing
-adjustments probably mean "leave as is / default" when the preset is applied. ❓ Does a
-preset overwrite adjustments it does not contain? (See sample request N-0.)
-
-### 1.3 Common inner keys
+### Common inner keys
 
 | key | meaning |
 |---|---|
-| `enabled` | bool: adjustment checkbox ✅ |
-| `disclosed` | bool: panel expanded in the UI (cosmetic) ✅ |
-| `preserve` | bool ❓ (probably "keep when pasting/applying presets") |
-| `defaultsUpdated` | bool ❓ (set to `true` in all samples; copy it) |
-| `numeric` | dict `String → Double`: the slider values ✅ |
-| `defaultParameters` | (in the Swift model; not serialised in the samples) |
-
-Adjustment-specific extra keys are listed below.
+| `enabled` | bool, the adjustment's checkbox ✅ |
+| `disclosed` | bool, whether the panel is expanded in the UI (cosmetic only) ✅ |
+| `numeric` | dict of `String → Double`, the slider values ✅ |
+| `preserve`, `defaultsUpdated` | bools that only some adjustments have (Tone, Detail, RAW); always `false` and `true` respectively. Copy them unchanged. |
 
 ---
 
-## 2. Adjustment IDs
+## 2. Adjustment IDs ✅ (all seen in samples)
 
-The adjustment set comes from the UI panels (`*AdjustmentTableViewCell.nib`) and from the ID
-strings in the binary. The binary only keeps Swift strings of 16 or more characters in
-readable form, so some IDs are only partly confirmed.
-
-| id (exact string) | UI (de) | status |
+| `id` | UI (de) | sample |
 |---|---|---|
-| `RAW` | RAW | ✅ sample |
-| `Tone` | Ton | ✅ sample |
-| `Enhance` | Verbessern | ✅ sample |
-| `Detail` | Details | ✅ sample |
-| `WhiteBalance` | Weißabgleich | 🟡 binary fragments `WhiteBal`+`ance` |
-| `Curves` | Kurven | ✅ sample |
-| `Levels` | Tonwerte | 🟡 binary |
-| `HSL` | HSL | ✅ sample |
-| `BlackAndWhite` | Schwarzweiß | 🟡 binary fragments `BlackAnd`+`White` |
-| `ChannelMixer` | Kanalmischer | ✅ sample |
-| `SplitToning` | Teiltonung | 🟡 fragment `SplitTon…` |
-| `Vignette` | Vignette | 🟡 binary |
-| `Grain` | Körnung | 🟡 binary |
-| `LUT` | LUT | 🟡 binary |
-| `Lens` | Objektiv | 🟡 binary |
-| `ChromaticAberration` | Chrom. Aberration | 🟡 nib name only |
-| `Crop`, `Perspective`, `Depth` | Geometrie / Tiefe | not relevant to the converter |
+| `WhiteBalance` | Weißabgleich | N1 |
+| `Tone` | Tonwert | Lebendig, N1 |
+| `Enhance` | Verbessern | Lebendig, N1 |
+| `Detail` | Detail | Lebendig, N1 |
+| `RAW` | RAW Tuning | Entsättigen, N1 |
+| `Levels` | Tonwerte | N1 |
+| `Curves` | Kurven | curves…, N1 |
+| `HSL` | HSL | curves…, N1 |
+| `BlackAndWhite` | Schwarzweiß | N0, N1 |
+| `SplitToning` | Split-Farbtöne | N1 |
+| `ChromaticAberration` | Chromatische Aberration | N1 |
+| `ChannelMixer` | Kanalmischer | curves… |
+| `Vignette` | Vignette | N0, N1 |
+| `LUT` | LUT (presets tab → LUTs) | N1 |
+| `Lens`, `Crop`, `Perspective`, `Depth` | — | not sampled, and not needed by the converter |
 
-❓ The exact ID strings for every adjustment except the four confirmed ones are needed (see
-sample request N-1). The converter must not invent IDs.
+There is **no separate Grain panel** in this Nitro version. The grain keys sit in `Detail`
+and are not shown in the UI.
 
 ---
 
-## 3. Known adjustments in detail
+## 3. Adjustments
 
-### 3.1 `RAW` (only meaningful for RAW files)
+The **UI** column gives the German label shown in the app. Defaults are the values seen in
+the UI for this RAW file.
+
+### 3.1 `RAW` (RAW Tuning)
 
 ```json
-{"preserve":false,"enabled":false,"defaultsUpdated":true,"disclosed":true,"enableGamutMap":true,
- "numeric":{"rawContrast":0,"rawSharpen":1,"moire":0}}
+{"enabled":true,"disclosed":true,"preserve":false,"defaultsUpdated":true,"enableGamutMap":false,
+ "numeric":{"moire":0.29,"rawContrast":0.43,"rawSharpen":0.57}}
 ```
 
-| key | sample | 🟡 CIRAWFilter property |
-|---|---|---|
-| `numeric.rawContrast` | 0 | `contrastAmount` |
-| `numeric.rawSharpen` | 1 | `sharpnessAmount` |
-| `numeric.moire` | 0 | `moireReductionAmount` |
-| `enableGamutMap` | true | `isGamutMappingEnabled` (UI "Gamut Mapping") |
-
-The decoder version lives in `EditVersion.decoderVersionString`, not here. ❓ Is there a local
-tone map amount or noise reduction in RAW? (noise is in `Detail`.)
+| key | UI | default | CIRAWFilter 🟡 |
+|---|---|---|---|
+| `rawSharpen` | RAW-Schärfe | 1.0 | `sharpnessAmount` |
+| `rawContrast` | RAW Kontrast | 0.0 | `contrastAmount` |
+| `moire` | Moiré (only shown with decoder v8) | 0.55 on this image, 0 in other samples | `moireReductionAmount` |
+| `enableGamutMap` | Spektrum-Mapping checkbox | true | `isGamutMappingEnabled` |
 
 ### 3.2 `Tone`
 
 ```json
-{"enabled":true,"disclosed":false,"preserve":false,"defaultsUpdated":true,
+{"enabled":true,"disclosed":true,"preserve":false,"defaultsUpdated":true,
  "baseBlackPoint":5,"baseWhitePoint":0.15,"bpIsAbs":false,"wpIsAbs":false,
- "supportsToneMap":false,"supportsBoost":true,
- "numeric":{"exposure":0,"recovery":0,"boost":1,"boostShadowSliderValue":0.9,"midtones":1,
-            "highlights":1,"shadows":0,"blackPointDelta":-0,"whitePointDelta":0.375,"toneMap":0}}
+ "supportsBoost":true,"supportsToneMap":false,
+ "numeric":{"boost":0.73,"exposure":0.37,"highlights":0.61,"shadows":0.23,"midtones":1.17,
+            "blackPointDelta":0.13,"whitePointDelta":0.29,"recovery":0.41,
+            "boostShadowSliderValue":0.53,"toneMap":0}}
 ```
 
-Manual: Exposure is in EV (1.0 = 2×). Highlights, Shadows and Midtones apply to all images.
-Recovery is a selective exposure for the brightest pixels. **RAW-only:** Boost (0…1, "0.5 or 0 for
-a flatter look"), Boost Shadows (the black end of the boost curve), Blacks (RAW black point), and
-Whites (modifies the baseline exposure).
+The numeric values are stored exactly as the UI shows them ✅.
 
-| key | samples | meaning |
+| key | UI | neutral / default |
 |---|---|---|
-| `exposure` | 0 | EV ✅ (manual) |
-| `recovery` | 0 | highlight recovery 🟡 |
-| `boost` | 1 | RAW boost (CIRAWFilter `boostAmount`, 1 = full) 🟡 |
-| `boostShadowSliderValue` | 0.9 | boost shadow amount (UI value, not the raw CI value) 🟡 |
-| `midtones` | 1 | ❓ neutral value 1? |
-| `highlights` | 1 | ❓ neutral value 1? |
-| `shadows` | 0 | 🟡 |
-| `blackPointDelta` | −0 | UI "Blacks" (RAW black point, CIRAWFilter `shadowBias`), offset from `baseBlackPoint` 🟡 |
-| `whitePointDelta` | 0.225 / 0.375 | UI "Whites" (CIRAWFilter `baselineExposure`), offset from `baseWhitePoint` 🟡 |
-| `toneMap` | 0 | local tone map (`supportsToneMap:false` here) 🟡 |
-| `baseBlackPoint`, `baseWhitePoint`, `bpIsAbs`, `wpIsAbs` | 5, 0.15, false | image-dependent base values ❓ (are they recomputed when the preset is applied?) |
-| `supportsToneMap`, `supportsBoost` | | capabilities of the source image (RAW → boost) |
+| `boost` | Verstärkung (RAW only) | 1.0 |
+| `exposure` | Belichtung, in EV | 0.0 |
+| `highlights` | Glanzlichter | **1.0** |
+| `shadows` | Schatten | 0.0 |
+| `midtones` | Mitteltöne | **1.0** |
+| `blackPointDelta` | Schwarz (RAW only) | 0.0 |
+| `whitePointDelta` | Weiß (RAW only) | 0.0 |
+| `recovery` | Wiederherstellen | 0.0 |
+| `boostShadowSliderValue` | Schatten verstärken (RAW only) | **0.9** |
+| `toneMap` | not shown here (`supportsToneMap:false`) | 0 |
+
+`baseBlackPoint` and `baseWhitePoint` were identical (5 / 0.15) in every sample, from
+different images, so they are probably constants rather than per-image values.
+❓ Whether Nitro recomputes them when a preset is applied is still open (N-4.2).
+
+Earlier samples had `whitePointDelta` set to 0.225 or 0.375. That means the "Weiß" slider had
+been moved in those presets.
 
 ### 3.3 `Enhance`
 
-```json
-{"enabled":true,"disclosed":false,
- "numeric":{"contrast":1.2,"saturation":1.1,"vibrancy":0.4,"lighten":0.1,"deepen":0.2}}
-```
-
-| key | neutral 🟡 | samples |
+| key | UI | neutral |
 |---|---|---|
-| `contrast` | 1 (multiplier) | 1, 1.2 |
-| `saturation` | 1 (multiplier) | 0.8, 1.1 |
-| `vibrancy` | 0 | −0.2, 0.4 |
-| `lighten` | 0 | 0.1, 0.2 |
-| `deepen` | 0 | 0, 0.2 |
+| `deepen` | Tiefen | 0 |
+| `lighten` | Lichter | 0 |
+| `contrast` | Kontrast | **1.0** (multiplier) |
+| `saturation` | Sättigung | **1.0** (multiplier) |
+| `vibrancy` | Farbdynamik | 0 |
 
 ### 3.4 `Detail`
 
 ```json
-{"enabled":true,"disclosed":false,"preserve":false,"defaultsUpdated":true,"grainSeed":29.984333,
- "numeric":{"clarity":0.2,"sharpen":0,"blur":0,"lumaNoise":0,"colorNoise":0,"noiseDetail":0,
-            "jpegNoise":0,"grainIntensity":0,"grainDensity":0.5}}
+{"enabled":true,"disclosed":true,"preserve":false,"defaultsUpdated":true,"grainSeed":25.016823,
+ "numeric":{"clarity":0.33,"sharpen":0.21,"lumaNoise":0.39,"colorNoise":0.61,"noiseDetail":0.17,
+            "blur":0,"jpegNoise":0,"grainIntensity":0,"grainDensity":0.5}}
 ```
 
-| key | neutral 🟡 | notes |
+| key | UI | default |
 |---|---|---|
-| `clarity` | 0 | 0.15 / 0.2 in the samples |
-| `sharpen` | 0 | |
-| `blur` | 0 | |
-| `lumaNoise`, `colorNoise`, `noiseDetail` | 0 | noise reduction |
-| `jpegNoise` | 0 | JPEG artefact reduction |
-| `grainIntensity`, `grainDensity` | 0, 0.5 | legacy grain? (there is also a `Grain` panel ❓) |
-| `grainSeed` | random float | RNG seed; generate one |
+| `clarity` | Klarheit | 0 |
+| `sharpen` | Schärfen | 0 |
+| `lumaNoise` | Bildrauschen | 0 (v9) / 0.8 (v8 on this image) |
+| `colorNoise` | Farbrauschen (v8 only) | 0.5 |
+| `noiseDetail` | Rauschdetails (v8 only) | 0 |
+| `blur`, `jpegNoise`, `grainIntensity`, `grainDensity` | **not in the UI** | 0, 0, 0, 0.5 |
+| `grainSeed` | — | random float; generate a new one |
 
-### 3.5 `Curves` ✅ (sample `curves hsl channel mixer`)
+🟡 `grainIntensity`/`grainDensity` look like a working film grain. A test preset with a
+non-zero value would show whether Nitro actually renders it (❓).
 
-The inner object differs from the slider adjustments: it repeats `id`/`name`/`localizedName`
-and has an empty `numeric`. The curve lives in `levelsCurvesData`:
-
-```jsonc
-{"id":"Curves","name":"Curves","localizedName":"Kurven","enabled":true,"disclosed":true,"numeric":{},
- "levelsCurvesData":{
-   "curves": true,            // true = Curves; Levels probably shares this struct with curves:false 🟡
-   "operateOnGray": true,     // 🟡 manual: "Luminance" vs "Equal RGB" mode (UI Grau ↔ RGB)
-   "gamma": true,             // 🟡 manual: curve mode "Gamma" vs "Linear"
-   "maxValue": 2,             // 🟡 the "1 / 2" toggle: manual "Extended Range" curve 0…2.0 (RAW only)
-   "histogramMaxValue": 1,    // ❓
-   "autoAlgorithm": 0,        // which Auto button was used (0 = none) 🟡
-   "pointsArray": [ [<pt>…], [<pt>…], [<pt>…], [<pt>…] ]   // 4 channels
- }}
-```
-
-`pointsArray` holds **4 curves**. Only index 0 was edited in the sample. The manual lists the
-channels as Combined, R, G, B, so the order is 🟡 `[combined, red, green, blue]`. ❓ This needs confirmation (request N-2).
-
-Each point:
-`{"x":0.2656,"y":0.1526,"deletable":true,"inactive":false,"invisible":false,"isWhitePoint":false}`.
-
-Every curve has this fixed skeleton:
-
-| # | x,y | flags | role |
-|---|---|---|---|
-| first | 0,0 | `invisible:true`, `deletable:false` | guard point |
-| 2nd | 0,0 | `deletable:false` | black point (handle) |
-| … | user points | `deletable:true` | |
-| | 1,1 | `isWhitePoint:true`, `deletable:false` | white point (handle) |
-| last | maxValue,maxValue (2,2) | `invisible:true`, `deletable:false` | guard point |
-
-The converter must keep this skeleton. It should move the black and white handles to the
-Photomator end points, insert the inner points as `deletable:true`, and keep the guard points.
-
-### 3.6 `HSL` ✅
+### 3.5 `WhiteBalance`: absolute ✅
 
 ```json
-{"enabled":true,"disclosed":true,"version":1,"numeric":{ "hueDelta_red":6.9, "saturationDelta_red":-0.22,
- "lumaDelta_red":0.11, "range_red":-0.21, … }}
+{"enabled":true,"disclosed":true,"autoWB":false,"applyFaceBalance":false,
+ "numeric":{"temperature":4321,"tint":-17}}
 ```
+
+`temperature` is in **Kelvin** and `tint` is on Nitro's ±175 scale. The values are written
+exactly as the UI shows them. This RAW's as-shot values were 5277 K and tint 25.
+`autoWB` and `applyFaceBalance` correspond to the Auto button and face-based auto WB.
+❓ Behaviour on JPEG/HEIC files is untested (N-1 `WB jpg`).
+
+### 3.6 `Levels` and `Curves` (`levelsCurvesData`)
+
+Both adjustments share the same struct:
+
+```jsonc
+"levelsCurvesData": {
+  "curves": false,            // false = Levels, true = Curves ✅
+  "operateOnGray": true,      // 🟡 UI selector Grau (luminance) vs RGB
+  "gamma": true,              // 🟡 Gamma vs Linear mode
+  "maxValue": 2,              // always 2 in every sample, including with the UI "1|2" toggle on "1". The toggle is NOT this field ❓
+  "histogramMaxValue": 1,
+  "autoAlgorithm": 0,         // 0 = no Auto button used
+  "pointsArray": [ [pts], [pts], [pts], [pts] ]   // 4 channels 🟡 [gray/master, R, G, B]
+}
+```
+
+Point format: `{"x","y","deletable","inactive","invisible","isWhitePoint"}`. Every channel
+has this skeleton:
+
+| point | x,y | flags |
+|---|---|---|
+| guard | 0,0 | `invisible:true` |
+| black handle | (bx, 0) | `deletable:false` |
+| user points (Curves only) | … | `deletable:true` |
+| white handle | (wx, 1) | `isWhitePoint:true` |
+| guard | 2,2 | `invisible:true` |
+
+- **Levels** ✅ (`N1 all`): the black input 0.07 is stored as black handle `x:0.072164945`.
+  The UI mid value 0.54 is **not stored**; it is just shown as the midpoint between the black
+  and white handles. Levels therefore stores only black and white input per channel, and no
+  gamma or output values. ❓ Whether moving the mid handle adds a point is untested.
+- **Curves** ✅: the added point 0.25 → 0.37 is stored as `{x:0.25, y:0.3736842}`. The
+  Curves inner object also repeats `"id":"Curves","name":"Curves","localizedName":"Kurven"`
+  and has `"numeric":{}`. Levels does not repeat these.
+- ❓ Still open: the order of the 4 channels, and what the "1 | 2" toggle does.
+
+### 3.7 `HSL` ✅
 
 The keys follow the pattern `<param>_<colour>`:
 
-- param ∈ `hueDelta` (degrees, UI shows integers, e.g. 6.9 → "7"), `saturationDelta`,
-  `lumaDelta`, `range` (all ≈ −1…1 ❓ exact limits)
-- colour ∈ `red, orange, yellow, green, cyan, lightBlue, blue, purple, magenta` (9, in
-  UI order)
+- `<param>` is one of `hueDelta` (in degrees, as shown in the UI: 11 → `11`),
+  `saturationDelta`, `lumaDelta`, `range`.
+- `<colour>` is one of `red, orange, yellow, green, cyan, lightBlue, blue, purple, magenta`.
 
-Neutral = 0 for all 36 keys. Note the inner `"version":1`.
+All 36 keys are always written, and 0 is neutral. The block also has an inner `"version":1`.
+UI values are stored 1:1 (red: 11 / 0.23 / −0.17 / 0.31).
 
-### 3.7 `ChannelMixer` ✅
+### 3.8 `ChannelMixer` ✅
+
+The keys are `<out>_<in>` and `<out>_bias` (UI "Konstant"), with `out` and `in` each one of
+`red, green, blue`. Identity is `<c>_<c> = 1` and every other key 0.
+
+### 3.9 `BlackAndWhite` ✅
+
+`numeric: {red, green, blue}`. The defaults are `0.299 / 0.587 / 0.114` (Rec.601 luma); the UI
+rounds them to 0.3 / 0.59 / 0.11.
+
+### 3.10 `SplitToning` ✅
 
 ```json
-{"enabled":true,"disclosed":true,"numeric":{
- "red_red":1,"red_green":-0.2955,"red_blue":0.2334,"red_bias":0.0383,
- "green_red":0,"green_green":1,"green_blue":0,"green_bias":0,
- "blue_red":0,"blue_green":0,"blue_blue":1,"blue_bias":0}}
+"numeric":{"highlights_hue":0.1195,"highlights_saturation":0.8549,"highlights_luma":0,
+           "shadows_hue":0.6404,"shadows_saturation":0.9176,"shadows_luma":0,
+           "overall_hue":0.1929,"overall_saturation":0.7120,"overall_luma":0.13,"balance":0.63}
 ```
 
-Keys: `<output>_<input>` and `<output>_bias` (UI "Konstant"). Identity = diagonal 1. This has
-the same structure as Photomator's channel mixer.
+- `*_hue` is a 0…1 fraction of the colour wheel (0.12 ≈ 43°, orange).
+- `*_saturation` is 0…1, the distance from the wheel's centre.
+- `*_luma` is the "Luminanz" slider for the selected wheel.
+- `balance` defaults to 0.5.
+
+### 3.11 `ChromaticAberration` ✅
+
+`numeric: {redCyan, blueYellow, purpleAmount, purpleRange, greenAmount, greenRange}`.
+The defaults are 0, 0, 0, 0.2, 0, 0.2.
+
+### 3.12 `Vignette` ✅
+
+`{"center":[0.5,0.5], "numeric":{"intensity":0.37,"radius":0.71}}`. The defaults are intensity
+0.5 and radius 0.5. As with B&W, a default vignette still changes the image.
+
+### 3.13 `LUT` ✅
+
+```json
+{"enabled":true,"disclosed":false,
+ "dataParameters":{"lutName":"Velvia","encodedFilePath":"($APP_LUT)/Film Simulation/Velvia.rawpowerCubeData"},
+ "numeric":{"intensity":0.46597072}}
+```
+
+- Built-in LUTs are referenced through the `($APP_LUT)` placeholder.
+- ❓ How imported user LUTs are referenced (probably a different placeholder pointing at the
+  user's LUT folder with `.rawpowerCubeData`).
 
 ---
 
-## 4. Adjustments known only from UI and binary (shape ❓)
+## 4. CIRAWFilter reference
 
-| adjustment | UI controls | field names found in the binary |
-|---|---|---|
-| WhiteBalance | Temperature (**Kelvin**, manual), Tint (±175), presets, auto, grey-point picker | `temperature`, `tint` |
-| Levels | Luminance / RGB, Auto, black/white pickers | ❓ |
-| SplitToning | Highlights, Shadows, Overall (hue / saturation / luma) + Balance | `highlights_hue`, `highlights_saturation`, `highlights_luma`, `shadows_*`, `overall_*`, `balance` |
-| BlackAndWhite | R/G/B mixer (default luminance weights), filter presets Red/Orange/Yellow/Green/Blue/Equal | ❓ |
-| SplitToning (manual) | Highlight, Shadow and Overall tint wheels + luminance; Balance does not affect Overall | see above |
-| Vignette | intensity + centre point; applied after crop | `center` ❓ |
-| Grain | ❓ | `grain_image_taus` (internal) |
-| LUT | imported `.cube` files | ❓ how the LUT is referenced |
-| Lens | lens profile, De-Vignette | not used |
-
----
-
-## 5. CIRAWFilter reference (RAW-engine sliders)
-
-Apple documents these ranges. The Nitro slider each one maps to is 🟡 inferred from the manual.
+The ranges and defaults below are Apple's documentation. The Nitro key each one maps to is
+🟡 inferred.
 
 | CIRAWFilter | range / default | Nitro |
 |---|---|---|
 | `boostAmount` | 0…1, default 1 | `Tone.boost` |
-| `boostShadowAmount` | 0…2, default 1 | `Tone.boostShadowSliderValue` (UI value; may be rescaled) |
-| `shadowBias` | image-dependent | `Tone.blackPointDelta` + `baseBlackPoint` |
-| `baselineExposure` | camera-dependent | `Tone.whitePointDelta` + `baseWhitePoint` |
-| `localToneMapAmount` | 0…1, image-dependent | `Tone.toneMap` |
-| `luminanceNoiseReductionAmount` | 0…1, image-dependent | `Detail.lumaNoise` |
-| `colorNoiseReductionAmount` | 0…1, image-dependent | `Detail.colorNoise` |
-| `detailAmount` | 0…3, image-dependent | `Detail.noiseDetail` |
-| `moireReductionAmount` | 0…1, image-dependent | `RAW.moire` |
-| `sharpnessAmount` | 0…1, image-dependent | `RAW.rawSharpen` |
-| `contrastAmount` | 0…1, image-dependent | `RAW.rawContrast` |
+| `boostShadowAmount` | 0…2, default 1 | `Tone.boostShadowSliderValue` (UI default 0.9) |
+| `shadowBias` | image-dependent | `Tone.blackPointDelta` |
+| `baselineExposure` | camera-dependent | `Tone.whitePointDelta` |
+| `localToneMapAmount` | 0…1 | `Tone.toneMap` |
+| `luminanceNoiseReductionAmount` | 0…1 | `Detail.lumaNoise` |
+| `colorNoiseReductionAmount` | 0…1 | `Detail.colorNoise` |
+| `detailAmount` | 0…3 | `Detail.noiseDetail` |
+| `moireReductionAmount` | 0…1 | `RAW.moire` |
+| `sharpnessAmount` | 0…1 | `RAW.rawSharpen` |
+| `contrastAmount` | 0…1 | `RAW.rawContrast` |
 | `isGamutMappingEnabled` | default true | `RAW.enableGamutMap` |
-| `neutralTemperature` / `neutralTint` | 2000…50000 K / ±150 | `WhiteBalance.temperature` / `tint` (Nitro allows ±175) |
+| `neutralTemperature` / `neutralTint` | 2000…50000 K / ±150 | `WhiteBalance.temperature` / `tint` |
 | `decoderVersion` | — | `decoderVersionString` |
 
-Many defaults are image-dependent. A converter therefore cannot know a RAW's neutral
-values, which is one more reason to leave the `RAW` block out unless the source has RAW settings.
+## 5. Writing a Nitro preset (converter recipe)
 
-## 6. Writing a Nitro preset (converter recipe)
-
-1. Build an ordered `adjDataArr` containing only the adjustments the source preset uses.
-   The order varies between samples (`Tone, Enhance, Detail, RAW` and `Curves, RAW, ChannelMixer, HSL`),
-   so it probably follows the edit order and is irrelevant for rendering 🟡.
-2. For each adjustment, write the complete key set from a known-good template (copy the
-   neutral values from a baseline Nitro preset), override the mapped sliders, and set
-   `enabled:true`, `disclosed:false`.
-3. JSON-encode each inner object into the `json` string.
-4. Wrap it in `editModel` with `formatVersion:1`, `currentVersionIndex:0`, one version,
-   `decoderVersionString:"9.dng"` (❓ or omit to keep the image's version), `masks:[]`,
-   `defaultOrientation:1`, `lowResMask:false`, `editingJPEGHalf:false`.
-5. Write `{"name", "version":1, "editModel"}` to `<name>.nitropreset`.
-
-Templates for every adjustment should come from real Nitro presets (sample request N-1), so
-the converter never emits a key set that Nitro has not produced itself.
+1. Emit only the adjustments that the conversion actually changes. Nitro itself never saves
+   neutral blocks, and an emitted block replaces the image's own block of that type.
+2. Avoid emitting `Tone` and `RAW` unless needed. If `Tone` is emitted, it has to carry the
+   neutral RAW values (`boost` 1, `boostShadowSliderValue` 0.9, `blackPointDelta`/`whitePointDelta`
+   0), or it will override the image's RAW look.
+3. Build every block from the full key set shown above, override the mapped values, then set
+   `enabled:true` and `disclosed:false`.
+4. JSON-encode each inner object into its `json` string.
+5. Wrap the blocks in the `editModel` with `decoderVersionString:"9.dng"`, `masks:[]`, and the
+   constants from §1.
