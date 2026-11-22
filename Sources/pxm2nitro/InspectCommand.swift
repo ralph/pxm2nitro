@@ -12,8 +12,16 @@ struct InspectCommand: ParsableCommand {
     var packages: [String]
 
     func run() throws {
+        var hadError = false
         for path in packages {
-            let package = try AdjustmentsPackage.load(from: URL(filePath: path))
+            let package: LoadedPackage
+            do {
+                package = try AdjustmentsPackage.load(from: URL(filePath: path))
+            } catch {
+                FileHandle.standardError.write(Data("error: \(error)\n".utf8))
+                hadError = true
+                continue
+            }
             print("\(path): \(package.presets.count) preset(s)")
             for preset in package.presets {
                 guard let adjustments = preset.adjustments else {
@@ -34,5 +42,6 @@ struct InspectCommand: ParsableCommand {
                 print("  ⚠️ \(failure.file.lastPathComponent): \(failure.reason)")
             }
         }
+        if hadError { throw ExitCode.failure }
     }
 }

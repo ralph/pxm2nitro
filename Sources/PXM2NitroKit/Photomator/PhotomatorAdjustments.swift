@@ -66,12 +66,12 @@ public struct PhotomatorAdjustments: Sendable, Equatable {
     /// Decodes the raw `ColorAdjustmentData` bytes: `[version, {…}]` JSON.
     public init(data: Data) throws {
         guard case .array(let items) = try JSONDecoder().decode(JSONValue.self, from: data),
-              items.count == 2, let version = items[0].doubleValue,
+              items.count == 2, let version = items[0].doubleValue.flatMap({ Int(exactly: $0) }),
               let root = items[1].unwrappingVersionContainers().objectValue
         else {
             throw PhotomatorError.malformedAdjustmentData
         }
-        self.init(formatVersion: Int(version), root: root)
+        self.init(formatVersion: version, root: root)
     }
 
     /// Preset intensity (`in`), 0…1. Defaults to 1.
@@ -173,7 +173,7 @@ extension PhotomatorAdjustments {
                           let x = xy[0].doubleValue, let y = xy[1].doubleValue
                     else { return nil }
                     return CurvePoint(x: x, y: y)
-                }
+                }.sorted { $0.x < $1.x }
             }
         }
     }
@@ -181,15 +181,13 @@ extension PhotomatorAdjustments {
     public var levels: PhotomatorLevels? {
         enabledBlock(.levels).map {
             ColorChannels($0) { channel in
-                guard let black = channel["black"]?.doubleValue,
-                      let white = channel["white"]?.doubleValue
-                else { return nil }
+                guard channel.objectValue != nil else { return nil }
                 return LevelsHandles(
-                    black: black,
+                    black: channel["black"]?.doubleValue ?? 0,
                     midOfBlackAndGray: channel["midOfBlackAndGray"]?.doubleValue ?? 0.25,
                     gray: channel["gray"]?.doubleValue ?? 0.5,
                     midOfGrayAndWhite: channel["midOfGrayAndWhite"]?.doubleValue ?? 0.75,
-                    white: white)
+                    white: channel["white"]?.doubleValue ?? 1)
             }
         }
     }

@@ -55,7 +55,9 @@ public enum AdjustmentsPackage {
     /// Throws only if `url` is not a package; unreadable presets end up in `failures`.
     public static func load(from url: URL) throws -> LoadedPackage {
         let presetsDirectory = url.appending(path: "presets", directoryHint: .isDirectory)
-        guard FileManager.default.fileExists(atPath: presetsDirectory.path) else {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: presetsDirectory.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
             throw PhotomatorError.notAPackage(url)
         }
 
@@ -85,30 +87,32 @@ public enum AdjustmentsPackage {
     /// Loads a single `presets/<UUID>.plist` file.
     public static func loadPreset(from url: URL, collectionName: String? = nil) throws -> PhotomatorPreset {
         let plist = try PropertyListDecoder().decode(PresetPlist.self, from: Data(contentsOf: url))
-        let adjustments = try plist.properties
-            .first { $0.key == colorAdjustmentDataKey }?.data
-            .map(PhotomatorAdjustments.init(data:))
+        var adjustments: PhotomatorAdjustments?
+        if let property = plist.properties.first(where: { $0.key == colorAdjustmentDataKey }) {
+            guard let data = property.data else { throw PhotomatorError.malformedAdjustmentData }
+            adjustments = try PhotomatorAdjustments(data: data)
+        }
         return PhotomatorPreset(
             id: plist.id, name: plist.name, collectionName: collectionName,
             adjustments: adjustments,
             otherPropertyKeys: plist.properties.map(\.key).filter { $0 != colorAdjustmentDataKey })
     }
 
-    /// Collections in library order; falls back to file-name order if the library info is missing.
+    /// Collections in library order, followed by collections the library info does not list
+    /// (in file-name order). Unreadable library info or collection files are skipped, so their
+    /// presets load without a collection.
     static func collections(in url: URL) throws -> [CollectionPlist] {
         let directory = url.appending(path: "collections", directoryHint: .isDirectory)
         guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
         let files = try plistFilesByID(in: directory)
         let decoder = PropertyListDecoder()
 
-        let ids: [String]
-        if let info = try? Data(contentsOf: url.appending(path: "Adjustments-LibraryInfo.plist")) {
-            ids = try decoder.decode(LibraryInfoPlist.self, from: info).collectionsList
-        } else {
-            ids = files.keys.sorted()
-        }
-        return try ids.compactMap { files[$0] }.map {
-            try decoder.decode(CollectionPlist.self, from: Data(contentsOf: $0))
+        let listed = (try? Data(contentsOf: url.appending(path: "Adjustments-LibraryInfo.plist")))
+            .flatMap { try? decoder.decode(LibraryInfoPlist.self, from: $0).collectionsList } ?? []
+        let listedSet = Set(listed)
+        let ids = listed + files.keys.filter { !listedSet.contains($0) }.sorted()
+        return ids.compactMap { files[$0] }.compactMap {
+            try? decoder.decode(CollectionPlist.self, from: Data(contentsOf: $0))
         }
     }
 
