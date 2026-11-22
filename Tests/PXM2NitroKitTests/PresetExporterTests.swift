@@ -45,6 +45,23 @@ struct PresetExporterTests {
         #expect(try NitroPreset(data: Data(contentsOf: second)).name == "BW 001 2")
     }
 
+    @Test func deduplicatesLongNamesWithoutLosingTheCounter() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var exporter = PresetExporter(outputDirectory: directory)
+        let bw = try Fixtures.photomatorPreset("BW", "001")
+        let longName = String(repeating: "x", count: 250)
+        let preset = PhotomatorPreset(id: "x", name: longName, collectionName: nil,
+                                      adjustments: bw.adjustments, otherPropertyKeys: [])
+
+        guard case .written(let first) = try exporter.export(preset).outcome,
+              case .written(let second) = try exporter.export(preset).outcome
+        else { Issue.record("both exports should be written"); return }
+        #expect(first != second)
+        #expect(second.lastPathComponent.hasSuffix(" 2.nitropreset"))
+        #expect(second.lastPathComponent.utf8.count <= 255)
+    }
+
     @Test func skipsPresetsWithNothingToConvert() throws {
         let directory = temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }

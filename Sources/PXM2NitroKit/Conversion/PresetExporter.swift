@@ -58,18 +58,25 @@ public struct PresetExporter {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         while safe.hasPrefix(".") { safe.removeFirst() }
         if safe.isEmpty { safe = "Untitled" }
-        while safe.utf8.count > maxStemLength { safe.removeLast() }
-        return "\(safe).\(NitroPreset.fileExtension)"
+        return "\(truncated(safe, toUTF8Count: maxStemLength)).\(NitroPreset.fileExtension)"
     }
 
     /// Appends " 2", " 3", … if another preset of this export already used the file name.
+    /// Long names are shortened before the counter is added, so the counter always survives.
     private mutating func uniqueName(for presetName: String) -> String {
         var candidate = presetName
         var counter = 2
         while !usedFileNames.insert(Self.fileName(for: candidate).lowercased()).inserted {
-            candidate = "\(presetName) \(counter)"
+            let suffix = " \(counter)"
+            candidate = Self.truncated(presetName, toUTF8Count: Self.maxStemLength - suffix.utf8.count) + suffix
             counter += 1
         }
         return candidate
+    }
+
+    static func truncated(_ string: String, toUTF8Count limit: Int) -> String {
+        var result = string
+        while result.utf8.count > limit { result.removeLast() }
+        return result
     }
 }
