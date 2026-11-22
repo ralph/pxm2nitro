@@ -49,16 +49,17 @@ struct NitroPresetTests {
         #expect(hsl[.orange].hueDelta == 12.730264)
         #expect(hsl[.lightBlue] == .init())
 
-        let curves = try #require(contents.compactMap { if case .curves(let c) = $0 { c } else { nil } }.first)
-        #expect(curves[.master].count == 6)
-        #expect(curves[.red] == LevelsCurvesData.channel())
+        let curves = try #require(contents.compactMap { if case .levelsCurves(let c) = $0 { c } else { nil } }.first)
+        #expect(curves.isCurves)
+        #expect(curves.master.count == 6)
+        #expect(curves.red == curves.channel())
     }
 
     @Test func encodesAdjustmentsAsJSONStrings() throws {
-        var curves = LevelsCurvesData(curves: true)
-        curves[.master] = LevelsCurvesData.channel(inner: [(0.25, 0.4)])
+        var curves = NitroLevelsCurves(isCurves: true)
+        curves.master = curves.channel(inner: [CurvePoint(x: 0.25, y: 0.4)])
         let preset = NitroPreset(name: "Test", adjustments: [
-            NitroAdjustment(.curves(curves)),
+            NitroAdjustment(.levelsCurves(curves)),
             NitroAdjustment(.channelMixer(NitroChannelMixer())),
             NitroAdjustment(.hsl(NitroHSL(values: [.red: .init(hueDelta: 10)]))),
         ])
@@ -78,11 +79,25 @@ struct NitroPresetTests {
     }
 
     @Test func channelSkeleton() {
-        let points = LevelsCurvesData.channel(black: (0.1, 0.05), inner: [(0.5, 0.6)])
+        let points = NitroLevelsCurves(isCurves: true)
+            .channel(black: CurvePoint(x: 0.1, y: 0.05), inner: [CurvePoint(x: 0.5, y: 0.6)])
         #expect(points.map(\.x) == [0, 0.1, 0.5, 1, 2])
         #expect(points.map(\.invisible) == [true, false, false, false, true])
         #expect(points.map(\.deletable) == [false, false, true, false, false])
         #expect(points.map(\.isWhitePoint) == [false, false, false, true, false])
+    }
+
+    @Test func levelsAndCurvesIdsFollowTheFlag() {
+        #expect(NitroAdjustment(.levelsCurves(NitroLevelsCurves(isCurves: false))).id == "Levels")
+        #expect(NitroAdjustment(.levelsCurves(NitroLevelsCurves(isCurves: true))).id == "Curves")
+    }
+
+    @Test func otherAdjustmentsHonourFlags() throws {
+        var adjustment = NitroAdjustment(id: "Tone", json: ["enabled": true, "numeric": ["exposure": 0.5]])
+        #expect(adjustment.isEnabled)
+        adjustment.isEnabled = false
+        #expect(adjustment.json["enabled"] == false)
+        #expect(adjustment.json["numeric"]?["exposure"] == 0.5)
     }
 
     @Test func rejectsMalformedPresets() {

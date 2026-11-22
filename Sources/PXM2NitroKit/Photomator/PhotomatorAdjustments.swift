@@ -65,8 +65,8 @@ public struct PhotomatorAdjustments: Sendable, Equatable {
 
     /// Decodes the raw `ColorAdjustmentData` bytes: `[version, {…}]` JSON.
     public init(data: Data) throws {
-        guard case .array(let items) = try JSONDecoder().decode(JSONValue.self, from: data),
-              items.count == 2, let version = items[0].doubleValue.flatMap({ Int(exactly: $0) }),
+        guard case .array(let items) = try JSONValue(data: data),
+              items.count == 2, let version = items[0].intValue,
               let root = items[1].unwrappingVersionContainers().objectValue
         else {
             throw PhotomatorError.malformedAdjustmentData

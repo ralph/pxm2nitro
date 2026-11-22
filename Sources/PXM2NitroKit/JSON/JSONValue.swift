@@ -19,6 +19,11 @@ public enum JSONValue: Sendable, Equatable {
         if case .number(let value) = self { value } else { nil }
     }
 
+    /// The number as an `Int`, if it is integral and in range.
+    public var intValue: Int? {
+        doubleValue.flatMap { Int(exactly: $0) }
+    }
+
     public var boolValue: Bool? {
         if case .bool(let value) = self { value } else { nil }
     }

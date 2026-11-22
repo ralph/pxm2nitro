@@ -12,6 +12,10 @@ public enum NitroError: Error, Equatable, CustomStringConvertible {
 
 /// A Nitro preset (`.nitropreset`): JSON with one edit version whose `adjDataArr` holds
 /// each adjustment as a *string-encoded* JSON object. See `docs/nitro-format.md` §1.
+///
+/// Write-oriented: reading keeps the name, decoder version and the adjustments of the current
+/// edit version. Masks, other versions and the remaining edit-model fields are not preserved;
+/// `encoded()` writes Nitro's constants for them.
 public struct NitroPreset: Sendable, Equatable {
     public static let fileExtension = "nitropreset"
     /// RAW decoder version Nitro writes for its current ("v9") decoder.
@@ -35,7 +39,7 @@ public struct NitroPreset: Sendable, Equatable {
               let editModel = root["editModel"],
               let versions = editModel["versions"]?.arrayValue
         else { throw NitroError.malformedPreset("missing name or editModel.versions") }
-        let index = Int(exactly: editModel["currentVersionIndex"]?.doubleValue ?? 0) ?? 0
+        let index = editModel["currentVersionIndex"]?.intValue ?? 0
         guard versions.indices.contains(index), let entries = versions[index]["adjDataArr"]?.arrayValue else {
             throw NitroError.malformedPreset("missing adjDataArr")
         }
