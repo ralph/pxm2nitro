@@ -7,19 +7,24 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-and-test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Swift version
+        id: swift
+        run: |
+          swift --version
+          echo "hash=$(swift --version 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         with:
           path: .build
-          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
-          restore-keys: spm-${{ runner.os }}-
+          key: spm-${{ runner.os }}-${{ steps.swift.outputs.hash }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-${{ steps.swift.outputs.hash }}-
       - name: Build
-        run: swift --version && swift build
+        run: swift build
       - name: Test
         run: swift test
