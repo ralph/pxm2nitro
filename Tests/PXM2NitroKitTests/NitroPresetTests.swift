@@ -41,15 +41,15 @@ struct NitroPresetTests {
         let preset = try NitroPreset(data: Data(contentsOf: Fixtures.nitroPreset("curves hsl channel mixer")))
         let contents = preset.adjustments.map(\.content)
 
-        let mixer = try #require(contents.compactMap { if case .channelMixer(let m) = $0 { m } else { nil } }.first)
+        let mixer = try #require(contents.compactMap(\.channelMixer).first)
         #expect(mixer.red == .init(red: 1, green: -0.29553092, blue: 0.23336692, bias: 0.03830644))
         #expect(mixer.green == .init(red: 0, green: 1, blue: 0))
 
-        let hsl = try #require(contents.compactMap { if case .hsl(let h) = $0 { h } else { nil } }.first)
+        let hsl = try #require(contents.compactMap(\.hsl).first)
         #expect(hsl[.orange].hueDelta == 12.730264)
         #expect(hsl[.lightBlue] == .init())
 
-        let curves = try #require(contents.compactMap { if case .levelsCurves(let c) = $0 { c } else { nil } }.first)
+        let curves = try #require(contents.compactMap(\.levelsCurves).first)
         #expect(curves.isCurves)
         #expect(curves.master.count == 6)
         #expect(curves.red == curves.channel())

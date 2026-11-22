@@ -8,9 +8,7 @@ struct ConverterTests {
     }
 
     private func levelsCurves(_ result: ConversionResult, curves: Bool) throws -> NitroLevelsCurves {
-        try #require(try contents(result).compactMap {
-            if case .levelsCurves(let data) = $0, data.isCurves == curves { data } else { nil }
-        }.first)
+        try #require(try contents(result).compactMap(\.levelsCurves).first { $0.isCurves == curves })
     }
 
     @Test func convertsRGBCurveToMasterChannel() throws {
@@ -68,9 +66,7 @@ struct ConverterTests {
 
     @Test func convertsChannelMixerRows() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("LS", "005"))
-        let mixer = try #require(try contents(result).compactMap {
-            if case .channelMixer(let mixer) = $0 { mixer } else { nil }
-        }.first)
+        let mixer = try #require(try contents(result).compactMap(\.channelMixer).first)
         #expect(mixer.red == NitroChannelMixer().red)
         #expect(mixer.blue == .init(red: -0.5, green: 1.5, blue: 0, bias: 0))
     }
@@ -90,9 +86,7 @@ struct ConverterTests {
         #expect(curves.master[1] == NitroCurvePoint(x: 0, y: 0.1))
         #expect(curves.master[2] == NitroCurvePoint(x: 0.5, y: 0.6, deletable: true))
 
-        let mixer = try #require(try contents(result).compactMap {
-            if case .channelMixer(let mixer) = $0 { mixer } else { nil }
-        }.first)
+        let mixer = try #require(try contents(result).compactMap(\.channelMixer).first)
         #expect(mixer.red == .init(red: 1.5, green: 0, blue: 0, bias: 0.2))
     }
 

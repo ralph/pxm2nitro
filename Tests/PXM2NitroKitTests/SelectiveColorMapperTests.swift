@@ -5,7 +5,7 @@ struct SelectiveColorMapperTests {
     private func hsl(_ adjustments: PhotomatorAdjustments) -> (NitroHSL?, [ConversionDiagnostic]) {
         var context = MappingContext(intensity: adjustments.intensity)
         let contents = SelectiveColorMapper.map(adjustments, context: &context)
-        let hsl = contents.compactMap { if case .hsl(let hsl) = $0 { hsl } else { nil } }.first
+        let hsl = contents.compactMap(\.hsl).first
         return (hsl, context.diagnostics)
     }
 
@@ -33,9 +33,9 @@ struct SelectiveColorMapperTests {
     @Test func scalesHueToDegreesAndAppliesIntensity() throws {
         let ranges = [range(hue: 0.5, saturation: 0.4)] + Array(repeating: range(), count: 7)
         let (full, _) = hsl(adjustments(ranges: ranges))
-        #expect(full?[.red].hueDelta == 0.5 * MappingConstants.selectiveColorHueDegreesPerUnit)
+        #expect(full?[.red].hueDelta == 0.5 * MappingConstants.SelectiveColor.hueDegreesPerUnit)
         let (half, _) = hsl(adjustments(ranges: ranges, intensity: 0.5))
-        #expect(half?[.red].hueDelta == 0.25 * MappingConstants.selectiveColorHueDegreesPerUnit)
+        #expect(half?[.red].hueDelta == 0.25 * MappingConstants.SelectiveColor.hueDegreesPerUnit)
         #expect(half?[.red].saturationDelta == 0.2)
     }
 
