@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>2440</integer>
+	<key>id</key>
+	<string>1A2F7FF5-A782-49B5-8A1F-81E134BDF098</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>My top 7 presets.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Super 7</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>0B83FF</string>
+		<key>PXTKitPresetsGroupIsColapsedKey</key>
+		<false/>
+		<key>PXTKitPresetsGroupIsRecents</key>
+		<false/>
+		<key>PXTKitPresetsGroupIsUnlocked</key>
+		<false/>
+		<key>PXTKitPresetsGroupIsUserCustom</key>
+		<false/>
+	</dict>
+	<key>name</key>
+	<string>🎞️</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>B9E766BD-4FD7-46C8-9F05-06DEB84B742A</string>
+		<string>E932C7F6-2B66-4AA1-9CA3-1F799782EF57</string>
+		<string>669DE271-5A3D-4796-B240-8780AE6C81A4</string>
+		<string>5296C173-06D8-49ED-8C60-E2F2C900FE3F</string>
+		<string>1B6E6E4E-4D0D-404D-9F50-E00F05B8025D</string>
+		<string>9AFFB012-9E41-4268-B678-364F15EF71CB</string>
+		<string>CB8BC35D-1437-45EA-87CC-547C09C1D725</string>
+		<string>7F1FFE63-6982-4690-9C19-CB99B62C12CA</string>
+		<string>7AF0D08B-E02D-4F15-9ED4-F729914D08A7</string>
+		<string>490F6593-BB11-46C3-8611-30349D27DF49</string>
+	</array>
+</dict>
+</plist>

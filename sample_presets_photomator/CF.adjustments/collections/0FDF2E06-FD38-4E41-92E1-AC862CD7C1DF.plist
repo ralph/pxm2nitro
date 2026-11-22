@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>1783</integer>
+	<key>id</key>
+	<string>0FDF2E06-FD38-4E41-92E1-AC862CD7C1DF</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>Before digital, there was analog.@newline And many analog films have become legendary for their visual qualities — these presets are based on some of the most well-known and popular analog films. This collection is great for portrait and lifestyle photography, adding a subtle and tasteful vintage look and feel.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Classic Films</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>59a6d7</string>
+	</dict>
+	<key>name</key>
+	<string>CF</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>228C5538-0DA8-4247-8DAB-713470D1FAF3</string>
+		<string>C8E784D0-6FC8-42FA-B327-D9D63D026B78</string>
+		<string>9490FDDB-C1CE-441A-866A-D7376F4A692B</string>
+		<string>3F00EE64-66DE-40F9-9A3B-9B3ED9A15357</string>
+		<string>ECB584BE-4AFF-45B5-912B-3D04EA956E2F</string>
+	</array>
+</dict>
+</plist>

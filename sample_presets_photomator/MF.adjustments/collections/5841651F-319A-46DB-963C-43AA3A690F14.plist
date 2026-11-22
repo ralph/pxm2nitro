@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>1698</integer>
+	<key>id</key>
+	<string>5841651F-319A-46DB-963C-43AA3A690F14</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>Many modern analog films are well regarded@newline for highlighting skin tones, creating pleasing outdoor shots, or having unique grain detail. This collection is based on some of the best films in production today — try them if you’re looking for a more clean and simple look, especially for portrait and nature photography.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Modern Films</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>f19a38</string>
+	</dict>
+	<key>name</key>
+	<string>MF</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>B864020A-51A1-4F71-B6B5-D48A5C5CAE21</string>
+		<string>05779157-1356-4937-A61B-1D7E05F24907</string>
+		<string>D8CCF420-AEBC-40C9-BBE6-7E37273E3DE0</string>
+		<string>4BD1E40A-5C56-44E9-8017-E1E9DC0DD919</string>
+		<string>DD8148BE-0628-4D06-BE97-992CB24F6661</string>
+		<string>5F508D35-A4C3-4BF9-8C49-A8F813E2C650</string>
+	</array>
+</dict>
+</plist>

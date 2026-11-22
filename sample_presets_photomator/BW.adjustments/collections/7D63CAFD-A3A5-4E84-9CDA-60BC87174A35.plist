@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>1625</integer>
+	<key>id</key>
+	<string>7D63CAFD-A3A5-4E84-9CDA-60BC87174A35</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>These black and white presets@newline are based on classic black and white films. The black and white look is very versatile and is great for artistic photography, landscapes, portraits, street photography, and many other styles. Especially when you want to add a little drama. Some presets apply film-style grain to create an old-school film feel, others increase contrast for a more striking look.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Black &amp; White</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>fdfdfd</string>
+	</dict>
+	<key>name</key>
+	<string>BW</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>D8AFB15B-07BF-4FF8-9B4C-C84177C7F391</string>
+		<string>25980DAD-4C3C-40C0-A8D9-49B5A775B6BD</string>
+		<string>A0D93CF5-6B81-4120-AC6B-A215351A7819</string>
+		<string>60965571-B5B7-44A3-8B66-943A995F8573</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>1796</integer>
+	<key>id</key>
+	<string>D0BDF0F9-D2FA-4830-B2C9-00A2C0AE81F4</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>This collection of presets for landscape photography@newline is designed to boost colors and bring out details in photographs of nature — especially in shots with lots of greens and blues. Along with color changes, the presets also increase contrast for a more striking and eye-catching look.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Landscape</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>b7e860</string>
+	</dict>
+	<key>name</key>
+	<string>LS</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>19EEE6AC-90DF-47F2-91B5-44B48EA4154A</string>
+		<string>53330894-7DF6-4B0A-88BF-6A1EEE5E5280</string>
+		<string>8A0FCE97-15E7-43B5-A6E2-BCB42C86B4E7</string>
+		<string>631D87C4-0C17-4A5B-A628-8D599066588F</string>
+		<string>7609E40D-23BB-4BA2-88C4-4DEFC0E500CF</string>
+	</array>
+</dict>
+</plist>
