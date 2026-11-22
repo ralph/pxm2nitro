@@ -10,7 +10,11 @@ enum SelectiveColorMapper: BlockMapper {
     static let colors: [NitroHSLColor] = [.red, .orange, .yellow, .green, .cyan, .blue, .purple, .magenta]
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
-        guard let ranges = adjustments.selectiveColor else { return [] }
+        guard adjustments.enabledBlock(block) != nil else { return [] }
+        guard let ranges = adjustments.selectiveColor else {
+            context.report(.skipped, block, "the colour ranges (`a`) are missing or not an array")
+            return []
+        }
         if ranges.count != colors.count {
             context.report(.skipped, block, "expected \(colors.count) colour ranges, found \(ranges.count)")
             return []
@@ -22,9 +26,17 @@ enum SelectiveColorMapper: BlockMapper {
         }
         hsl[.lightBlue] = .average(hsl[.cyan], hsl[.blue])
 
-        guard hsl != NitroHSL() else { return [] }
+        guard !isNeutral(hsl) else { return [] }
         context.reportUncalibrated(block, "hue, saturation and brightness")
         return [.hsl(hsl)]
+    }
+
+    static func isNeutral(_ hsl: NitroHSL) -> Bool {
+        NitroHSLColor.allCases.allSatisfy { color in
+            let values = hsl[color]
+            return [values.hueDelta, values.saturationDelta, values.lumaDelta, values.range]
+                .allSatisfy { isNearlyEqual($0, 0) }
+        }
     }
 
     static func values(for range: SelectiveColorRange, context: MappingContext) -> NitroHSL.Values {

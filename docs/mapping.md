@@ -115,7 +115,7 @@ the master between luminance ("Grau") and RGB.
 - `brightness` → `lumaDelta_<c>` = k_lum · brightness.
 - `range_<c>` = 0 (Nitro default; Photomator has no per-colour range).
 - Nitro has an extra `lightBlue` swatch. Options: (a) leave it at 0, (b) average cyan and blue.
-  Recommendation: (b), configurable.
+  Implemented: (b), always. Making it configurable is a later option.
   ❓ The hue centres of both apps decide which is better (calibration request).
 
 ### 2.3 Color Balance (`B`): opt-in only

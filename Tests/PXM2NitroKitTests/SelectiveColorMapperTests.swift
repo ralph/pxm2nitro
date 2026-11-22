@@ -45,6 +45,19 @@ struct SelectiveColorMapperTests {
         #expect(diagnostics.isEmpty)
     }
 
+    @Test func missingRangesAreSkipped() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: ["in": 1, "ca": ["E": 1]])
+        let (result, diagnostics) = hsl(adjustments)
+        #expect(result == nil)
+        #expect(diagnostics.map(\.kind) == [.skipped])
+    }
+
+    @Test func nearlyNeutralRangesProduceNothing() {
+        let (result, diagnostics) = hsl(adjustments(ranges: Array(repeating: range(saturation: 1e-9), count: 8)))
+        #expect(result == nil)
+        #expect(diagnostics.isEmpty)
+    }
+
     @Test func unexpectedRangeCountIsSkipped() {
         let (result, diagnostics) = hsl(adjustments(ranges: [range(saturation: 0.5)]))
         #expect(result == nil)
