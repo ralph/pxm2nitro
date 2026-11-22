@@ -13,10 +13,21 @@ enum Fixtures {
         repositoryRoot.appending(path: "sample_presets_photomator/\(name).adjustments")
     }
 
+    /// Every sample package, loaded once per test run.
+    /// A load error is kept so it fails the tests that use the package instead of crashing the run.
+    static let photomatorPackages: [String: Result<LoadedPackage, any Error>] = Dictionary(
+        uniqueKeysWithValues: ["BW", "CF", "LS", "MF", "filmic"].map { name in
+            (name, Result { try AdjustmentsPackage.load(from: photomatorPackage(name)) })
+        })
+
+    /// The presets of `sample_presets_photomator/<package>.adjustments`.
+    static func photomatorPresets(_ package: String) throws -> [PhotomatorPreset] {
+        try #require(photomatorPackages[package]).get().presets
+    }
+
     /// The preset named `presetName` from `sample_presets_photomator/<package>.adjustments`.
     static func photomatorPreset(_ package: String, _ presetName: String) throws -> PhotomatorPreset {
-        try #require(try AdjustmentsPackage.load(from: photomatorPackage(package))
-            .presets.first { $0.name == presetName })
+        try #require(try photomatorPresets(package).first { $0.name == presetName })
     }
 
     /// Decoded `ColorAdjustmentData` of a sample preset.

@@ -18,7 +18,7 @@ struct InspectCommand: ParsableCommand {
             do {
                 package = try AdjustmentsPackage.load(from: URL(filePath: path))
             } catch {
-                FileHandle.standardError.write(Data("error: \(error)\n".utf8))
+                printError("\(path): \(error)")
                 hadError = true
                 continue
             }

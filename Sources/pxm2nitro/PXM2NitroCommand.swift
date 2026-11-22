@@ -7,6 +7,6 @@ struct PXM2NitroCommand: ParsableCommand {
         commandName: "pxm2nitro",
         abstract: "Convert Photomator / Pixelmator Pro adjustment presets to Nitro presets.",
         version: PXM2Nitro.version,
-        subcommands: [InspectCommand.self]
+        subcommands: [ConvertCommand.self, InspectCommand.self]
     )
 }
