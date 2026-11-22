@@ -23,6 +23,32 @@ public enum PhotomatorBlock: String, CaseIterable, Sendable {
     case vignette = "v"
     case grain = "g"
     case lut = "cL"
+
+    /// Name of the adjustment as shown in Photomator.
+    public var displayName: String {
+        switch self {
+        case .light: "Light"
+        case .fade: "Fade"
+        case .whiteBalance: "White Balance"
+        case .hueSaturation: "Color"
+        case .levels: "Levels"
+        case .curves: "Curves"
+        case .sharpen: "Sharpen"
+        case .selectiveClarity: "Selective Clarity"
+        case .colorBalance: "Color Balance"
+        case .selectiveColor: "Selective Color"
+        case .replaceColor: "Replace Color"
+        case .removeColor: "Remove Color"
+        case .channelMixer: "Channel Mixer"
+        case .colorMonochrome: "Color Monochrome"
+        case .blackAndWhite: "Black & White"
+        case .sepia: "Sepia"
+        case .invert: "Invert"
+        case .vignette: "Vignette"
+        case .grain: "Grain"
+        case .lut: "LUT"
+        }
+    }
 }
 
 /// Decoded `ColorAdjustmentData` with all version containers removed.
@@ -32,16 +58,20 @@ public struct PhotomatorAdjustments: Sendable, Equatable {
     /// Root object after unwrapping; block payloads are keyed by `PhotomatorBlock.rawValue`.
     public let root: [String: JSONValue]
 
+    public init(formatVersion: Int, root: [String: JSONValue]) {
+        self.formatVersion = formatVersion
+        self.root = root
+    }
+
+    /// Decodes the raw `ColorAdjustmentData` bytes: `[version, {…}]` JSON.
     public init(data: Data) throws {
-        let raw = try JSONDecoder().decode(JSONValue.self, from: data)
-        guard case .array(let items) = raw, items.count == 2,
-              let version = items[0].doubleValue,
-              case .object(let root) = raw.unwrappingVersionContainers()
+        guard case .array(let items) = try JSONDecoder().decode(JSONValue.self, from: data),
+              items.count == 2, let version = items[0].doubleValue,
+              let root = items[1].unwrappingVersionContainers().objectValue
         else {
             throw PhotomatorError.malformedAdjustmentData
         }
-        self.formatVersion = Int(version)
-        self.root = root
+        self.init(formatVersion: Int(version), root: root)
     }
 
     /// Preset intensity (`in`), 0…1. Defaults to 1.
@@ -63,20 +93,45 @@ public struct PhotomatorAdjustments: Sendable, Equatable {
 
 // MARK: - Typed blocks
 
+/// Per-channel values of Curves and Levels. A `nil` channel was not edited (identity).
+public struct ColorChannels<Value: Sendable & Equatable>: Sendable, Equatable {
+    public var rgb: Value?
+    public var red: Value?
+    public var green: Value?
+    public var blue: Value?
+    public var luminance: Value?
+
+    public init(rgb: Value? = nil, red: Value? = nil, green: Value? = nil,
+                blue: Value? = nil, luminance: Value? = nil) {
+        self.rgb = rgb
+        self.red = red
+        self.green = green
+        self.blue = blue
+        self.luminance = luminance
+    }
+
+    init(_ block: [String: JSONValue], parse: (JSONValue) -> Value?) {
+        func value(_ key: String) -> Value? { block[key].flatMap(parse) }
+        self.init(rgb: value("rgb"), red: value("r"), green: value("g"),
+                  blue: value("b"), luminance: value("l"))
+    }
+}
+
 public struct CurvePoint: Sendable, Equatable {
     public var x: Double
     public var y: Double
+
+    public init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
+    }
 }
 
-/// Curves (`C`). Each channel is a list of control points in 0…1, sorted by x.
-public struct PhotomatorCurves: Sendable, Equatable {
-    public var rgb: [CurvePoint]
-    public var red: [CurvePoint]
-    public var green: [CurvePoint]
-    public var blue: [CurvePoint]
-    public var luminance: [CurvePoint]
+/// Curves (`C`): control points in 0…1, sorted by x, per channel.
+public typealias PhotomatorCurves = ColorChannels<[CurvePoint]>
 
-    public static let identity = [CurvePoint(x: 0, y: 0), CurvePoint(x: 1, y: 1)]
+public extension ColorChannels where Value == [CurvePoint] {
+    static var identityCurve: [CurvePoint] { [CurvePoint(x: 0, y: 0), CurvePoint(x: 1, y: 1)] }
 }
 
 /// The five input handles of one Levels channel.
@@ -86,19 +141,10 @@ public struct LevelsHandles: Sendable, Equatable {
     public var gray: Double
     public var midOfGrayAndWhite: Double
     public var white: Double
-
-    public static let identity = LevelsHandles(
-        black: 0, midOfBlackAndGray: 0.25, gray: 0.5, midOfGrayAndWhite: 0.75, white: 1)
 }
 
-/// Levels (`L`). Channels that were never edited are absent and mean identity.
-public struct PhotomatorLevels: Sendable, Equatable {
-    public var rgb: LevelsHandles?
-    public var red: LevelsHandles?
-    public var green: LevelsHandles?
-    public var blue: LevelsHandles?
-    public var luminance: LevelsHandles?
-}
+/// Levels (`L`).
+public typealias PhotomatorLevels = ColorChannels<LevelsHandles>
 
 /// One output channel of the channel mixer.
 public struct ChannelMixerRow: Sendable, Equatable {
@@ -108,12 +154,8 @@ public struct ChannelMixerRow: Sendable, Equatable {
     public var constant: Double
 }
 
-/// Channel Mixer (`m`). Absent rows are not stored by Photomator.
-public struct PhotomatorChannelMixer: Sendable, Equatable {
-    public var red: ChannelMixerRow?
-    public var green: ChannelMixerRow?
-    public var blue: ChannelMixerRow?
-}
+/// Channel Mixer (`m`): output rows `red`, `green`, `blue`; absent rows were not edited.
+public typealias PhotomatorChannelMixer = ColorChannels<ChannelMixerRow>
 
 /// One of the eight Selective Color ranges.
 public struct SelectiveColorRange: Sendable, Equatable {
@@ -122,69 +164,57 @@ public struct SelectiveColorRange: Sendable, Equatable {
     public var brightness: Double
 }
 
-/// Selective Color (`ca`): eight ranges in UI order
-/// red, orange, yellow, green, cyan, blue, violet, magenta.
-public struct PhotomatorSelectiveColor: Sendable, Equatable {
-    public var ranges: [SelectiveColorRange]
-}
-
 extension PhotomatorAdjustments {
     public var curves: PhotomatorCurves? {
-        guard let block = enabledBlock(.curves) else { return nil }
-        func channel(_ key: String) -> [CurvePoint] {
-            let points = block[key]?["p"]?.arrayValue?.compactMap { pair -> CurvePoint? in
-                guard let xy = pair.arrayValue, xy.count == 2,
-                      let x = xy[0].doubleValue, let y = xy[1].doubleValue
-                else { return nil }
-                return CurvePoint(x: x, y: y)
+        enabledBlock(.curves).map {
+            ColorChannels($0) { channel in
+                channel["p"]?.arrayValue?.compactMap { pair in
+                    guard let xy = pair.arrayValue, xy.count == 2,
+                          let x = xy[0].doubleValue, let y = xy[1].doubleValue
+                    else { return nil }
+                    return CurvePoint(x: x, y: y)
+                }
             }
-            return points ?? PhotomatorCurves.identity
         }
-        return PhotomatorCurves(
-            rgb: channel("rgb"), red: channel("r"), green: channel("g"),
-            blue: channel("b"), luminance: channel("l"))
     }
 
     public var levels: PhotomatorLevels? {
-        guard let block = enabledBlock(.levels) else { return nil }
-        func channel(_ key: String) -> LevelsHandles? {
-            guard let handles = block[key]?.objectValue,
-                  let black = handles["black"]?.doubleValue,
-                  let white = handles["white"]?.doubleValue
-            else { return nil }
-            let identity = LevelsHandles.identity
-            return LevelsHandles(
-                black: black,
-                midOfBlackAndGray: handles["midOfBlackAndGray"]?.doubleValue ?? identity.midOfBlackAndGray,
-                gray: handles["gray"]?.doubleValue ?? identity.gray,
-                midOfGrayAndWhite: handles["midOfGrayAndWhite"]?.doubleValue ?? identity.midOfGrayAndWhite,
-                white: white)
+        enabledBlock(.levels).map {
+            ColorChannels($0) { channel in
+                guard let black = channel["black"]?.doubleValue,
+                      let white = channel["white"]?.doubleValue
+                else { return nil }
+                return LevelsHandles(
+                    black: black,
+                    midOfBlackAndGray: channel["midOfBlackAndGray"]?.doubleValue ?? 0.25,
+                    gray: channel["gray"]?.doubleValue ?? 0.5,
+                    midOfGrayAndWhite: channel["midOfGrayAndWhite"]?.doubleValue ?? 0.75,
+                    white: white)
+            }
         }
-        return PhotomatorLevels(
-            rgb: channel("rgb"), red: channel("r"), green: channel("g"),
-            blue: channel("b"), luminance: channel("l"))
     }
 
     public var channelMixer: PhotomatorChannelMixer? {
-        guard let block = enabledBlock(.channelMixer) else { return nil }
-        func row(_ key: String) -> ChannelMixerRow? {
-            guard let row = block[key]?.objectValue else { return nil }
-            return ChannelMixerRow(
-                red: row["red"]?.doubleValue ?? 0,
-                green: row["green"]?.doubleValue ?? 0,
-                blue: row["blue"]?.doubleValue ?? 0,
-                constant: row["constant"]?.doubleValue ?? 0)
+        enabledBlock(.channelMixer).map {
+            ColorChannels($0) { row in
+                guard row.objectValue != nil else { return nil }
+                return ChannelMixerRow(
+                    red: row["red"]?.doubleValue ?? 0,
+                    green: row["green"]?.doubleValue ?? 0,
+                    blue: row["blue"]?.doubleValue ?? 0,
+                    constant: row["constant"]?.doubleValue ?? 0)
+            }
         }
-        return PhotomatorChannelMixer(red: row("r"), green: row("g"), blue: row("b"))
     }
 
-    public var selectiveColor: PhotomatorSelectiveColor? {
-        guard let entries = enabledBlock(.selectiveColor)?["a"]?.arrayValue else { return nil }
-        return PhotomatorSelectiveColor(ranges: entries.map { entry in
+    /// Selective Color (`ca`): eight ranges in UI order
+    /// red, orange, yellow, green, cyan, blue, violet, magenta.
+    public var selectiveColor: [SelectiveColorRange]? {
+        enabledBlock(.selectiveColor)?["a"]?.arrayValue?.map { entry in
             SelectiveColorRange(
                 hue: entry["hue"]?.doubleValue ?? 0,
                 saturation: entry["saturation"]?.doubleValue ?? 0,
                 brightness: entry["brightness"]?.doubleValue ?? 0)
-        })
+        }
     }
 }

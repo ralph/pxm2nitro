@@ -22,6 +22,24 @@ public struct PhotomatorPreset: Sendable, Equatable {
     public let adjustments: PhotomatorAdjustments?
     /// Keys of preset properties other than `ColorAdjustmentData` (not converted).
     public let otherPropertyKeys: [String]
+
+    /// "Collection / Name", or just the name.
+    public var title: String {
+        [collectionName, name].compactMap { $0 }.joined(separator: " / ")
+    }
+}
+
+/// A preset file that could not be read; the rest of the package still loads.
+public struct PresetLoadFailure: Sendable {
+    public let file: URL
+    public let collectionName: String?
+    public let reason: String
+}
+
+/// The readable presets of a package plus the files that failed.
+public struct LoadedPackage: Sendable {
+    public let presets: [PhotomatorPreset]
+    public let failures: [PresetLoadFailure]
 }
 
 /// Reads a `.adjustments` package (or the `Adjustments.library` inside Photomator.app):
@@ -33,75 +51,73 @@ public enum AdjustmentsPackage {
     static let colorAdjustmentDataKey = "ColorAdjustmentData"
 
     /// Loads all presets, in collection order and then in each collection's display order.
-    /// Presets not referenced by any collection follow, sorted by name.
-    public static func load(from url: URL) throws -> [PhotomatorPreset] {
+    /// Presets not referenced by any collection follow, sorted by file name.
+    /// Throws only if `url` is not a package; unreadable presets end up in `failures`.
+    public static func load(from url: URL) throws -> LoadedPackage {
         let presetsDirectory = url.appending(path: "presets", directoryHint: .isDirectory)
         guard FileManager.default.fileExists(atPath: presetsDirectory.path) else {
             throw PhotomatorError.notAPackage(url)
         }
 
-        var listed: [(id: String, collection: String)] = []
+        var remaining = try plistFilesByID(in: presetsDirectory)
+        var order: [(file: URL, collection: String?)] = []
         for collection in try collections(in: url) {
-            listed += collection.presetsList.map { ($0, collection.name) }
-        }
-
-        let presetFiles = try FileManager.default
-            .contentsOfDirectory(at: presetsDirectory, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "plist" }
-        let filesByID = Dictionary(
-            presetFiles.map { ($0.deletingPathExtension().lastPathComponent, $0) },
-            uniquingKeysWith: { first, _ in first })
-
-        var presets: [PhotomatorPreset] = []
-        var seen = Set<String>()
-        for entry in listed {
-            guard let file = filesByID[entry.id], seen.insert(entry.id).inserted else { continue }
-            presets.append(try loadPreset(from: file, collectionName: entry.collection))
-        }
-        let orphans = try filesByID
-            .filter { !seen.contains($0.key) }
-            .map { try loadPreset(from: $0.value, collectionName: nil) }
-            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        return presets + orphans
-    }
-
-    static func loadPreset(from url: URL, collectionName: String?) throws -> PhotomatorPreset {
-        let plist = try PropertyListDecoder().decode(PresetPlist.self, from: Data(contentsOf: url))
-        var adjustments: PhotomatorAdjustments?
-        var otherKeys: [String] = []
-        for property in plist.properties {
-            if property.key == colorAdjustmentDataKey, let data = property.data {
-                adjustments = try PhotomatorAdjustments(data: data)
-            } else {
-                otherKeys.append(property.key)
+            for id in collection.presetsList {
+                if let file = remaining.removeValue(forKey: id) {
+                    order.append((file, collection.name))
+                }
             }
         }
-        return PhotomatorPreset(
-            id: plist.id, name: plist.name, collectionName: collectionName,
-            adjustments: adjustments, otherPropertyKeys: otherKeys)
+        order += remaining.sorted { $0.key < $1.key }.map { ($0.value, nil) }
+
+        var presets: [PhotomatorPreset] = []
+        var failures: [PresetLoadFailure] = []
+        for (file, collection) in order {
+            do {
+                presets.append(try loadPreset(from: file, collectionName: collection))
+            } catch {
+                failures.append(PresetLoadFailure(file: file, collectionName: collection, reason: "\(error)"))
+            }
+        }
+        return LoadedPackage(presets: presets, failures: failures)
     }
 
-    /// Collections in library order; falls back to directory order if the library info is missing.
+    /// Loads a single `presets/<UUID>.plist` file.
+    public static func loadPreset(from url: URL, collectionName: String? = nil) throws -> PhotomatorPreset {
+        let plist = try PropertyListDecoder().decode(PresetPlist.self, from: Data(contentsOf: url))
+        let adjustments = try plist.properties
+            .first { $0.key == colorAdjustmentDataKey }?.data
+            .map(PhotomatorAdjustments.init(data:))
+        return PhotomatorPreset(
+            id: plist.id, name: plist.name, collectionName: collectionName,
+            adjustments: adjustments,
+            otherPropertyKeys: plist.properties.map(\.key).filter { $0 != colorAdjustmentDataKey })
+    }
+
+    /// Collections in library order; falls back to file-name order if the library info is missing.
     static func collections(in url: URL) throws -> [CollectionPlist] {
         let directory = url.appending(path: "collections", directoryHint: .isDirectory)
         guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+        let files = try plistFilesByID(in: directory)
         let decoder = PropertyListDecoder()
 
-        let infoURL = url.appending(path: "Adjustments-LibraryInfo.plist")
         let ids: [String]
-        if let data = try? Data(contentsOf: infoURL) {
-            ids = try decoder.decode(LibraryInfoPlist.self, from: data).collectionsList
+        if let info = try? Data(contentsOf: url.appending(path: "Adjustments-LibraryInfo.plist")) {
+            ids = try decoder.decode(LibraryInfoPlist.self, from: info).collectionsList
         } else {
-            ids = try FileManager.default.contentsOfDirectory(atPath: directory.path)
-                .filter { $0.hasSuffix(".plist") }
-                .map { String($0.dropLast(".plist".count)) }
-                .sorted()
+            ids = files.keys.sorted()
         }
-        return try ids.compactMap { id in
-            let file = directory.appending(path: "\(id).plist")
-            guard let data = try? Data(contentsOf: file) else { return nil }
-            return try decoder.decode(CollectionPlist.self, from: data)
+        return try ids.compactMap { files[$0] }.map {
+            try decoder.decode(CollectionPlist.self, from: Data(contentsOf: $0))
         }
+    }
+
+    /// `*.plist` files in a directory, keyed by file name without extension (the UUID).
+    static func plistFilesByID(in directory: URL) throws -> [String: URL] {
+        let files = try FileManager.default
+            .contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "plist" }
+        return Dictionary(uniqueKeysWithValues: files.map { ($0.deletingPathExtension().lastPathComponent, $0) })
     }
 }
 

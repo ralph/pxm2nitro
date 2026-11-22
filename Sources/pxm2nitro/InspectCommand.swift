@@ -13,16 +13,15 @@ struct InspectCommand: ParsableCommand {
 
     func run() throws {
         for path in packages {
-            let presets = try AdjustmentsPackage.load(from: URL(filePath: path))
-            print("\(path): \(presets.count) preset(s)")
-            for preset in presets {
-                let title = [preset.collectionName, preset.name].compactMap { $0 }.joined(separator: " / ")
+            let package = try AdjustmentsPackage.load(from: URL(filePath: path))
+            print("\(path): \(package.presets.count) preset(s)")
+            for preset in package.presets {
                 guard let adjustments = preset.adjustments else {
-                    print("  \(title): no colour adjustments")
+                    print("  \(preset.title): no colour adjustments")
                     continue
                 }
-                let blocks = adjustments.enabledBlocks.map { "\($0)" }.joined(separator: ", ")
-                var line = "  \(title) [v\(adjustments.formatVersion)]: \(blocks)"
+                let blocks = adjustments.enabledBlocks.map(\.displayName).joined(separator: ", ")
+                var line = "  \(preset.title) [v\(adjustments.formatVersion)]: \(blocks)"
                 if adjustments.intensity != 1 {
                     line += " (intensity \(adjustments.intensity))"
                 }
@@ -30,6 +29,9 @@ struct InspectCommand: ParsableCommand {
                 if !preset.otherPropertyKeys.isEmpty {
                     print("    other properties: \(preset.otherPropertyKeys.joined(separator: ", "))")
                 }
+            }
+            for failure in package.failures {
+                print("  ⚠️ \(failure.file.lastPathComponent): \(failure.reason)")
             }
         }
     }

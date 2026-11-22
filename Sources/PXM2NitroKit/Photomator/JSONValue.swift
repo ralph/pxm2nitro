@@ -26,7 +26,7 @@ public enum JSONValue: Sendable, Equatable {
 
     /// Photomator stores flags as `0`/`1` in compact containers and as `true`/`false`
     /// in verbose ones.
-    public var isTruthy: Bool {
+    var isTruthy: Bool {
         switch self {
         case .bool(let value): value
         case .number(let value): value != 0
@@ -37,7 +37,7 @@ public enum JSONValue: Sendable, Equatable {
     /// Removes PTFoundation's version containers recursively. Two styles exist:
     /// compact `[version, {…}]` and verbose `{"version": v, "versionSpecifiContainer": {…}}`
     /// (sic: "Specifi").
-    public func unwrappingVersionContainers() -> JSONValue {
+    func unwrappingVersionContainers() -> JSONValue {
         switch self {
         case .array(let items):
             if items.count == 2, case .number = items[0], case .object = items[1] {
