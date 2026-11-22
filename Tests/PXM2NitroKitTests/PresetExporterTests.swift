@@ -40,7 +40,9 @@ struct PresetExporterTests {
         let preset = try Fixtures.photomatorPreset("BW", "001")
 
         _ = try exporter.export(preset)
-        #expect(try exporter.export(preset).outcome == .written(directory.appending(path: "BW 001 2.nitropreset")))
+        let second = directory.appending(path: "BW 001 2.nitropreset")
+        #expect(try exporter.export(preset).outcome == .written(second))
+        #expect(try NitroPreset(data: Data(contentsOf: second)).name == "BW 001 2")
     }
 
     @Test func skipsPresetsWithNothingToConvert() throws {
@@ -55,5 +57,9 @@ struct PresetExporterTests {
 
     @Test func sanitisesFileNames() {
         #expect(PresetExporter.fileName(for: "A/B: C") == "A-B- C.nitropreset")
+        #expect(PresetExporter.fileName(for: ".hidden") == "hidden.nitropreset")
+        #expect(PresetExporter.fileName(for: "  ") == "Untitled.nitropreset")
+        #expect(PresetExporter.fileName(for: String(repeating: "x", count: 300)).utf8.count
+            == PresetExporter.maxStemLength + ".nitropreset".utf8.count)
     }
 }

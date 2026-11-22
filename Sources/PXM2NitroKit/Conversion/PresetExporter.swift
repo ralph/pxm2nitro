@@ -31,10 +31,12 @@ public struct PresetExporter {
     /// exists (and `overwrite` is off).
     public mutating func export(_ preset: PhotomatorPreset) throws -> Entry {
         let result = Converter.convert(preset)
-        guard let nitro = result.preset else {
+        guard var nitro = result.preset else {
             return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .nothingToConvert)
         }
-        let file = outputDirectory.appending(path: uniqueFileName(for: nitro.name))
+        // Keep the name shown in Nitro in step with the (de-duplicated) file name.
+        nitro.name = uniqueName(for: nitro.name)
+        let file = outputDirectory.appending(path: Self.fileName(for: nitro.name))
         if !overwrite, FileManager.default.fileExists(atPath: file.path) {
             return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .fileExists(file))
         }
@@ -43,20 +45,29 @@ public struct PresetExporter {
         return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .written(file))
     }
 
-    /// `<name>.nitropreset` with path separators replaced.
+    /// Longest file name stem in UTF-8 bytes, leaving room for the extension and a counter
+    /// within the usual 255-byte file name limit.
+    static let maxStemLength = 200
+
+    /// `<name>.nitropreset` with path separators replaced. Leading dots (which would hide
+    /// the file) are dropped, an empty name becomes "Untitled", and long names are shortened.
     public static func fileName(for presetName: String) -> String {
-        let safe = presetName
+        var safe = presetName
             .replacingOccurrences(of: "/", with: "-")
             .replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        while safe.hasPrefix(".") { safe.removeFirst() }
+        if safe.isEmpty { safe = "Untitled" }
+        while safe.utf8.count > maxStemLength { safe.removeLast() }
         return "\(safe).\(NitroPreset.fileExtension)"
     }
 
-    /// Appends " 2", " 3", … if another preset of this export already used the name.
-    private mutating func uniqueFileName(for presetName: String) -> String {
-        var candidate = Self.fileName(for: presetName)
+    /// Appends " 2", " 3", … if another preset of this export already used the file name.
+    private mutating func uniqueName(for presetName: String) -> String {
+        var candidate = presetName
         var counter = 2
-        while !usedFileNames.insert(candidate.lowercased()).inserted {
-            candidate = Self.fileName(for: "\(presetName) \(counter)")
+        while !usedFileNames.insert(Self.fileName(for: candidate).lowercased()).inserted {
+            candidate = "\(presetName) \(counter)"
             counter += 1
         }
         return candidate

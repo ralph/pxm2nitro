@@ -96,6 +96,26 @@ struct ConverterTests {
         #expect(mixer.red == .init(red: 1.5, green: 0, blue: 0, bias: 0.2))
     }
 
+    @Test func zeroIntensityCurvesAreNotWritten() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "in": 0,
+            "C": ["E": 1, "rgb": ["p": [[0, 0.2], [0.5, 0.7], [1, 1]]]],
+        ])
+        let preset = PhotomatorPreset(id: "x", name: "Zero", collectionName: nil,
+                                      adjustments: adjustments, otherPropertyKeys: [])
+        #expect(Converter.convert(preset).preset == nil)
+    }
+
+    @Test func warnsAboutParametricCurveSliders() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "C": ["E": 1, "rgb": ["p": [[0, 0], [1, 1]], "d": 0.3, "l": 0, "s": 0, "h": -0.1]],
+        ])
+        let preset = PhotomatorPreset(id: "x", name: "Sliders", collectionName: nil,
+                                      adjustments: adjustments, otherPropertyKeys: [])
+        let diagnostics = Converter.convert(preset).diagnostics
+        #expect(diagnostics.contains { $0.kind == .skipped && $0.block == .curves && $0.message.contains("d, h") })
+    }
+
     @Test func presetWithoutConvertibleBlocksYieldsNothing() {
         let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
             "l": ["E": 1, "e": 0.3],

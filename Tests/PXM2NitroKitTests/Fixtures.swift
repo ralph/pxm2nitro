@@ -14,15 +14,15 @@ enum Fixtures {
     }
 
     /// Every sample package, loaded once per test run.
-    static let photomatorPackages: [String: LoadedPackage] = Dictionary(
+    /// A load error is kept so it fails the tests that use the package instead of crashing the run.
+    static let photomatorPackages: [String: Result<LoadedPackage, any Error>] = Dictionary(
         uniqueKeysWithValues: ["BW", "CF", "LS", "MF", "filmic"].map { name in
-            // swiftlint:disable:next force_try
-            (name, try! AdjustmentsPackage.load(from: photomatorPackage(name)))
+            (name, Result { try AdjustmentsPackage.load(from: photomatorPackage(name)) })
         })
 
     /// The presets of `sample_presets_photomator/<package>.adjustments`.
     static func photomatorPresets(_ package: String) throws -> [PhotomatorPreset] {
-        try #require(photomatorPackages[package]).presets
+        try #require(photomatorPackages[package]).get().presets
     }
 
     /// The preset named `presetName` from `sample_presets_photomator/<package>.adjustments`.

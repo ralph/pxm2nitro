@@ -26,10 +26,16 @@ public enum Converter {
     }
 
     public static func convert(_ preset: PhotomatorPreset) -> ConversionResult {
+        func reportOtherProperties(_ context: inout MappingContext) {
+            for key in preset.otherPropertyKeys {
+                context.report(.skipped, nil, "preset property \(key) is not converted")
+            }
+        }
         guard let adjustments = preset.adjustments else {
-            return ConversionResult(preset: nil, diagnostics: [
-                ConversionDiagnostic(.skipped, nil, "the preset has no colour adjustments"),
-            ])
+            var context = MappingContext(intensity: 1)
+            context.report(.skipped, nil, "the preset has no colour adjustments")
+            reportOtherProperties(&context)
+            return ConversionResult(preset: nil, diagnostics: context.diagnostics)
         }
         var context = MappingContext(intensity: adjustments.intensity)
         let contents = mappers.flatMap { $0.map(adjustments, context: &context) }
@@ -38,9 +44,7 @@ public enum Converter {
         for block in adjustments.enabledBlocks where !supported.contains(block) {
             context.report(.skipped, block, "no Nitro equivalent is implemented yet")
         }
-        for key in preset.otherPropertyKeys {
-            context.report(.skipped, nil, "preset property \(key) is not converted")
-        }
+        reportOtherProperties(&context)
 
         let nitroPreset = contents.isEmpty ? nil : NitroPreset(
             name: nitroName(for: preset),

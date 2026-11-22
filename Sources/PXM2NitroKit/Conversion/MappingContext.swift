@@ -8,7 +8,7 @@ struct MappingContext {
     private(set) var diagnostics: [ConversionDiagnostic] = []
 
     init(intensity: Double) {
-        self.intensity = intensity
+        self.intensity = min(max(intensity, 0), 1)
     }
 
     /// Applies the preset intensity: interpolates from `neutral` (0 %) to `value` (100 %).

@@ -41,7 +41,14 @@ struct ConvertCommand: ParsableCommand {
                 failed = true
             }
             for preset in package.presets {
-                let entry = try exporter.export(preset)
+                let entry: PresetExporter.Entry
+                do {
+                    entry = try exporter.export(preset)
+                } catch {
+                    printError("  \(preset.title): \(error)")
+                    failed = true
+                    continue
+                }
                 switch entry.outcome {
                 case .written(let file):
                     print("  ✓ \(preset.title) → \(file.lastPathComponent)")
