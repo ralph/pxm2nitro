@@ -1,14 +1,11 @@
 import Foundation
 @testable import PXM2NitroKit
+import PXM2NitroTestSupport
 import Testing
 
 struct PresetExporterTests {
-    private func temporaryDirectory() -> URL {
-        FileManager.default.temporaryDirectory.appending(path: "pxm2nitro-export-\(UUID().uuidString)")
-    }
-
     @Test func writesConvertiblePresets() throws {
-        let directory = temporaryDirectory()
+        let directory = SampleFiles.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: directory) }
         var exporter = PresetExporter(outputDirectory: directory)
 
@@ -20,7 +17,7 @@ struct PresetExporterTests {
     }
 
     @Test func respectsExistingFilesUnlessOverwriting() throws {
-        let directory = temporaryDirectory()
+        let directory = SampleFiles.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: directory) }
         let preset = try Fixtures.photomatorPreset("BW", "001")
         let file = directory.appending(path: "BW 001.nitropreset")
@@ -34,7 +31,7 @@ struct PresetExporterTests {
     }
 
     @Test func keepsNamesUniqueWithinOneExport() throws {
-        let directory = temporaryDirectory()
+        let directory = SampleFiles.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: directory) }
         var exporter = PresetExporter(outputDirectory: directory)
         let preset = try Fixtures.photomatorPreset("BW", "001")
@@ -46,7 +43,7 @@ struct PresetExporterTests {
     }
 
     @Test func deduplicatesLongNamesWithoutLosingTheCounter() throws {
-        let directory = temporaryDirectory()
+        let directory = SampleFiles.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: directory) }
         var exporter = PresetExporter(outputDirectory: directory)
         let bw = try Fixtures.photomatorPreset("BW", "001")
@@ -62,7 +59,7 @@ struct PresetExporterTests {
     }
 
     @Test func skipsPresetsWithNothingToConvert() throws {
-        let directory = temporaryDirectory()
+        let directory = SampleFiles.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: directory) }
         var exporter = PresetExporter(outputDirectory: directory)
         let preset = Fixtures.preset("Empty", nil)

@@ -67,6 +67,19 @@ struct BlockOutcomeTests {
         #expect(mixer.red == NitroChannelMixer().red)
     }
 
+    @Test func droppedPresetPropertiesAreNotLossless() throws {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "C": ["E": 1, "rgb": ["p": [[0, 0.1], [1, 1]]]],
+        ])
+        let exact = Converter.convert(Fixtures.preset("Curves", adjustments))
+        #expect(exact.isLossless)
+        let withCrop = PhotomatorPreset(id: "x", name: "Curves", collectionName: nil,
+                                        adjustments: adjustments, otherPropertyKeys: ["CropData"])
+        let result = Converter.convert(withCrop)
+        #expect(result.blocks == [BlockOutcome(.curves, .carriedOver)])
+        #expect(!result.isLossless)
+    }
+
     @Test func presetWithoutAdjustmentsHasNoBlocks() {
         let preset = Fixtures.preset("Empty", nil)
         #expect(Converter.convert(preset).blocks.isEmpty)

@@ -1,17 +1,11 @@
 import Foundation
 @testable import PXM2NitroKit
+import PXM2NitroTestSupport
 import Testing
 
 /// Sample presets checked into the repository root.
 enum Fixtures {
-    static let repositoryRoot = URL(filePath: #filePath)
-        .deletingLastPathComponent()   // PXM2NitroKitTests
-        .deletingLastPathComponent()   // Tests
-        .deletingLastPathComponent()   // repository root
-
-    static func photomatorPackage(_ name: String) -> URL {
-        repositoryRoot.appending(path: "sample_presets_photomator/\(name).adjustments")
-    }
+    static func photomatorPackage(_ name: String) -> URL { SampleFiles.photomatorPackage(name) }
 
     /// Every sample package, loaded once per test run.
     /// A load error is kept so it fails the tests that use the package instead of crashing the run.
@@ -40,9 +34,7 @@ enum Fixtures {
         try #require(try photomatorPreset(package, presetName).adjustments)
     }
 
-    static func nitroPreset(_ name: String) -> URL {
-        repositoryRoot.appending(path: "nitro_sample_presets/\(name).nitropreset")
-    }
+    static func nitroPreset(_ name: String) -> URL { SampleFiles.nitroPreset(name) }
 }
 
 /// Pattern-match shortcuts for tests.
