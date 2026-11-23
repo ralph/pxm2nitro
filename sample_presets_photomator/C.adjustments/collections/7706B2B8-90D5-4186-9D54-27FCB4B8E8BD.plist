@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>created-at-base-version</key>
+	<integer>1807</integer>
+	<key>id</key>
+	<string>7706B2B8-90D5-4186-9D54-27FCB4B8E8BD</string>
+	<key>meta</key>
+	<dict>
+		<key>PXTKitPresetsGroupDescriptionKey</key>
+		<string>Here you’ll find all the presets you create.@newline Save any combination of color adjustments as a custom preset to quickly apply them to any of your photos and even share presets with others.</string>
+		<key>PXTKitPresetsGroupDescriptiveNameKey</key>
+		<string>Custom</string>
+		<key>PXTKitPresetsGroupHeaderColorKey</key>
+		<string>aeacb2</string>
+		<key>PXTKitPresetsGroupIsUnlocked</key>
+		<integer>1</integer>
+		<key>PXTKitPresetsGroupIsUserCustom</key>
+		<true/>
+	</dict>
+	<key>name</key>
+	<string>C</string>
+	<key>options</key>
+	<integer>2</integer>
+	<key>presets-list</key>
+	<array>
+		<string>BCE3A715-BEEF-4238-886C-1181341A991A</string>
+		<string>F7FF51C4-18A1-4796-BF2A-7FB7889FA8B1</string>
+		<string>1C8986DC-576E-44A5-ADB8-343CF2B4FDDA</string>
+		<string>F16C65E7-DB61-4C7F-BD74-E4C06AA32451</string>
+		<string>6B6DC9D8-C1EB-4D33-B85E-A967E4EF150B</string>
+		<string>475637FB-9EE6-41D2-ABAD-534BEA313B98</string>
+		<string>8E210B6C-1124-45A4-8C49-7012E956DB8B</string>
+		<string>C4E40884-DADF-4564-8E78-775162B928BC</string>
+		<string>FA7FCC6E-0FEA-46B2-8A03-FCFD01137F21</string>
+		<string>DEA207E0-D9E6-4A98-B22B-9CD7D44BB4FD</string>
+		<string>CB887A04-DCFB-4CD3-A800-CC04688C7565</string>
+		<string>D57083E0-051D-4234-A0DD-31E57A1185C8</string>
+		<string>4507DFBA-0E33-4295-AE96-C190BCBF1723</string>
+		<string>E7BB61FF-1816-4BA5-90EA-9B3A82B11170</string>
+	</array>
+</dict>
+</plist>

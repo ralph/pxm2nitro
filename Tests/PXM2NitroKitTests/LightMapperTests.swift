@@ -48,10 +48,11 @@ struct LightMapperTests {
         #expect(diagnostics.map(\.kind) == [.skipped, .uncalibrated])
     }
 
-    @Test func blackPointGoesToNitrosBlackSlider() throws {
+    /// Photomator's positive black point deepens the blacks; Nitro's positive Black lifts them.
+    @Test func blackPointGoesToNitrosBlackSliderWithTheSignFlipped() throws {
         let (sliders, diagnostics) = map(["E": 1, "B": 0.25], intensity: 0.5)
         let tone = try #require(sliders[.tone])
-        #expect(tone["blackPointDelta"] == 0.125)
+        #expect(tone["blackPointDelta"] == -0.125)
         #expect(diagnostics.map(\.message) == ["black point: placeholder scale, not calibrated yet"])
     }
 

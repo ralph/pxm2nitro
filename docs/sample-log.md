@@ -81,6 +81,57 @@ Decimal commas in the UI are written as dots here.
 | Vignette | Intensität / Radius | 0.37 / 0.71 |
 | Lens, Channel Mixer | — | not changed (Channel Mixer covered by `curves hsl channel mixer`) |
 
+## Photomator: group `C` (L1008408.DNG, created via computer use on 2026-11-23)
+
+Values were typed into the value fields. Typing more than the maximum clamps, which gives the
+range. Photomator names new presets "Voreinstellung", "Voreinstellung 1", …; the stored value
+is from `C.adjustments`.
+
+| preset | request | block | UI value → stored |
+|---|---|---|---|
+| Voreinstellung | P3 light | Light | Belichtung 23 % → `e` 0.23; Lichter −37 % → `h` **−0.74**; Schatten 41 % → `s` **0.82**; Helligkeit −19 % → `b` −0.19; Kontrast 29 % → `c` 0.29; Schwarzpunkt 13 % → `B` 0.13; Struktur −27 % → `T` −0.27; Klarheit 33 % → `C` 0.33 |
+| Voreinstellung 1 | P3 light max | Light | 400 / 100 / 100 / 200 / 200 / 200 / 100 / 100 % → `e` 4, `h` 2, `s` 2, `b` 2, `c` 2, `B` 2, `T` 1, `C` 1 |
+| Voreinstellung 2 | P3 light min | Light | the negatives of the maximums |
+| Voreinstellung 3 | P4 fade | Fade | Schwarztöne 63 % → `f` 0.63, Weißtöne 17 % → `c` 0.17 (defaults 100 % / 0 %) |
+| Voreinstellung 4 | (extra) | Fade | `f` 2, `c` 0.17: a save between the two max entries |
+| Voreinstellung 5 | P4 fade max | Fade | 200 % / 200 % → `f` 2, `c` 2 |
+| Voreinstellung 6 | P6 color | Color | Farbton 23 % → `h` 0.23, Sättigung −37 % → `s` −0.37, Lebendigkeit 41 % → `v` 0.41 |
+| Voreinstellung 7 | P6 color max | Color | 100 / 100 / 200 % → `h` 1, `s` 1, `v` 2 |
+| Voreinstellung 8 | P6 bw | B&W | Rot 23, Grün −37, Blau 11, Ton 29, Intensität 61 % → filter `b` {red 0.23, green −0.37, blue 0.11}, `t` 0.29, `i` 0.61 |
+| Voreinstellung 9 | P6 balance | Color Balance | mode "3-Wege-Farbtöne"; Lichter puck slightly up-right, Mitteltöne puck slightly down-left + right arc 54 %, Schatten puck slightly up-right → `h`, **`M`** (luminance 0.538) and `s`, each R/G/B offsets that sum to 0 |
+| Voreinstellung 10 | P2 selective | Selective Color | saturation 10…80 % in UI order → `a[0…7].saturation` 0.1…0.8; red hue 100 % (max) → `hue` **4**; orange brightness −200 % (min) → `brightness` **−4** |
+| Voreinstellung 11 | P9 fx | Vignette, Sharpen, Grain | Vignette Belichtung 37 / Schwarzpunkt 13 / Weichheit 61 % → `e` 0.37, `b` 0.13, `s` 0.61; Schärfen Radius 4.3 px / Intensität 73 % → `r` 4.3, `i` 0.73; Körnung Größe 41 / Intensität 29 % → `s` 0.41, `i` 0.29 |
+| Voreinstellung 12 | P5 wb raw | White Balance | Temperatur −23 %, Färbung 17 % → `t` −0.23, `T` 0.17 (the RAW shows %, not Kelvin) |
+| Voreinstellung 13 | P5 wb raw max | White Balance | 200 % / 200 % → `t` 2, `T` 2 |
+
+Observations:
+
+- Photomator saves no preset when nothing is edited (P-0 could not be created).
+- Defaults in the UI: Vignette Belichtung 50 %, Schwarzpunkt 0 %, Weichheit 100 %; Schärfen
+  2.5 px / 50 %; Körnung Größe 25 % / Intensität 50 %; B&W Intensität 100 %.
+- Bold values break the "percent / 100" rule (see `photomator-format.md`).
+
+## Nitro: import test (N-5) and black point (P-3.3), L1008408.DNG, 2026-11-23
+
+- **N-5:** all 38 converted presets appear under "Meine Presets" after a restart and apply.
+  - `BW 001`: B&W, HSL and Tone apply. The master curve keeps its end handles (black ≈ 0.03,
+    white ≈ 0.94) and the inner points.
+  - `LS 002`: Levels black 0.0 / gray 0.44 / white 0.88 (gray is the midpoint, as written). The
+    master curve's black handle sits at ≈ 0.14. With "Overlay anzeigen" the red, green and blue
+    curves have the expected shapes, which confirms the slot order `[master, R, G, B]`.
+  - The curve channel menu offers Grau / Rot / Grün / Blau / Overlay anzeigen. There is no
+    separate RGB entry, so the master channel is always shown as "Grau".
+- **P-3.3, black point sign:**
+  - Nitro: with `C Voreinstellung` applied, Black −1.0 crushes the shadows (the black phone on
+    the wall turns pure black, a spike at the histogram's left edge), and +1.0 lifts them (no
+    pure black left). The Black slider's range is ±1 in steps of 0.1 via the arrows.
+  - Photomator: Schwarzpunkt +100 % darkens the phone and moves the histogram left, and −100 %
+    lifts the blacks.
+  - So the signs are **opposite**. Photomator +100 % looked weaker than Nitro −1.0; the scale
+    is still open.
+- Opening a `.nitropreset` with `open -a Nitro` does not import it. Nitro treats it as an image
+  and asks for folder access.
+
 ## Template for further samples
 
 | preset | app | adjustment | slider (UI label) | UI value | note |

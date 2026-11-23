@@ -46,7 +46,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
 | `l` Light: brightness | `Tone.midtones` = 1 + k·b (alternative: `Enhance.lighten` / `deepen`) | 🟠 | revisit after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
-| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign and scale ❓ |
+| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign is opposite (checked on a RAW), scale ❓ |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
 | `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | semantics ❓ |
@@ -167,8 +167,8 @@ output. Bake it into the master curve by moving the black and white handle outpu
 
 ### 2.7 Light (`l`)
 
-Photomator stores percent/100 (Exposure UI ±400 %, Highlights/Shadows ±100 %, Brightness/
-Contrast/Black Point ±200 %). Nitro Exposure is in EV. How much EV Photomator's "100 %
+Photomator stores percent/100 (Exposure UI ±400 %, Brightness/Contrast/Black Point ±200 %), except
+Highlights/Shadows, which store ±2 for the UI's ±100 %. Nitro Exposure is in EV. How much EV Photomator's "100 %
 exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. Notes:
 
 - Nitro `Tone.highlights` and `Tone.midtones` are 1 in all samples. They are either
@@ -177,8 +177,10 @@ exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. 
   `Tone.highlights`.
 - Photomator `blackPoint` raises or lowers the black level. Nitro `blackPointDelta` is an offset to
   `baseBlackPoint` (5 in every sample, probably a constant; N-4.2). Implemented as
-  `blackPointDelta = k · blackPoint`, sign assumed to match (positive = deeper blacks). It only
-  takes effect on RAW files, Nitro's main use case.
+  `blackPointDelta = k · blackPoint` with **k < 0**: on L1008408.DNG a positive Photomator black
+  point deepens the blacks, while a positive Nitro Black (range ±1) lifts them (−1 crushes the
+  shadows, +1 leaves no pure black). |k| is a placeholder (1); Photomator +100 % looked weaker
+  than Nitro −1. It only takes effect on RAW files, Nitro's main use case.
 
 ### 2.8 RAW
 

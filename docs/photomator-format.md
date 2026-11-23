@@ -179,21 +179,23 @@ Short key → adjustment, with the UI name in Photomator:
 Every preset in the samples contains **all** blocks (except lens correction). Most are
 disabled. Only the `E` flag says whether a block is active.
 
-**Storage convention** (pxdlib + docs): sliders the UI shows in % are stored as
-`value = percent / 100` (so ±100 % ↔ ±1, ±200 % ↔ ±2). `i` is always an intensity
-0…1 (default 1), and `A` means an ML auto adjustment was applied.
+**Storage convention** (pxdlib + docs, checked with sample `C`, see `sample-log.md`): sliders the
+UI shows in % are stored as `value = percent / 100` (so ±100 % ↔ ±1, ±200 % ↔ ±2). ✅ **Exceptions:**
+Light highlights/shadows (UI ±100 % ↔ ±2), Selective Color hue (UI ±100 % ↔ ±4) and
+brightness (UI ±200 % ↔ ±4). `i` is always an intensity 0…1 (default 1), and `A` means an ML
+auto adjustment was applied. Typed values beyond the range are clamped to it.
 
 UI ranges from the Pixelmator guides (typed entry; option-drag can exceed the normal slider span):
 
 | adjustment | slider: UI range |
 |---|---|
-| White Balance | Temperature ±200 %, Tint ±200 % (slider ±100 %) |
-| Hue & Saturation | Hue ±100 %, Saturation ?, Vibrance ±200 % |
-| Light / Basic | Exposure ±400 % (slider ±200 %), Highlights ±100 %, Shadows ±100 %, Brightness ±200 %, Contrast ±200 %, Black Point ±200 %, Clarity ±100 %, Texture ±100 % |
+| White Balance | Temperature ±200 %, Tint ±200 % (slider ±100 %); relative % even on a RAW ✅ |
+| Hue & Saturation | Hue ±100 %, Saturation ±100 %, Vibrance ±200 % ✅ |
+| Light / Basic | Exposure ±400 % (slider ±200 %), Highlights ±100 %, Shadows ±100 %, Brightness ±200 %, Contrast ±200 %, Black Point ±200 %, Clarity ±100 %, Texture ±100 % ✅ |
 | Selective Clarity | Clarity / Texture ±100 % per tone range |
-| Selective Color | Hue ±400 %, Saturation ?, Brightness ±200 % |
+| Selective Color | Hue ±100 %, Saturation ?, Brightness ±200 % ✅ (hue and brightness are stored ×4 and ×2, see above) |
 | Black & White | Red/Green/Blue ±100 %, Tone ±200 %, Intensity |
-| Fade | Pixelmator Pro: Blacks / Whites ±200 %. Photomator shows only an Intensity |
+| Fade | Blacks (default 100 %) / Whites (default 0 %), 0…200 % ✅ (Photomator shows them too) |
 | Channel Mixer | Red, Green, Blue, Constant ±200 % |
 | Vignette | Exposure ±200 %, Black Point ±200 %, Softness 0…100 % |
 | Grain | Size 0…400 %, Intensity 0…100 % |
@@ -208,25 +210,28 @@ calibration sample.
 
 | key | field | default | range seen | notes |
 |---|---|---|---|---|
-| `e` | exposure | 0 | 0 … 0.57 | 🟡 unit unknown (EV or ±1 = ±100 %) |
-| `h` | highlights | 0 | −1.2 … 0.8 | 🟡 |
-| `s` | shadows | 0 | −0.1 … 1.07 | 🟡 |
+| `e` | exposure | 0 | 0 … 0.57 | ✅ UI shows %: ±1 = ±100 %, range ±4 |
+| `h` | highlights | 0 | −1.2 … 0.8 | ✅ UI ±100 % ↔ ±2 |
+| `s` | shadows | 0 | −0.1 … 1.07 | ✅ UI ±100 % ↔ ±2 |
 | `b` | brightness | 0 | −0.35 … 0.20 | 🟡 |
 | `c` | contrast | 0 | −0.65 … 0.30 | 🟡 |
-| `B` | blackPoint | 0 | −0.31 … 0.40 | 🟡 |
-| `C` | clarity (`basicClarity`) | 0 | −0.5 … 0 | 🟡 |
-| `T` | texture (`basicTexture`) | 0 | always 0 | 🟡 |
+| `B` | blackPoint | 0 | −0.31 … 0.40 | ✅ ±1 = ±100 %, range ±2; positive deepens the blacks |
+| `C` | clarity (`basicClarity`) | 0 | −0.5 … 0 | ✅ ±1 = ±100 % |
+| `T` | texture (`basicTexture`, UI "Struktur") | 0 | always 0 | ✅ ±1 = ±100 % |
 | `A` | auto-enhanced | 0 | | |
 
 The field list also has `basicDehaze`/`basicDehazeTint` (`dehaze`, `dehazeTint`). They are
 not present in the samples ❓.
 
-### 3.2 `f` Fade 🟡
+### 3.2 `f` Fade
 
 | key | default | range seen | notes |
 |---|---|---|---|
-| `f` | 1 (some disabled blocks have 0.5) | 0.35 … 1.10 | ❓ |
-| `c` | 0 | 0 … 0.2 | ❓ |
+| `f` | 1 (some disabled blocks have 0.5) | 0.35 … 1.10 | ✅ Blacks ("Schwarztöne"), UI % / 100, 0…2 |
+| `c` | 0 | 0 … 0.2 | ✅ Whites ("Weißtöne"), UI % / 100, 0…2 |
+
+✅ Sample `C` (P-4) settles the keys: Photomator's Fade panel shows Blacks and Whites, like
+Pixelmator Pro. The older notes below are kept for context.
 
 pxdlib documents `f` = intensity and leaves `c` unexplained. Photomator's guide shows only an
 Intensity slider, while Pixelmator Pro has Blacks/Whites (the Swift fields `fadeBlack`/`fadeWhite`).
@@ -242,8 +247,8 @@ calibration sample (P-4).**
 | `T` | tint | 0 | −0.196 … 0 |
 | `A` | auto | 0 | |
 
-These are **relative** shifts on rendered pixels (not Kelvin). Field list: `temperature, tint,
-grey, whiteBalanceAutoEnhance`.
+These are **relative** shifts on rendered pixels (not Kelvin), ±1 = ±100 %, range ±2. ✅ The UI
+shows % even on a RAW file (P-5). Field list: `temperature, tint, grey, whiteBalanceAutoEnhance`.
 
 ### 3.4 `hS` Color (hue / saturation)
 
@@ -252,6 +257,8 @@ grey, whiteBalanceAutoEnhance`.
 | `h` | hue | 0 | −0.1 … 0 |
 | `s` | saturation | 0 | −0.2 … 0 |
 | `v` | vibrancy | 0 | −0.35 … 0.15 |
+
+✅ All three are UI % / 100 (P-6): hue and saturation ±1, vibrance ±2.
 
 ### 3.5 `L` Levels
 
@@ -294,7 +301,11 @@ all samples.
 Verbose sub-objects `M` (master, overall), `s` (shadows), `m` (midtones), `h` (highlights).
 Each one is `{red, green, blue, luminance, saturation}` with values about −0.6…0.6, 0 =
 neutral. The UI is a colour wheel per range. The wheel position is stored as R/G/B offsets
-plus luminance and saturation.
+(they sum to 0) plus luminance and saturation (UI % / 100, the arcs beside each wheel).
+
+⚠️ Sample `C` (P-6, "3-Wege-Farbtöne" mode, wheels Lichter / Mitteltöne / Schatten) stores the
+**midtones wheel as `M`**, next to `h` and `s`, and writes no `m`. So `M` is not always the
+master. The mode menu has more options (not sampled), which probably use `M`/`m` differently ❓.
 
 ### 3.10 `ca` Selective Color (hsbColors)
 
@@ -302,16 +313,16 @@ plus luminance and saturation.
 
 | key | range seen | notes |
 |---|---|---|
-| `hue` | −0.92 … 1.6 | ❓ unit (fraction of a hue sector?) |
+| `hue` | −0.92 … 1.6 | ±4 = UI ±100 %; how many degrees that is in Nitro is ❓ |
 | `saturation` | −0.7 … 0.6 | |
 | `brightness` | −1.6 … 0.77 | |
 | `color` | always `[0,0,0,1]` | unused for the 8 standard ranges (probably a custom picked colour) |
 
 Index → colour range ✅ (the documented UI order: reds, oranges, yellows, greens, cyans, blues,
-violets, magentas; the storage order is assumed to equal the UI order):
+violets, magentas; ✅ storage order = UI order, checked with P-2):
 `0 red, 1 orange, 2 yellow, 3 green, 4 cyan, 5 blue, 6 violet, 7 magenta`.
-Hue is stored as percent/100 (UI ±400 % ↔ ±4). Brightness ±200 % ↔ ±2. `ca` is enabled in
-every preset and is heavily used.
+✅ Saturation is UI % / 100. Hue shows ±100 % in the UI but stores ±4, and brightness shows
+±200 % but stores ±4 (P-2). `ca` is enabled in every preset and is heavily used.
 
 ### 3.11 `r` Replace Color, `R` Remove Color 🟡
 

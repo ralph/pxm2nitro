@@ -24,6 +24,10 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 > [sample-log.md](sample-log.md)). N-0 and N-1 are **done**, except for `WB jpg` and Grain;
 > Nitro has no Grain panel. Still open: N-1 `WB jpg`, N-2 (curve slots and the 1|2 toggle),
 > N-3, N-4.2, and N-6.
+>
+> **Status 2026-11-23:** N-5 is **done** for `BW 001` and `LS 002`; the curve slot order is
+> confirmed with the curves overlay. P-3.3 is done: the black point signs are opposite (see
+> [sample-log.md](sample-log.md)).
 
 ### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.
@@ -116,6 +120,12 @@ For each Photomator adjustment below, check whether Nitro has an equivalent cont
 
 ## Photomator
 
+> **Status 2026-11-23:** group `C` (`sample_presets_photomator/C.adjustments`, 14 presets on
+> L1008408.DNG, created via computer use) covers P-2, P-3, P-4, P-5 (RAW only), P-6 (except
+> `P6 mixer red`) and P-9. Values and findings are in [sample-log.md](sample-log.md). Still
+> open: P-0 (Photomator does not save a preset without edits), P-1, P-5 on a JPEG, P-6 mixer,
+> P-7, P-8 and P-10.
+
 ### P-0 Baseline (P2)
 `P0 jpg` and `P0 raw`: an untouched image saved as a preset. This shows which blocks a
 "default" preset writes, and the default `f` (fade) values.
@@ -180,14 +190,14 @@ is identical and shows any extra properties Pixelmator Pro writes.
 | Nitro adjustment ID strings | N-0, N-1 |
 | Nitro neutral values (`highlights=1`?) | N-0 |
 | Nitro slider ranges | N-3 |
-| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | N-2 |
+| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ slot order and end-point handles (N-5); `operateOnGray`, `maxValue`: N-2 |
 | Preset application semantics | ✅ manual (per-adjustment replacement); N-4.2 for base black/white points |
 | Photomator RAW params in presets | 🟡 docs say no; P-1 confirms |
-| Selective Color index → colour, hue unit | P-2 |
-| Light units | P-3 |
-| Fade semantics | P-4 |
-| WB relative vs absolute | N-1 WB, P-5 |
-| Colour balance UI ↔ storage | P-6 |
+| Selective Color index → colour, hue unit | ✅ P-2 (hue in Nitro degrees still ❓) |
+| Light units | ✅ P-3 (black point sign ✅; scales ❓) |
+| Fade semantics | ✅ P-4 (keys; the tone curve it applies is still ❓) |
+| WB relative vs absolute | ✅ Photomator relative even on RAW (P-5); Nitro RAW Kelvin (N-1); Nitro JPEG ❓ |
+| Colour balance UI ↔ storage | 🟡 P-6 (3-way mode only) |
 | LUT storage | N-1 LUT, P-8 |
 | Which adjustments Nitro truly lacks | N-6 |
 | Pixelmator Pro format identical | P-10 |
