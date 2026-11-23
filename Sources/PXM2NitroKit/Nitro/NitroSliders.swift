@@ -49,10 +49,9 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
     }
 
     /// Keys besides `numeric`, `enabled` and `disclosed` that Nitro writes for this adjustment.
-    /// Tone's base black/white points are the Leica M11's; Nitro recomputes them per image on
-    /// apply, so they are harmless for other cameras (`docs/nitro-format.md` §3.2).
     var fixedKeys: [String: JSONValue] {
         switch self {
+        // Leica M11 base points; Nitro keeps each image's own on apply (`docs/nitro-format.md` §3.2).
         case .tone: ["preserve": false, "defaultsUpdated": true, "baseBlackPoint": 5, "baseWhitePoint": 0.15,
                      "bpIsAbs": false, "wpIsAbs": false, "supportsBoost": true, "supportsToneMap": false]
         case .enhance: [:]

@@ -7,7 +7,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 
 | Photomator block | Nitro | code | status |
 |---|---|---|---|
-| Curves | Curves | `CurvesMapper` | ✅ implemented (slot order / handle y still to verify in Nitro) |
+| Curves | Curves | `CurvesMapper` | ✅ implemented (slot order and handle y confirmed, N-2/N-5) |
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
@@ -32,8 +32,8 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 5. **No approximations by default.** Only mappings with a direct Nitro counterpart are
    converted. Anything else is **skipped with a warning** (the library returns structured
    diagnostics; the CLI prints them per preset). Approximations (marked *opt-in* below) are a
-   later, explicitly enabled option. An adjustment counts as "missing in Nitro" only after
-   the feature check N-6 confirms it. ✅ N-6 is done (see `sample-requests.md`).
+   later, explicitly enabled option. The feature check N-6 (`sample-requests.md`) confirmed which
+   adjustments Nitro lacks.
 6. **Scaling functions** (`k_*` below) are placeholders until the calibration samples arrive.
    Both apps store most sliders as roughly −1…1 floats, but the units differ (see §3).
 
@@ -46,11 +46,11 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
 | `l` Light: brightness | `Tone.midtones` = 1 + k·b (alternative: `Enhance.lighten` / `deepen`) | 🟠 | revisit after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
-| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign is opposite (checked on a RAW), scale ❓ |
+| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider exists on RAW files only (Nitro's main use case); a JPEG's Tone panel has none (nitro-format §3.2). Sign is opposite (checked on a RAW), scale ❓ |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
-| `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | `f` = Blacks, `c` = Whites ✅ (photomator-format §3.2); their curve shape ❓ |
-| `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ✅ JPEGs too: Nitro shows a nominal 5001 K / tint 10 and stores absolute Kelvin (N-1 `WB jpg`) |
+| `f` Fade | default: **skip and warn** (N-6: no Nitro Fade). Opt-in: bake into the master curve | 🟠 | `f` = Blacks, `c` = Whites ✅ (photomator-format §3.2); their curve shape ❓ |
+| `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ✅ Also on JPEG (nitro-format §3.5) |
 | `hS` saturation | `Enhance.saturation` = 1 + k·s | 🟢 | |
 | `hS` vibrancy | `Enhance.vibrancy` | 🟢 | scale ❓ |
 | `hS` hue | default: **skip and warn**. Opt-in: the same `HSL.hueDelta_*` shift on all 9 colours | 🟠 | approximation of a global hue rotation |
@@ -64,8 +64,8 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `b` Black & White | `BlackAndWhite` (`red`/`green`/`blue` weights); toning would need `SplitToning` plus a hue Photomator does not store | 🟠 | implemented, see the status table |
 | `M` Color Monochrome | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `s` Sepia | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
-| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: `intensity` (±1), `radius` (0…1, both default 0.5) and `center`. Softness and black point are dropped. Nitro allows a negative intensity, so a brightening Photomator vignette could be converted too (not yet) |
-| `g` Grain | `Grain` (or `Detail.grainIntensity/grainDensity`) | 🟡 | Nitro shape ❓ |
+| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: nitro-format §3.12. Softness and black point are dropped. Nitro allows a negative intensity; if that brightens (❓), a brightening Photomator vignette could be converted too (not yet) |
+| `g` Grain | `Detail.grainIntensity/grainDensity` (not in Nitro's UI; N-6: no Grain panel) | 🟡 | whether Nitro renders it ❓ |
 | `cL` LUT | `LUT` | 🟠 | needs the `.cube` file on both sides ❓ |
 | `r` Replace Color, `R` Remove Color, `i` Invert | — | ❌ skip and warn | never used in the samples |
 | RAW params (very likely never in presets, see the format doc §4) | `RAW`, `Tone.boost`, `Tone.boostShadowSliderValue`, `Detail.*Noise`, `decoderVersionString` | 🟢 likely | ❓ sample needed |
@@ -80,12 +80,11 @@ White Balance 10, Vignette 6, Sharpen 5, Channel Mixer 2. **Curves + Selective C
 ### 2.1 Curves
 
 Photomator `C` has five curves: `rgb`, `r`, `g`, `b`, `l` (luminance). Nitro has one curve
-set with 4 slots (✅ `[master, red, green, blue]`, N-2/N-5) and a flag `operateOnGray`. 🟡 It
-was assumed to switch the master between luminance ("Grau") and RGB, but Nitro's UI has no RGB
-master mode and always saves `true` (N-2). Imported presets with `false` load fine; whether they
-render differently is ❓.
+set with 4 slots (✅ `[master, red, green, blue]`, N-2/N-5) and a flag `operateOnGray` (🟡, see
+nitro-format §3.6: the UI always saves `true`).
 
-- `rgb` → master with `operateOnGray:false`.
+- `rgb` → master with `operateOnGray:false` (🟡 the rule the code follows; unverified, since the UI
+  never writes `false`).
 - `l` (luminance) → master with `operateOnGray:true`, used only when `rgb` is identity.
   If both are non-identity, compose `l ∘ rgb` into one RGB master curve and warn. (In all
   83 samples `l` is identity.)
@@ -157,11 +156,10 @@ Scale: both apps show "1.0" for identity, so no scaling is expected.
 
 Each Photomator channel has 5 input handles. Converted to a curve, this is
 black → (b, 0), white → (w, 1), with the gamma defined by the gray handle
-(`midOfBlackAndGray`/`midOfGrayAndWhite` look derived, 0.25/0.75 at identity). If Nitro's
-`Levels` (probably `levelsCurvesData` with `curves:false`) has the same handles, map 1:1;
-otherwise bake into the curves.
+(`midOfBlackAndGray`/`midOfGrayAndWhite` look derived, 0.25/0.75 at identity). Nitro's Levels
+keeps only black and white input (see the `L` row above and nitro-format §3.6).
 
-### 2.6 Fade (`f`): skip unless N-6 finds a Nitro equivalent; the curve baking below is opt-in
+### 2.6 Fade (`f`): skip (N-6: no Nitro equivalent); the curve baking below is opt-in
 
 ✅ `f` = Blacks (default 1) and `c` = Whites (default 0), photomator-format §3.2. How they shape
 the curve is ❓. Working hypothesis: they raise the black output and lower the white output, so bake
@@ -173,13 +171,12 @@ Photomator stores percent/100 (Exposure UI ±400 %, Brightness/Contrast/Black Po
 Highlights/Shadows, which store ±2 for the UI's ±100 %. Nitro Exposure is in EV. How much EV Photomator's "100 %
 exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. Notes:
 
-- Nitro `Tone.highlights` and `Tone.midtones` are 1 in all samples. They are either
-  multipliers (neutral 1) or sliders whose default is 1. ❓ Baseline sample.
+- Nitro `Tone.highlights` and `Tone.midtones` are neutral at 1 (N-0); ranges highlights 0…1,
+  midtones 0.5…1.5 (nitro-format §3.2).
 - Negative Photomator `highlights` (recover) may fit `Tone.recovery` better than
   `Tone.highlights`.
 - Photomator `blackPoint` raises or lowers the black level. Nitro `blackPointDelta` is an offset to
-  `baseBlackPoint`, which depends on the camera but is recomputed by Nitro on apply (N-4.2, so the
-  template's 5 does not matter). Implemented as
+  `baseBlackPoint` (✅ N-4.2, see nitro-format §3.2: the template's 5 does not matter). Implemented as
   `blackPointDelta = k · blackPoint` with **k = −0.5** (maps Photomator's ±2 onto Nitro's ±1): on L1008408.DNG a positive Photomator black
   point deepens the blacks, while a positive Nitro Black (range ±1) lifts them (−1 crushes the
   shadows, +1 leaves no pure black). |k| is a placeholder; Photomator +100 % looked weaker
@@ -192,7 +189,7 @@ The converter emits **no** `RAW` block and does not touch `Tone.boost` & co. Nit
 merge then keeps the image's own RAW and Tone settings, but only if no `Tone` block is emitted.
 ⚠️ As soon as we emit `Tone` (for exposure, highlights, …), the whole Tone block replaces the
 image's one, including Boost and Blacks/Whites. The template values must therefore be Nitro's
-neutral defaults (request N-0). For reference only, if RAW params ever turn up:
+neutral defaults (N-0 ✅). For reference only, if RAW params ever turn up:
 
 | PTRawParameters | Nitro |
 |---|---|
@@ -204,7 +201,7 @@ neutral defaults (request N-0). For reference only, if RAW params ever turn up:
 | `luminanceNoiseReductionAmount` | `Detail.lumaNoise` |
 | `colorNoiseReductionAmount` | `Detail.colorNoise` |
 | `noiseReductionDetailAmount` | `Detail.noiseDetail` |
-| `neutralTemperature/Tint` | `WhiteBalance` (absolute, RAW only) ❓ |
+| `neutralTemperature/Tint` | `WhiteBalance` (absolute Kelvin) |
 | `decoderVersion` | `decoderVersionString` |
 | `localToneMapAmount` | `Tone.toneMap` |
 | `extendedDynamicRangeAmount` | — ❓ |

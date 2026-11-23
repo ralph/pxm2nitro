@@ -1,8 +1,8 @@
 # Nitro preset format (`.nitropreset`)
 
-Status: reverse-engineered from 5 sample presets in `nitro_sample_presets/`, the strings and
-Swift reflection data in `Nitro.app` (2026.09.01, build 247), and the UI itself. `N0 defaults`
-and `N1 all` were created on purpose with known UI values; see
+Status: reverse-engineered from the sample presets in `nitro_sample_presets/`, the strings and
+Swift reflection data in `Nitro.app` (2026.09.01, build 247), and the UI itself. The `N…` presets
+were created on purpose with known UI values; see
 [sample-log.md](sample-log.md) for every value that was set. Nitro is made by Gentlemen
 Coders (the RAW Power team), and its edit model comes from RAW Power.
 
@@ -34,8 +34,8 @@ Nitro manual <https://www.gentlemencoders.com/nitro/user-manual/index.html>, RAW
 - **Only changed adjustments are saved** ✅ (observed). The save dialog lists only adjustments
   whose values differ from neutral. An adjustment switched on at its defaults is not offered,
   and a preset without any edit cannot be saved at all.
-- **Save dialog defaults** ✅ (observed): there is one switch per adjustment. Tone, Enhance and
-  Detail are switched **off** by default; every other adjustment is switched on.
+- **Save dialog defaults** ✅ (observed): there is one switch per adjustment, and the switches
+  remember the last choice (on first use Tone, Enhance and Detail were off; see sample-log).
 - Per-image edits live in XMP sidecars (namespace `http://com.gentlemencoders/xmp/nitro/1.0/`).
 
 ---
@@ -212,7 +212,7 @@ non-zero value would show whether Nitro actually renders it (❓).
 `temperature` is in **Kelvin** and `tint` is on Nitro's ±175 scale. The values are written
 exactly as the UI shows them. This RAW's as-shot values were 5277 K and tint 25.
 `autoWB` and `applyFaceBalance` correspond to the Auto button and face-based auto WB.
-Ranges (N-3): `temperature` 1000…20000 K, `tint` ±175.
+✅ Ranges (N-3): `temperature` 1000…20000 K, `tint` ±175.
 
 ✅ JPEG (N-1 `WB jpg`, IMG_6659.JPG): the panel also shows Kelvin. The untouched JPEG shows
 5001 K / tint 10, a nominal neutral rather than a measured as-shot value. Raising it to 7851 K warms
@@ -241,9 +241,9 @@ has this skeleton:
 | point | x,y | flags |
 |---|---|---|
 | guard | 0,0 | `invisible:true` |
-| black handle | (bx, 0) | `deletable:false` |
+| black handle | (bx, by), by usually 0 | `deletable:false` (true once moved up, see below) |
 | user points (Curves only) | … | `deletable:true` |
-| white handle | (wx, 1) | `isWhitePoint:true` |
+| white handle | (wx, wy), wy usually 1 | `isWhitePoint:true` |
 | guard | 2,2 | `invisible:true` |
 
 - **Levels** ✅ (`N1 all`): the black input 0.07 is stored as black handle `x:0.072164945`.
@@ -265,7 +265,6 @@ has this skeleton:
   master mode, and the UI always saves `operateOnGray: true`. Presets with `operateOnGray: false`
   still load and show the curve under "Grau"; whether the two render differently is ❓. The
   colour-wheel button next to "Auto" is "Auto RGB", which replaces the curves with automatic ones.
-
 
 ### 3.7 `HSL` ✅
 

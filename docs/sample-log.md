@@ -14,7 +14,7 @@ Decimal commas in the UI are written as dots here.
 - **Save dialog defaults:** it has one switch per changed adjustment. On 2026-11-22 Tone, Enhance
   and Detail were switched OFF by default and the others ON. On 2026-11-23 all switches were ON;
   the dialog seems to remember the last choice.
-  HSL did not appear in the list for `N1 all` (❓ check the file).
+  HSL did not appear in the list for `N1 all`, but the file contains it anyway.
 - **Decoder v8 vs v9:** v8 adds sliders: Detail → *Farbrauschen* (color noise, default 0.5) and
   *Rauschdetails* (noise detail, 0.0). RAW Tuning → *Moiré* (default 0.55 on this image).
   *Bildrauschen* (luma noise) changed to 0.8 when switching to v8.
