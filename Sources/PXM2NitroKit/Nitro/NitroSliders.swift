@@ -1,19 +1,31 @@
 /// Nitro adjustments that are plain sliders (`numeric`) plus a few fixed keys.
 /// See `docs/nitro-format.md` §3.
 public enum NitroSliderKind: String, CaseIterable, Sendable {
+    case tone = "Tone"
     case enhance = "Enhance"
 
     /// Every slider with its default value, as Nitro writes them. A default is not always
     /// a no-op: Nitro's default B&W and Vignette still change the image.
     public var defaults: [String: Double] {
         switch self {
-        case .enhance: ["deepen": 0, "lighten": 0, "contrast": 1, "saturation": 1, "vibrancy": 0]
+        case .tone: Self.toneDefaults
+        case .enhance: Self.enhanceDefaults
         }
     }
+
+    private static let toneDefaults: [String: Double] = [
+        "exposure": 0, "highlights": 1, "shadows": 0, "midtones": 1, "recovery": 0, "boost": 1,
+        "boostShadowSliderValue": 0.9, "blackPointDelta": 0, "whitePointDelta": 0, "toneMap": 0,
+    ]
+    private static let enhanceDefaults: [String: Double] = [
+        "deepen": 0, "lighten": 0, "contrast": 1, "saturation": 1, "vibrancy": 0,
+    ]
 
     /// Keys besides `numeric`, `enabled` and `disclosed` that Nitro writes for this adjustment.
     var fixedKeys: [String: JSONValue] {
         switch self {
+        case .tone: ["preserve": false, "defaultsUpdated": true, "baseBlackPoint": 5, "baseWhitePoint": 0.15,
+                     "bpIsAbs": false, "wpIsAbs": false, "supportsBoost": true, "supportsToneMap": false]
         case .enhance: [:]
         }
     }
@@ -27,6 +39,8 @@ public struct NitroSliders: Sendable, Equatable {
     private(set) var numeric: [String: Double]
     /// Non-slider keys, from the template or as read.
     var otherKeys: [String: JSONValue]
+    /// Sliders set through the subscript, i.e. by a mapper. Not part of equality.
+    private var setKeys: Set<String> = []
 
     /// The adjustment with every slider at its default value.
     public init(_ kind: NitroSliderKind) {
@@ -40,12 +54,27 @@ public struct NitroSliders: Sendable, Equatable {
         set {
             precondition(kind.defaults[key] != nil, "\(kind.rawValue) has no slider \(key)")
             numeric[key] = newValue
+            setKeys.insert(key)
         }
     }
 
     /// Whether every slider is at its default value.
     public var isDefault: Bool {
         kind.defaults.allSatisfy { key, value in isNearlyEqual(self[key], value) }
+    }
+
+    /// Takes over every slider `other` set. Two mappers writing the same adjustment must set
+    /// different sliders; a collision is a programming error that needs an explicit rule.
+    mutating func merge(_ other: NitroSliders) {
+        precondition(kind == other.kind, "cannot merge \(other.kind.rawValue) into \(kind.rawValue)")
+        for key in other.setKeys {
+            precondition(!setKeys.contains(key), "two mappers set \(kind.rawValue) \(key)")
+            self[key] = other[key]
+        }
+    }
+
+    public static func == (lhs: NitroSliders, rhs: NitroSliders) -> Bool {
+        lhs.kind == rhs.kind && lhs.numeric == rhs.numeric && lhs.otherKeys == rhs.otherKeys
     }
 
     var json: [String: JSONValue] {

@@ -166,13 +166,38 @@ public struct SelectiveColorRange: Sendable, Equatable {
     public var brightness: Double
 }
 
-/// Color (`hS`): global hue, saturation and vibrance, stored as UI percent / 100.
-public struct PhotomatorColor: Sendable, Equatable {
-    static let keys = ["h", "s", "v"]
-    public var hue: Double
-    public var saturation: Double
-    public var vibrancy: Double
+/// A block of plain numeric fields, stored as UI percent / 100. Missing fields are 0.
+public struct PhotomatorSliders<Field>: Sendable, Equatable
+where Field: RawRepresentable<String> & CaseIterable & Hashable & Sendable {
+    public let values: [Field: Double]
+
+    public subscript(field: Field) -> Double { values[field] ?? 0 }
+
+    /// `nil` if a field is present but not a number.
+    init?(_ payload: [String: JSONValue]) {
+        var values: [Field: Double] = [:]
+        for field in Field.allCases {
+            guard let raw = payload[field.rawValue] else { continue }
+            guard let value = raw.doubleValue else { return nil }
+            values[field] = value
+        }
+        self.values = values
+    }
 }
+
+/// Fields of Light (`l`).
+public enum LightField: String, CaseIterable, Sendable {
+    case exposure = "e", highlights = "h", shadows = "s", brightness = "b", contrast = "c"
+    case blackPoint = "B", clarity = "C", texture = "T"
+}
+
+/// Fields of Color (`hS`): global hue, saturation and vibrance.
+public enum ColorField: String, CaseIterable, Sendable {
+    case hue = "h", saturation = "s", vibrancy = "v"
+}
+
+public typealias PhotomatorLight = PhotomatorSliders<LightField>
+public typealias PhotomatorColor = PhotomatorSliders<ColorField>
 
 extension PhotomatorAdjustments {
     public var curves: PhotomatorCurves? {
@@ -215,14 +240,10 @@ extension PhotomatorAdjustments {
         }
     }
 
-    /// Color (`hS`); `nil` if the block is disabled or one of its values is not a number.
-    public var color: PhotomatorColor? {
-        enabledBlock(.hueSaturation).flatMap { payload in
-            guard JSONValue.object(payload).isObject(withNumericFields: PhotomatorColor.keys) else { return nil }
-            return PhotomatorColor(hue: payload["h"]?.doubleValue ?? 0,
-                                   saturation: payload["s"]?.doubleValue ?? 0,
-                                   vibrancy: payload["v"]?.doubleValue ?? 0)
-        }
+    /// The fields of an enabled slider block such as Light or Color; `nil` if the block is
+    /// disabled or a field is not a number.
+    public func sliders<Field>(_ block: PhotomatorBlock, as _: Field.Type = Field.self) -> PhotomatorSliders<Field>? {
+        enabledBlock(block).flatMap(PhotomatorSliders.init)
     }
 
     /// Selective Color (`ca`): eight ranges in UI order

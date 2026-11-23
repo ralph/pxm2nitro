@@ -35,6 +35,16 @@ enum Fixtures {
     }
 
     static func nitroPreset(_ name: String) -> URL { SampleFiles.nitroPreset(name) }
+
+    /// Runs one mapper on a single block payload.
+    static func map(_ mapper: any BlockMapper.Type, _ payload: JSONValue, intensity: Double = 1)
+        -> (contents: [NitroAdjustment.Content], diagnostics: [ConversionDiagnostic]) {
+        let adjustments = PhotomatorAdjustments(
+            formatVersion: 2, root: ["in": .number(intensity), mapper.block.rawValue: payload])
+        var context = MappingContext(intensity: adjustments.intensity)
+        let contents = mapper.map(adjustments, context: &context)
+        return (contents, context.diagnostics)
+    }
 }
 
 /// Pattern-match shortcuts for tests.

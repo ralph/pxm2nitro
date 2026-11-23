@@ -54,7 +54,7 @@ public enum Converter {
     /// The block mappers, in the order their Nitro adjustments are written.
     static var mappers: [any BlockMapper.Type] {
         [LevelsMapper.self, CurvesMapper.self, ChannelMixerMapper.self, SelectiveColorMapper.self,
-         ColorMapper.self]
+         LightMapper.self, ColorMapper.self]
     }
 
     /// Photomator blocks this converter maps.
@@ -97,12 +97,30 @@ public enum Converter {
 
         let nitroPreset = contents.isEmpty ? nil : NitroPreset(
             name: nitroName(for: preset),
-            adjustments: contents.map { NitroAdjustment($0) })
+            adjustments: merged(contents.map { NitroAdjustment($0) }))
         let blocks = enabled.compactMap { block in
             BlockOutcome.Status(converted: converted.contains(block),
                                 reported: context.diagnostics.contains { $0.block == block })
                 .map { BlockOutcome(block, $0) }
         }
         return ConversionResult(preset: nitroPreset, diagnostics: context.diagnostics, blocks: blocks)
+    }
+
+    /// A Nitro preset holds each adjustment once. Slider adjustments written by several
+    /// mappers (e.g. Enhance from Light and Color) are combined at the first one's position;
+    /// any other duplicate is a programming error.
+    static func merged(_ adjustments: [NitroAdjustment]) -> [NitroAdjustment] {
+        var merged: [NitroAdjustment] = []
+        for adjustment in adjustments {
+            guard let index = merged.firstIndex(where: { $0.id == adjustment.id }) else {
+                merged.append(adjustment)
+                continue
+            }
+            guard case .sliders(var existing) = merged[index].content, case .sliders(let other) = adjustment.content
+            else { preconditionFailure("two mappers wrote \(adjustment.id), which cannot be merged") }
+            existing.merge(other)
+            merged[index].content = .sliders(existing)
+        }
+        return merged
     }
 }

@@ -40,8 +40,8 @@ struct ConverterTests {
         #expect(abs(levels.master[1].x - 0.009124071608744393) < 1e-12)
         #expect(levels.master[1].y == 0)
         #expect(levels.master[2] == NitroCurvePoint(x: 1, y: 1, isWhitePoint: true))
-        // PT800 also has curves and selective color → three adjustments are written.
-        #expect(try result.preset?.adjustments.map(\.id) == ["Levels", "Curves", "HSL"])
+        // PT800 also has curves, selective color and light (no contrast) → four adjustments.
+        #expect(try result.preset?.adjustments.map(\.id) == ["Levels", "Curves", "HSL", "Tone"])
     }
 
     @Test func warnsAboutUncentredLevelsMidtones() throws {
@@ -109,10 +109,10 @@ struct ConverterTests {
 
     @Test func presetWithoutConvertibleBlocksYieldsNothing() {
         let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
-            "l": ["E": 1, "e": 0.3],
+            "g": ["E": 1, "i": 0.5],
             "C": ["E": 1, "rgb": ["p": [[0, 0], [1, 1]]]],
         ])
-        let preset = PhotomatorPreset(id: "x", name: "Light only", collectionName: "Test",
+        let preset = PhotomatorPreset(id: "x", name: "Grain only", collectionName: "Test",
                                       adjustments: adjustments, otherPropertyKeys: ["CropData"])
         let result = Converter.convert(preset)
         #expect(result.preset == nil)

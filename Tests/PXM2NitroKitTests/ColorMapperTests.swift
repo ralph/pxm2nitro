@@ -3,10 +3,8 @@ import Testing
 
 struct ColorMapperTests {
     private func enhance(_ color: JSONValue, intensity: Double = 1) -> (NitroSliders?, [ConversionDiagnostic]) {
-        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: ["in": .number(intensity), "hS": color])
-        var context = MappingContext(intensity: adjustments.intensity)
-        let enhance = ColorMapper.map(adjustments, context: &context).compactMap(\.sliders).first
-        return (enhance, context.diagnostics)
+        let (contents, diagnostics) = Fixtures.map(ColorMapper.self, color, intensity: intensity)
+        return (contents.compactMap(\.sliders).first, diagnostics)
     }
 
     @Test func mapsSaturationAndVibrance() throws {
@@ -52,9 +50,13 @@ struct ColorMapperTests {
     }
 
     @Test func samplePresets() throws {
+        // LS 002: Color saturation −20 %, plus Light contrast +25 % merged into the same Enhance.
         let saturated = Converter.convert(try Fixtures.photomatorPreset("LS", "002"))
-        let enhance = try #require(saturated.preset?.adjustments.compactMap(\.content.sliders).first)
+        let enhances = try #require(saturated.preset).adjustments.compactMap(\.content.sliders).filter { $0.kind == .enhance }
+        #expect(enhances.count == 1)
+        let enhance = try #require(enhances.first)
         #expect(abs(enhance["saturation"] - 0.8) < 1e-12)
+        #expect(enhance["contrast"] == 1.25)
         #expect(saturated.blocks.contains(BlockOutcome(.hueSaturation, .approximated)))
 
         let hueOnly = Converter.convert(try Fixtures.photomatorPreset("LS", "005"))

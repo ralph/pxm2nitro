@@ -20,9 +20,40 @@ struct MappingContext {
         diagnostics.append(ConversionDiagnostic(kind, block, message))
     }
 
+    /// A Nitro multiplier whose neutral is 1: `1 + scale · value` after intensity, never below 0.
+    /// Reports `what` as approximated when the value had to be clamped to 0.
+    mutating func multiplier(_ value: Double, scale: Double, _ block: PhotomatorBlock, _ what: String) -> Double {
+        let raw = 1 + blend(0, value) * scale
+        if raw < -MappingContext.tolerance {
+            report(.approximated, block, "\(what) was clamped to Nitro's minimum")
+        }
+        return max(0, raw)
+    }
+
+    /// The fields of an enabled slider block. Reports an enabled block that cannot be read.
+    mutating func sliders<Field>(_ block: PhotomatorBlock, in adjustments: PhotomatorAdjustments) -> PhotomatorSliders<Field>? {
+        guard adjustments.enabledBlock(block) != nil else { return nil }
+        guard let sliders = adjustments.sliders(block, as: Field.self) else {
+            report(.skipped, block, "a value is not a number")
+            return nil
+        }
+        return sliders
+    }
+
+    /// Reports a value that has no Nitro counterpart, unless it has no effect (0 after intensity).
+    mutating func reportDropped(_ value: Double, _ block: PhotomatorBlock, _ message: String) {
+        if !isNearlyEqual(blend(0, value), 0) { report(.skipped, block, message) }
+    }
+
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
+    }
+
+    /// Same for a list of converted sliders ("a, b and c"); reports nothing for an empty list.
+    mutating func reportUncalibrated(_ block: PhotomatorBlock, _ sliders: [String]) {
+        guard let last = sliders.last else { return }
+        reportUncalibrated(block, sliders.count == 1 ? last : sliders.dropLast().joined(separator: ", ") + " and " + last)
     }
 
     /// Reports channels of an enabled Curves/Levels/Channel Mixer block whose raw payload

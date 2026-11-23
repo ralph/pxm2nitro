@@ -24,8 +24,8 @@ struct ConversionSessionTests {
         #expect(bw.convertibleCount == 4)
         #expect(bw.losslessCount == 0)
         #expect(bw.blocks.blocks(.carriedOver) == [.curves])
-        #expect(bw.blocks.blocks(.approximated) == [.selectiveColor])
-        #expect(bw.blocks.blocks(.leftOut) == [.light, .fade, .blackAndWhite, .vignette, .grain])
+        #expect(bw.blocks.blocks(.approximated) == [.light, .selectiveColor])
+        #expect(bw.blocks.blocks(.leftOut) == [.fade, .blackAndWhite, .vignette, .grain])
     }
 
     @Test func packageBlocksUseTheLeastFavourableStatus() async throws {
@@ -40,7 +40,7 @@ struct ConversionSessionTests {
         let pt800 = try #require(filmic.presets.first { $0.preset.name == "PT800" })
         #expect(pt800.nitroFileName == "🎞️ PT800.nitropreset")
         #expect(pt800.result.blocks.blocks(.carriedOver) == [.levels, .curves])
-        #expect(pt800.result.blocks.blocks(.leftOut) == [.light, .whiteBalance, .colorBalance, .vignette, .grain])
+        #expect(pt800.result.blocks.blocks(.leftOut) == [.whiteBalance, .colorBalance, .vignette, .grain])
     }
 
     @Test func addingAPackageAgainReplacesIt() async {

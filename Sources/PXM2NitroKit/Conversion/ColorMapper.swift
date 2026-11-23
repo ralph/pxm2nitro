@@ -7,19 +7,13 @@ enum ColorMapper: BlockMapper {
     static let block = PhotomatorBlock.hueSaturation
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
-        guard adjustments.enabledBlock(block) != nil else { return [] }
-        guard let color = adjustments.color else {
-            context.report(.skipped, block, "a value is not a number")
-            return []
-        }
-        if !isNearlyEqual(context.blend(0, color.hue), 0) {
-            context.report(.skipped, block, "hue was dropped; Nitro has no global hue shift")
-        }
+        guard let color: PhotomatorColor = context.sliders(block, in: adjustments) else { return [] }
+        context.reportDropped(color[.hue], block, "hue was dropped; Nitro has no global hue shift")
 
         typealias Scale = MappingConstants.Color
         var enhance = NitroSliders(.enhance)
-        enhance["saturation"] = context.blend(1, max(0, 1 + color.saturation * Scale.saturationScale))
-        enhance["vibrancy"] = context.blend(0, color.vibrancy * Scale.vibrancyScale)
+        enhance["saturation"] = context.multiplier(color[.saturation], scale: Scale.saturationScale, block, "saturation")
+        enhance["vibrancy"] = context.blend(0, color[.vibrancy] * Scale.vibrancyScale)
         guard !enhance.isDefault else { return [] }
         context.reportUncalibrated(block, "saturation and vibrance")
         return [.sliders(enhance)]
