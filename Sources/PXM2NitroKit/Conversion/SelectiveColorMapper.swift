@@ -1,8 +1,9 @@
 /// Photomator Selective Color (`ca`, 8 ranges) → Nitro HSL (9 colours). See `docs/mapping.md` §2.2.
 ///
 /// The ranges map one to one (violet → purple). Nitro's extra `lightBlue` swatch gets the
-/// mean of cyan and blue. Nitro's per-colour `range` stays at its default (0). The scale
-/// factors are not calibrated yet (`MappingConstants`).
+/// mean of cyan and blue. Nitro's per-colour `range` stays at its default (0). Values are
+/// clamped to Nitro's ranges (hue ±60°, the rest ±1). The scale factors are not calibrated yet
+/// (`MappingConstants`).
 enum SelectiveColorMapper: BlockMapper {
     static let block = PhotomatorBlock.selectiveColor
 
@@ -21,8 +22,14 @@ enum SelectiveColorMapper: BlockMapper {
         }
 
         var hsl = NitroHSL()
+        var clamped = Set<String>()
         for (color, range) in zip(colors, ranges) {
-            hsl[color] = values(for: range, context: context)
+            hsl[color] = values(for: range, context: context, clamped: &clamped)
+        }
+        if !clamped.isEmpty {
+            let fields = ["hue", "saturation", "brightness"].filter(clamped.contains)
+            context.report(.approximated, block,
+                           "\(listed(fields)) \(fields.count == 1 ? "was" : "were") clamped to Nitro's range for some colours")
         }
         hsl[.lightBlue] = .average(hsl[.cyan], hsl[.blue])
 
@@ -39,11 +46,20 @@ enum SelectiveColorMapper: BlockMapper {
         }
     }
 
-    static func values(for range: SelectiveColorRange, context: MappingContext) -> NitroHSL.Values {
+    /// One Nitro swatch, clamped to Nitro's ranges; appends the names of clamped fields.
+    static func values(for range: SelectiveColorRange, context: MappingContext,
+                       clamped: inout Set<String>) -> NitroHSL.Values {
         typealias Scale = MappingConstants.SelectiveColor
-        return NitroHSL.Values(
-            hueDelta: context.blend(0, range.hue * Scale.hueDegreesPerUnit),
-            saturationDelta: context.blend(0, range.saturation * Scale.saturationScale),
-            lumaDelta: context.blend(0, range.brightness * Scale.brightnessScale))
+        typealias Values = NitroHSL.Values
+        func limit(_ value: Double, _ bounds: ClosedRange<Double>, _ name: String) -> Double {
+            let limited = bounds.clamping(value)
+            if !isNearlyEqual(limited, value) { clamped.insert(name) }
+            return limited
+        }
+        return Values(
+            hueDelta: limit(context.blend(0, range.hue * Scale.hueDegreesPerUnit), Values.hueRange, "hue"),
+            saturationDelta: limit(context.blend(0, range.saturation * Scale.saturationScale), Values.deltaRange,
+                                   "saturation"),
+            lumaDelta: limit(context.blend(0, range.brightness * Scale.brightnessScale), Values.deltaRange, "brightness"))
     }
 }

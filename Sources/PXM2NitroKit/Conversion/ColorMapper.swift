@@ -12,8 +12,9 @@ enum ColorMapper: BlockMapper {
 
         typealias Scale = MappingConstants.Color
         var enhance = NitroSliders(.enhance)
-        enhance["saturation"] = context.multiplier(color[.saturation], scale: Scale.saturationScale, block, "saturation")
-        enhance["vibrancy"] = context.blend(0, color[.vibrancy] * Scale.vibrancyScale)
+        context.set(&enhance, "saturation", context.factor(color[.saturation], scale: Scale.saturationScale),
+                    block, "saturation")
+        context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale), block, "vibrance")
         return context.uncalibrated(enhance, block, "saturation and vibrance")
     }
 }

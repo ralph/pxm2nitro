@@ -36,6 +36,32 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
     /// Rec. 601 luma weights.
     private static let blackAndWhiteDefaults: [String: Double] = ["red": 0.299, "green": 0.587, "blue": 0.114]
 
+    /// The range of each slider in Nitro's UI (N-3, `docs/nitro-format.md` §3). Mappers clamp
+    /// to it so a preset never holds a value Nitro's own sliders cannot produce. Sliders not
+    /// listed (B&W weights, unused keys) are not clamped.
+    var ranges: [String: ClosedRange<Double>] {
+        switch self {
+        case .tone: Self.toneRanges
+        case .enhance: Self.enhanceRanges
+        case .detail: Self.detailRanges
+        case .vignette: Self.vignetteRanges
+        case .blackAndWhite: [:]
+        }
+    }
+
+    private static let toneRanges: [String: ClosedRange<Double>] = [
+        "exposure": -3...3, "highlights": 0...1, "shadows": -1...1, "midtones": 0.5...1.5,
+        "recovery": -1...1, "boost": 0...1, "boostShadowSliderValue": 0...1,
+        "blackPointDelta": -1...1, "whitePointDelta": -1...1,
+    ]
+    private static let enhanceRanges: [String: ClosedRange<Double>] = [
+        "deepen": 0...2, "lighten": 0...2, "contrast": 0...2, "saturation": 0...2, "vibrancy": -1...1,
+    ]
+    private static let detailRanges: [String: ClosedRange<Double>] = [
+        "clarity": -1...1, "sharpen": -1...1, "lumaNoise": 0...1,
+    ]
+    private static let vignetteRanges: [String: ClosedRange<Double>] = ["intensity": -1...1, "radius": 0...1]
+
     /// Slider values at which the adjustment changes nothing. Usually the defaults, but Nitro's
     /// default vignette still darkens the edges, so only zero intensity is neutral there, and
     /// black & white always changes the image (`nil`). Never use `[:]`: it would mean "always

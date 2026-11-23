@@ -21,7 +21,8 @@ struct ConverterTests {
         let rgb = try #require(preset.adjustments?.curves?.rgb)
         // guard, black handle, 4 inner points, white handle, guard
         #expect(curves.master.count == rgb.count + 2)
-        #expect(curves.master[1] == NitroCurvePoint(x: rgb[0].x, y: rgb[0].y))
+        // A raised black handle is deletable, as Nitro writes it.
+        #expect(curves.master[1] == NitroCurvePoint(x: rgb[0].x, y: rgb[0].y, deletable: !isNearlyEqual(rgb[0].y, 0)))
         #expect(curves.master[2] == NitroCurvePoint(x: rgb[1].x, y: rgb[1].y, deletable: true))
         #expect(curves.master[rgb.count] == NitroCurvePoint(x: 1, y: rgb[rgb.count - 1].y, isWhitePoint: true))
         #expect(curves.red == curves.channel())
@@ -83,7 +84,7 @@ struct ConverterTests {
         #expect(result.preset?.name == "Half")
 
         let curves = try levelsCurves(result, curves: true)
-        #expect(curves.master[1] == NitroCurvePoint(x: 0, y: 0.1))
+        #expect(curves.master[1] == NitroCurvePoint(x: 0, y: 0.1, deletable: true))
         #expect(curves.master[2] == NitroCurvePoint(x: 0.5, y: 0.6, deletable: true))
 
         let mixer = try #require(try contents(result).compactMap(\.channelMixer).first)

@@ -151,13 +151,14 @@ public struct NitroLevelsCurves: Sendable, Equatable {
 
     /// Builds a channel with Nitro's fixed skeleton: invisible guard (0,0), black handle,
     /// `inner` user points (deletable), white handle, invisible guard (maxValue, maxValue).
+    /// Like Nitro, a black handle moved off y = 0 is marked deletable (`N2 curves ends`).
     public func channel(
         black: CurvePoint = CurvePoint(x: 0, y: 0),
         white: CurvePoint = CurvePoint(x: 1, y: 1),
         inner: [CurvePoint] = []
     ) -> [NitroCurvePoint] {
         [NitroCurvePoint(x: 0, y: 0, invisible: true),
-         NitroCurvePoint(x: black.x, y: black.y)]
+         NitroCurvePoint(x: black.x, y: black.y, deletable: !isNearlyEqual(black.y, 0))]
             + inner.map { NitroCurvePoint(x: $0.x, y: $0.y, deletable: true) }
             + [NitroCurvePoint(x: white.x, y: white.y, isWhitePoint: true),
                NitroCurvePoint(x: maxValue, y: maxValue, invisible: true)]
@@ -251,6 +252,9 @@ public enum NitroHSLColor: String, CaseIterable, Sendable {
 /// Nitro's per-colour HSL adjustment. Numeric keys are `<parameter>_<colour>`; 0 is neutral.
 public struct NitroHSL: Sendable, Equatable {
     public struct Values: Sendable, Equatable {
+        /// Nitro's slider ranges (N-3, `docs/nitro-format.md` §3.7): hue in degrees, the rest ±1.
+        static let hueRange = -60.0...60.0, deltaRange = -1.0...1.0
+
         /// Hue shift in degrees.
         public var hueDelta: Double
         public var saturationDelta: Double

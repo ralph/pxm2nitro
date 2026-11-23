@@ -34,10 +34,11 @@ struct VignetteMapperTests {
         #expect(diagnostics.map(\.kind) == [.skipped])
     }
 
-    @Test func outOfRangeStrength() {
+    @Test func brighteningAndOutOfRangeStrength() {
+        // A negative intensity brightens the corners in Nitro too (checked visually).
         let (negative, negativeDiagnostics) = vignette(["E": 1, "e": -0.5])
-        #expect(negative == nil)
-        #expect(negativeDiagnostics.map(\.kind) == [.skipped])
+        #expect(negative?["intensity"] == -0.5)
+        #expect(negativeDiagnostics.map(\.kind) == [.uncalibrated])
 
         let (strong, strongDiagnostics) = vignette(["E": 1, "e": 1.5])
         #expect(strong?["intensity"] == 1)

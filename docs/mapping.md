@@ -13,7 +13,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
 | Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + k·h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + k·b, contrast → Enhance `contrast` = 1 + k·c, clarity → Detail `clarity`, black point → `blackPointDelta` (k < 0); placeholder scales (UI 100 % = 1 unit), reports `uncalibrated`. Texture is skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
-| Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
+| Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`, brightening (negative) included; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
 | Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
@@ -26,7 +26,9 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
    value is not neutral.
 3. **Nitro templates:** every emitted Nitro adjustment starts from a template copied
    from a real Nitro preset (all keys at neutral). The mapped values then overwrite the
-   template. This way we never write a key set Nitro has not written itself.
+   template. This way we never write a key set Nitro has not written itself. Values are
+   clamped to the slider ranges of Nitro's UI (nitro-format §3, N-3) and a clamp is reported as
+   `approximated`, so a preset never holds a value Nitro could not produce itself.
 4. **Preset intensity (`in`)**: scalar values are multiplied by `in`. Curves are blended
    toward identity (`y' = x + in·(y − x)`). In all samples `in == 1`.
 5. **No approximations by default.** Only mappings with a direct Nitro counterpart are
@@ -64,7 +66,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `b` Black & White | `BlackAndWhite` (`red`/`green`/`blue` weights); toning would need `SplitToning` plus a hue Photomator does not store | 🟠 | implemented, see the status table |
 | `M` Color Monochrome | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `s` Sepia | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
-| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: nitro-format §3.12. Softness and black point are dropped. Nitro allows a negative intensity; if that brightens (❓), a brightening Photomator vignette could be converted too (not yet) |
+| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: nitro-format §3.12. Softness and black point are dropped. A negative intensity brightens the corners in Nitro too (checked visually), so brightening vignettes are converted |
 | `g` Grain | `Detail.grainIntensity/grainDensity` (not in Nitro's UI; N-6: no Grain panel) | 🟡 | whether Nitro renders it ❓ |
 | `cL` LUT | `LUT` | 🟠 | needs the `.cube` file on both sides ❓ |
 | `r` Replace Color, `R` Remove Color, `i` Invert | — | ❌ skip and warn | never used in the samples |
