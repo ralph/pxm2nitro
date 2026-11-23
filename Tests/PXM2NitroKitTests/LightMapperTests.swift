@@ -12,8 +12,8 @@ struct LightMapperTests {
         let (sliders, diagnostics) = map(["E": 1, "e": 0.5, "h": -0.25, "s": 0.2, "b": -0.1, "c": 0.3])
         let toneSliders = try #require(sliders[.tone])
         #expect(toneSliders["exposure"] == 0.5)
-        #expect(toneSliders["highlights"] == 0.75)
-        #expect(toneSliders["shadows"] == 0.2)
+        #expect(toneSliders["highlights"] == 0.875)
+        #expect(toneSliders["shadows"] == 0.1)
         #expect(toneSliders["midtones"] == 0.9)
         #expect(toneSliders["boost"] == 1)
         #expect(toneSliders["boostShadowSliderValue"] == 0.9)
@@ -25,7 +25,7 @@ struct LightMapperTests {
     @Test func appliesIntensity() throws {
         let (sliders, _) = map(["E": 1, "e": 0.4, "h": -0.5, "c": -0.2], intensity: 0.5)
         #expect(sliders[.tone]?["exposure"] == 0.2)
-        #expect(sliders[.tone]?["highlights"] == 0.75)
+        #expect(sliders[.tone]?["highlights"] == 0.875)
         #expect(sliders[.enhance]?["contrast"] == 0.9)
     }
 
@@ -48,10 +48,11 @@ struct LightMapperTests {
         #expect(diagnostics.map(\.kind) == [.skipped, .uncalibrated])
     }
 
-    @Test func blackPointGoesToNitrosBlackSlider() throws {
+    /// Photomator's positive black point deepens the blacks; Nitro's positive Black lifts them.
+    @Test func blackPointGoesToNitrosBlackSliderWithTheSignFlipped() throws {
         let (sliders, diagnostics) = map(["E": 1, "B": 0.25], intensity: 0.5)
         let tone = try #require(sliders[.tone])
-        #expect(tone["blackPointDelta"] == 0.125)
+        #expect(tone["blackPointDelta"] == -0.0625)
         #expect(diagnostics.map(\.message) == ["black point: placeholder scale, not calibrated yet"])
     }
 

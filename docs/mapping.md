@@ -11,7 +11,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
-| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`, black point → `blackPointDelta`; placeholder scales, reports `uncalibrated`. Texture is skipped |
+| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + k·h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + k·b, contrast → Enhance `contrast` = 1 + k·c, clarity → Detail `clarity`, black point → `blackPointDelta` (k < 0); placeholder scales (UI 100 % = 1 unit), reports `uncalibrated`. Texture is skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
@@ -46,10 +46,10 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
 | `l` Light: brightness | `Tone.midtones` = 1 + k·b (alternative: `Enhance.lighten` / `deepen`) | 🟠 | revisit after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
-| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign and scale ❓ |
+| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign is opposite (checked on a RAW), scale ❓ |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
-| `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | semantics ❓ |
+| `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | `f` = Blacks, `c` = Whites ✅ (photomator-format §3.2); their curve shape ❓ |
 | `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ❓ N-1 `WB jpg` shows whether Nitro behaves relatively on non-RAW files |
 | `hS` saturation | `Enhance.saturation` = 1 + k·s | 🟢 | |
 | `hS` vibrancy | `Enhance.vibrancy` | 🟢 | scale ❓ |
@@ -114,8 +114,8 @@ the master between luminance ("Grau") and RGB.
 | 6 violet | `purple` |
 | 7 magenta | `magenta` |
 
-- `hue` → `hueDelta_<c>` = k_hue · hue. Nitro uses degrees. Photomator stores percent/100
-  (UI ±400 %). Which angle 100 % equals is ❓ and needs a visual calibration.
+- `hue` → `hueDelta_<c>` = k_hue · hue. Nitro uses degrees. Photomator stores ±4 for its UI ±100 %
+  (storage scales: photomator-format §3.10). Which angle that equals is ❓ and needs a visual calibration.
 - `saturation` → `saturationDelta_<c>` = k_sat · saturation.
 - `brightness` → `lumaDelta_<c>` = k_lum · brightness.
 - `range_<c>` = 0 (Nitro default; Photomator has no per-colour range).
@@ -162,13 +162,14 @@ otherwise bake into the curves.
 
 ### 2.6 Fade (`f`): skip unless N-6 finds a Nitro equivalent; the curve baking below is opt-in
 
-❓ Semantics are pending. Working hypothesis: fade raises black output and/or lowers white
-output. Bake it into the master curve by moving the black and white handle outputs.
+✅ `f` = Blacks (default 1) and `c` = Whites (default 0), photomator-format §3.2. How they shape
+the curve is ❓. Working hypothesis: they raise the black output and lower the white output, so bake
+them into the master curve by moving the black and white handle outputs.
 
 ### 2.7 Light (`l`)
 
-Photomator stores percent/100 (Exposure UI ±400 %, Highlights/Shadows ±100 %, Brightness/
-Contrast/Black Point ±200 %). Nitro Exposure is in EV. How much EV Photomator's "100 %
+Photomator stores percent/100 (Exposure UI ±400 %, Brightness/Contrast/Black Point ±200 %), except
+Highlights/Shadows, which store ±2 for the UI's ±100 %. Nitro Exposure is in EV. How much EV Photomator's "100 %
 exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. Notes:
 
 - Nitro `Tone.highlights` and `Tone.midtones` are 1 in all samples. They are either
@@ -177,8 +178,10 @@ exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. 
   `Tone.highlights`.
 - Photomator `blackPoint` raises or lowers the black level. Nitro `blackPointDelta` is an offset to
   `baseBlackPoint` (5 in every sample, probably a constant; N-4.2). Implemented as
-  `blackPointDelta = k · blackPoint`, sign assumed to match (positive = deeper blacks). It only
-  takes effect on RAW files, Nitro's main use case.
+  `blackPointDelta = k · blackPoint` with **k = −0.5** (maps Photomator's ±2 onto Nitro's ±1): on L1008408.DNG a positive Photomator black
+  point deepens the blacks, while a positive Nitro Black (range ±1) lifts them (−1 crushes the
+  shadows, +1 leaves no pure black). |k| is a placeholder; Photomator +100 % looked weaker
+  than Nitro −1. It only takes effect on RAW files, Nitro's main use case.
 
 ### 2.8 RAW
 

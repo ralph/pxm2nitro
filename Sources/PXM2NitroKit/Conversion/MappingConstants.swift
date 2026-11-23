@@ -2,14 +2,14 @@
 /// Mappers that use them must call `MappingContext.reportUncalibrated`. See `docs/mapping.md`
 /// §3 and `docs/sample-requests.md` for how to calibrate them.
 enum MappingConstants {
-    /// Photomator Selective Color (UI values stored as percent / 100) → Nitro HSL.
+    /// Photomator Selective Color → Nitro HSL. Storage scales differ per slider (sample `C`).
     enum SelectiveColor {
-        /// Hue (±1 = ±100 %, range ±4) → `hueDelta` in degrees. Placeholder.
-        static let hueDegreesPerUnit = 30.0
-        /// Saturation (±1 = ±100 %) → `saturationDelta`. Placeholder.
+        /// Hue (stored ±4 = UI ±100 %) → `hueDelta` in degrees. Placeholder: UI 100 % = 30°.
+        static let hueDegreesPerUnit = 7.5
+        /// Saturation (stored ±1 = UI ±100 %) → `saturationDelta`. Placeholder.
         static let saturationScale = 1.0
-        /// Brightness (±1 = ±100 %) → `lumaDelta`. Placeholder.
-        static let brightnessScale = 1.0
+        /// Brightness (stored ±4 = UI ±200 %) → `lumaDelta`. Placeholder: UI 100 % = 1.
+        static let brightnessScale = 0.5
     }
 
     /// Photomator Color (`hS`, UI values stored as percent / 100) → Nitro Enhance.
@@ -20,23 +20,25 @@ enum MappingConstants {
         static let vibrancyScale = 1.0
     }
 
-    /// Photomator Light (`l`, UI values stored as percent / 100) → Nitro Tone and Enhance.
+    /// Photomator Light (`l`) → Nitro Tone and Enhance. Stored as UI percent / 100 unless noted.
     enum Light {
-        /// Exposure (±1 = ±100 %) → `exposure` in EV. Placeholder: 100 % = 1 EV.
+        /// Exposure (±1 = ±100 %, UI range ±400 %) → `exposure` in EV. Placeholder: 100 % = 1 EV.
         static let exposureEVPerUnit = 1.0
-        /// Highlights (negative = recover) → `highlights` = 1 + scale · h (Nitro's neutral is 1). Placeholder.
-        static let highlightsScale = 1.0
-        /// Shadows (±1 = ±100 %) → `shadows`. Placeholder.
-        static let shadowsScale = 1.0
+        /// Highlights (stored ±2 = UI ±100 %, negative = recover) → `highlights` = 1 + scale · h
+        /// (Nitro's neutral is 1). Placeholder: UI 100 % = 1.
+        static let highlightsScale = 0.5
+        /// Shadows (stored ±2 = UI ±100 %) → `shadows`. Placeholder: UI 100 % = 1.
+        static let shadowsScale = 0.5
         /// Brightness (±1 = ±100 %) → `midtones` = 1 + scale · b (Nitro's neutral is 1). Placeholder.
         static let brightnessScale = 1.0
         /// Contrast (±1 = ±100 %) → Enhance `contrast` = 1 + scale · c. Placeholder.
         static let contrastScale = 1.0
         /// Clarity (±1 = ±100 %) → Detail `clarity`. Placeholder.
         static let clarityScale = 1.0
-        /// Black point (±1 = ±100 %) → Tone `blackPointDelta` (Nitro's Black slider). Placeholder;
-        /// the sign is assumed to match (positive = deeper blacks).
-        static let blackPointScale = 1.0
+        /// Black point (±1 = ±100 %, range ±2) → Tone `blackPointDelta` (Nitro's Black slider,
+        /// range ±1). Negative because the signs are opposite (`docs/mapping.md` §2.7); the
+        /// magnitude 0.5 maps range onto range (Photomator +100 % looked weaker than Nitro −1).
+        static let blackPointScale = -0.5
     }
 
     /// Photomator Sharpen (`S`) → Nitro Detail.
