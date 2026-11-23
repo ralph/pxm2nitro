@@ -11,7 +11,8 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
-| Light (`l`) | Tone + Enhance | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c; placeholder scales, reports `uncalibrated`. Black point (RAW-only in Nitro), clarity (next step) and texture are skipped |
+| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`; placeholder scales, reports `uncalibrated`. Black point (RAW-only in Nitro) and texture are skipped |
+| Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
@@ -201,6 +202,10 @@ neutral defaults (request N-0). For reference only, if RAW params ever turn up:
 
 If a preset carries no RAW parameters, the converter emits no `RAW` block and leaves `Tone.boost`
 at its template value.
+
+The same holds for `Detail`: it is emitted for clarity or sharpening and then replaces the image's
+noise reduction too. Its template matches the Detail blocks Nitro writes into its own presets
+(noise sliders at 0), so a converted preset behaves like a clarity preset saved in Nitro.
 
 ## 3. Calibration plan (scale factors)
 

@@ -3,63 +3,70 @@ import Foundation
 import Testing
 
 struct LightMapperTests {
-    private func map(_ light: JSONValue, intensity: Double = 1) -> (tone: NitroSliders?, enhance: NitroSliders?, [ConversionDiagnostic]) {
+    /// The mapped slider adjustments by kind, and the diagnostics.
+    private func map(_ light: JSONValue, intensity: Double = 1) -> ([NitroSliderKind: NitroSliders], [ConversionDiagnostic]) {
         let (contents, diagnostics) = Fixtures.map(LightMapper.self, light, intensity: intensity)
-        let sliders = contents.compactMap(\.sliders)
-        return (sliders.first { $0.kind == .tone }, sliders.first { $0.kind == .enhance }, diagnostics)
+        return (Dictionary(uniqueKeysWithValues: contents.compactMap(\.sliders).map { ($0.kind, $0) }), diagnostics)
     }
 
     @Test func mapsToneSlidersAndContrast() throws {
-        let (tone, enhance, diagnostics) = map(["E": 1, "e": 0.5, "h": -0.25, "s": 0.2, "b": -0.1, "c": 0.3])
-        let toneSliders = try #require(tone)
+        let (sliders, diagnostics) = map(["E": 1, "e": 0.5, "h": -0.25, "s": 0.2, "b": -0.1, "c": 0.3])
+        let toneSliders = try #require(sliders[.tone])
         #expect(toneSliders["exposure"] == 0.5)
         #expect(toneSliders["highlights"] == 0.75)
         #expect(toneSliders["shadows"] == 0.2)
         #expect(toneSliders["midtones"] == 0.9)
         #expect(toneSliders["boost"] == 1)
         #expect(toneSliders["boostShadowSliderValue"] == 0.9)
-        #expect(try #require(enhance)["contrast"] == 1.3)
+        #expect(try #require(sliders[.enhance])["contrast"] == 1.3)
+        #expect(sliders[.detail] == nil)
         #expect(diagnostics.map(\.kind) == [.uncalibrated])
     }
 
     @Test func appliesIntensity() throws {
-        let (tone, enhance, _) = map(["E": 1, "e": 0.4, "h": -0.5, "c": -0.2], intensity: 0.5)
-        #expect(tone?["exposure"] == 0.2)
-        #expect(tone?["highlights"] == 0.75)
-        #expect(enhance?["contrast"] == 0.9)
+        let (sliders, _) = map(["E": 1, "e": 0.4, "h": -0.5, "c": -0.2], intensity: 0.5)
+        #expect(sliders[.tone]?["exposure"] == 0.2)
+        #expect(sliders[.tone]?["highlights"] == 0.75)
+        #expect(sliders[.enhance]?["contrast"] == 0.9)
     }
 
     @Test func clampedMultipliersAreReported() throws {
-        let (tone, _, diagnostics) = map(["E": 1, "b": -1.5])
-        #expect(try #require(tone)["midtones"] == 0)
+        let (sliders, diagnostics) = map(["E": 1, "b": -1.5])
+        #expect(try #require(sliders[.tone])["midtones"] == 0)
         #expect(diagnostics.map(\.kind) == [.approximated, .uncalibrated])
         #expect(diagnostics.last?.message.hasPrefix("brightness use") == true)
     }
 
     @Test func raisedHighlightsAreReported() {
-        let (tone, _, diagnostics) = map(["E": 1, "h": 0.8])
-        #expect(tone == nil)
+        let (sliders, diagnostics) = map(["E": 1, "h": 0.8])
+        #expect(sliders.isEmpty)
         #expect(diagnostics.map(\.kind) == [.skipped])
     }
 
-    @Test func blackPointClarityAndTextureAreReported() {
-        let (tone, enhance, diagnostics) = map(["E": 1, "e": 0.1, "B": 0.2, "C": -0.1, "T": 0.1])
-        #expect(tone != nil)
-        #expect(enhance == nil)
-        #expect(diagnostics.map(\.kind) == [.skipped, .skipped, .skipped, .uncalibrated])
+    @Test func blackPointAndTextureAreReported() {
+        let (sliders, diagnostics) = map(["E": 1, "e": 0.1, "B": 0.2, "T": 0.1])
+        #expect(sliders.keys.sorted { $0.rawValue < $1.rawValue } == [.tone])
+        #expect(diagnostics.map(\.kind) == [.skipped, .skipped, .uncalibrated])
+    }
+
+    @Test func clarityGoesToDetail() throws {
+        let (sliders, diagnostics) = map(["E": 1, "C": -0.2], intensity: 0.5)
+        #expect(Array(sliders.keys) == [.detail])
+        #expect(sliders[.detail]?["clarity"] == -0.1)
+        #expect(diagnostics.map(\.message) == ["clarity use placeholder scale factors until calibrated"])
     }
 
     @Test func neutralOrDisabledProducesNothing() {
         for light: JSONValue in [["E": 1, "e": 0, "h": 0, "B": 0], ["E": 0, "e": 0.5]] {
-            let (tone, enhance, diagnostics) = map(light)
-            #expect(tone == nil && enhance == nil)
+            let (sliders, diagnostics) = map(light)
+            #expect(sliders.isEmpty)
             #expect(diagnostics.isEmpty)
         }
     }
 
     @Test func nonNumericValueIsSkipped() {
-        let (tone, _, diagnostics) = map(["E": 1, "e": "bright"])
-        #expect(tone == nil)
+        let (sliders, diagnostics) = map(["E": 1, "e": "bright"])
+        #expect(sliders.isEmpty)
         #expect(diagnostics.map(\.kind) == [.skipped])
     }
 

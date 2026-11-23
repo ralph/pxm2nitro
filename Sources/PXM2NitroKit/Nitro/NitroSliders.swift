@@ -3,6 +3,7 @@
 public enum NitroSliderKind: String, CaseIterable, Sendable {
     case tone = "Tone"
     case enhance = "Enhance"
+    case detail = "Detail"
 
     /// Every slider with its default value, as Nitro writes them. A default is not always
     /// a no-op: Nitro's default B&W and Vignette still change the image.
@@ -10,6 +11,7 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
         switch self {
         case .tone: Self.toneDefaults
         case .enhance: Self.enhanceDefaults
+        case .detail: Self.detailDefaults
         }
     }
 
@@ -20,6 +22,12 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
     private static let enhanceDefaults: [String: Double] = [
         "deepen": 0, "lighten": 0, "contrast": 1, "saturation": 1, "vibrancy": 0,
     ]
+    /// As in Nitro's own saved Detail presets: noise sliders at 0, so applying the preset sets
+    /// noise reduction to 0 just like a clarity preset saved in Nitro does.
+    private static let detailDefaults: [String: Double] = [
+        "clarity": 0, "sharpen": 0, "lumaNoise": 0, "colorNoise": 0, "noiseDetail": 0, "blur": 0,
+        "jpegNoise": 0, "grainIntensity": 0, "grainDensity": 0.5,
+    ]
 
     /// Keys besides `numeric`, `enabled` and `disclosed` that Nitro writes for this adjustment.
     var fixedKeys: [String: JSONValue] {
@@ -27,6 +35,9 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
         case .tone: ["preserve": false, "defaultsUpdated": true, "baseBlackPoint": 5, "baseWhitePoint": 0.15,
                      "bpIsAbs": false, "wpIsAbs": false, "supportsBoost": true, "supportsToneMap": false]
         case .enhance: [:]
+        // Nitro writes a random grain seed. A fixed one keeps the output reproducible; it only
+        // matters with grain, which the converter does not write.
+        case .detail: ["preserve": false, "defaultsUpdated": true, "grainSeed": 25.016823]
         }
     }
 }

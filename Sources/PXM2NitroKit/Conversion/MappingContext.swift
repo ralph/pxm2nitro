@@ -40,14 +40,22 @@ struct MappingContext {
         return sliders
     }
 
-    /// Reports a value that has no Nitro counterpart, unless it has no effect (0 after intensity).
-    mutating func reportDropped(_ value: Double, _ block: PhotomatorBlock, _ message: String) {
-        if !isNearlyEqual(blend(0, value), 0) { report(.skipped, block, message) }
+    /// Reports a value that has no Nitro counterpart, unless it is at `neutral` (after intensity).
+    mutating func reportDropped(_ value: Double, neutral: Double = 0, _ block: PhotomatorBlock, _ message: String) {
+        if !isNearlyEqual(blend(neutral, value), neutral) { report(.skipped, block, message) }
     }
 
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
+    }
+
+    /// The sliders as Nitro content, with their placeholder scales reported; nothing if every
+    /// slider is at its default.
+    mutating func uncalibrated(_ sliders: NitroSliders, _ block: PhotomatorBlock, _ what: String) -> [NitroAdjustment.Content] {
+        guard !sliders.isDefault else { return [] }
+        reportUncalibrated(block, what)
+        return [.sliders(sliders)]
     }
 
     /// Same for a list of converted sliders ("a, b and c"); reports nothing for an empty list.

@@ -32,5 +32,13 @@ enum MappingConstants {
         static let brightnessScale = 1.0
         /// Contrast (±1 = ±100 %) → Enhance `contrast` = 1 + scale · c. Placeholder.
         static let contrastScale = 1.0
+        /// Clarity (±1 = ±100 %) → Detail `clarity`. Placeholder.
+        static let clarityScale = 1.0
+    }
+
+    /// Photomator Sharpen (`S`) → Nitro Detail.
+    enum Sharpen {
+        /// Intensity (0…1, default 0.5) → `sharpen`. Placeholder.
+        static let intensityScale = 1.0
     }
 }
