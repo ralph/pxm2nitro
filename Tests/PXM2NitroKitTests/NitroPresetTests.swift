@@ -60,17 +60,27 @@ struct NitroPresetTests {
         let enhance = try #require(preset.adjustments.compactMap(\.content.sliders).first { $0.kind == .enhance })
         #expect(enhance["saturation"] == 0.8)
         #expect(enhance["vibrancy"] == -0.2)
-        #expect(!enhance.isDefault)
+        #expect(!enhance.isNoOp)
     }
 
     @Test func sliderTemplatesWriteEveryDefault() throws {
         for kind in NitroSliderKind.allCases {
             let sliders = NitroSliders(kind)
-            #expect(sliders.isDefault)
+            #expect(sliders.isNoOp == (kind != .vignette))
             let json = try #require(NitroAdjustment(.sliders(sliders)).json.objectValue)
             #expect(json["numeric"]?.objectValue?.keys.sorted() == kind.defaults.keys.sorted())
             #expect(json["enabled"] == true)
         }
+    }
+
+    /// Nitro's own blocks at their defaults equal the converter's templates.
+    @Test(arguments: [("N0 defaults", "Vignette"), ("Lebendig", "Tone")])
+    func sliderTemplatesMatchNitrosBlocks(sample: String, id: String) throws {
+        let preset = try NitroPreset(data: Data(contentsOf: Fixtures.nitroPreset(sample)))
+        var sliders = try #require(preset.adjustments.first { $0.id == id }?.content.sliders)
+        // Lebendig's Tone moved only the RAW-only white point.
+        if id == "Tone" { sliders["whitePointDelta"] = 0 }
+        #expect(sliders == NitroSliders(sliders.kind))
     }
 
     @Test func mergesSliderAdjustmentsByID() {

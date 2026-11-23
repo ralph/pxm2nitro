@@ -166,12 +166,22 @@ public struct SelectiveColorRange: Sendable, Equatable {
     public var brightness: Double
 }
 
-/// A block of plain numeric fields, stored as UI percent / 100. Missing fields are 0.
-public struct PhotomatorSliders<Field>: Sendable, Equatable
-where Field: RawRepresentable<String> & CaseIterable & Hashable & Sendable {
+/// The fields of a Photomator slider block, with their storage keys as raw values.
+public protocol PhotomatorSliderField: RawRepresentable<String>, CaseIterable, Hashable, Sendable {
+    /// Photomator's default, used for a missing field.
+    var defaultValue: Double { get }
+}
+
+public extension PhotomatorSliderField {
+    var defaultValue: Double { 0 }
+}
+
+/// A block of plain numeric fields, stored as UI percent / 100.
+public struct PhotomatorSliders<Field: PhotomatorSliderField>: Sendable, Equatable {
     public let values: [Field: Double]
 
-    public subscript(field: Field) -> Double { values[field] ?? 0 }
+    /// The stored value, or Photomator's default if the field is missing.
+    public subscript(field: Field) -> Double { values[field] ?? field.defaultValue }
 
     /// `nil` if a field is present but not a number.
     init?(_ payload: [String: JSONValue]) {
@@ -186,29 +196,45 @@ where Field: RawRepresentable<String> & CaseIterable & Hashable & Sendable {
 }
 
 /// Fields of Light (`l`).
-public enum LightField: String, CaseIterable, Sendable {
+public enum LightField: String, PhotomatorSliderField {
     case exposure = "e", highlights = "h", shadows = "s", brightness = "b", contrast = "c"
     case blackPoint = "B", clarity = "C", texture = "T"
 }
 
 /// Fields of Color (`hS`): global hue, saturation and vibrance.
-public enum ColorField: String, CaseIterable, Sendable {
+public enum ColorField: String, PhotomatorSliderField {
     case hue = "h", saturation = "s", vibrancy = "v"
 }
 
 /// Fields of Sharpen (`S`).
-public enum SharpenField: String, CaseIterable, Sendable {
+public enum SharpenField: String, PhotomatorSliderField {
     case intensity = "i", radius = "r"
 
-    /// Photomator's default intensity.
-    public static let defaultIntensity = 0.5
-    /// Photomator's default radius.
-    public static let defaultRadius = 2.5
+    public var defaultValue: Double {
+        switch self {
+        case .intensity: 0.5
+        case .radius: 2.5
+        }
+    }
+}
+
+/// Fields of Vignette (`v`).
+public enum VignetteField: String, PhotomatorSliderField {
+    case exposure = "e", blackPoint = "b", softness = "s"
+
+    public var defaultValue: Double {
+        switch self {
+        case .exposure: 0.5
+        case .blackPoint: 0
+        case .softness: 1
+        }
+    }
 }
 
 public typealias PhotomatorLight = PhotomatorSliders<LightField>
 public typealias PhotomatorSharpen = PhotomatorSliders<SharpenField>
 public typealias PhotomatorColor = PhotomatorSliders<ColorField>
+public typealias PhotomatorVignette = PhotomatorSliders<VignetteField>
 
 extension PhotomatorAdjustments {
     public var curves: PhotomatorCurves? {

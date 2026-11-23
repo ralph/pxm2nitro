@@ -1,4 +1,3 @@
-import Foundation
 @testable import PXM2NitroKit
 import Testing
 
@@ -68,13 +67,5 @@ struct LightMapperTests {
         let (sliders, diagnostics) = map(["E": 1, "e": "bright"])
         #expect(sliders.isEmpty)
         #expect(diagnostics.map(\.kind) == [.skipped])
-    }
-
-    @Test func toneTemplateMatchesNitrosOwnToneBlock() throws {
-        // Lebendig's Tone only moved the RAW-only white point; everything else is at Nitro's defaults.
-        let preset = try NitroPreset(data: Data(contentsOf: Fixtures.nitroPreset("Lebendig")))
-        var lebendig = try #require(preset.adjustments.compactMap(\.content.sliders).first { $0.kind == .tone })
-        lebendig["whitePointDelta"] = 0
-        #expect(lebendig == NitroSliders(.tone))
     }
 }

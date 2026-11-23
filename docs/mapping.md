@@ -13,6 +13,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
 | Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`; placeholder scales, reports `uncalibrated`. Black point (RAW-only in Nitro) and texture are skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
+| Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 

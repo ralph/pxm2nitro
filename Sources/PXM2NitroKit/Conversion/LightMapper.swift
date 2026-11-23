@@ -36,11 +36,11 @@ enum LightMapper: BlockMapper {
 
         context.reportDropped(max(light[.highlights], 0), block,
                               "raised highlights were dropped; Nitro can only recover highlights")
-        context.reportDropped(light[.blackPoint], block,
+        context.reportDropped(light, .blackPoint, block,
                               "black point was dropped; Nitro's Black slider works on RAW files only")
-        context.reportDropped(light[.texture], block, "texture was dropped; Nitro has no texture slider")
+        context.reportDropped(light, .texture, block, "texture was dropped; Nitro has no texture slider")
 
         context.reportUncalibrated(block, converted)
-        return [tone, enhance, detail].filter { !$0.isDefault }.map(NitroAdjustment.Content.sliders)
+        return [tone, enhance, detail].filter { !$0.isNoOp }.map(NitroAdjustment.Content.sliders)
     }
 }
