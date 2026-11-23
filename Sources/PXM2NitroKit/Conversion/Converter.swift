@@ -92,7 +92,7 @@ public enum Converter {
         let supported = supportedBlocks
         let enabled = adjustments.enabledBlocks
         for block in enabled where !supported.contains(block) {
-            context.report(.skipped, block, "no Nitro equivalent is implemented yet")
+            context.report(.skipped, block, skipReason(block))
         }
         reportOtherProperties(&context)
 
@@ -105,6 +105,25 @@ public enum Converter {
                 .map { BlockOutcome(block, $0) }
         }
         return ConversionResult(preset: nitroPreset, diagnostics: context.diagnostics, blocks: blocks)
+    }
+
+    /// Why an enabled block without a mapper is skipped (`docs/sample-requests.md` N-6).
+    private static func skipReason(_ block: PhotomatorBlock) -> String {
+        switch block {
+        case .fade, .selectiveClarity, .replaceColor, .removeColor, .colorMonochrome, .sepia, .invert:
+            "Nitro has no such adjustment"
+        case .grain:
+            "Nitro has no grain control (its hidden grain keys are untested)"
+        case .colorBalance:
+            "Nitro has no such adjustment (Split Toning has no midtones)"
+        case .whiteBalance:
+            "Nitro stores absolute Kelvin, so a relative shift cannot be converted"
+        case .lut:
+            "LUTs are not converted yet"
+        case .light, .hueSaturation, .levels, .curves, .sharpen, .selectiveColor, .channelMixer,
+             .blackAndWhite, .vignette: // have mappers; reached only if one is removed
+            "this converter has no mapper for it"
+        }
     }
 
     /// A Nitro preset holds each adjustment once. Slider adjustments written by several

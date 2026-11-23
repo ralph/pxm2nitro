@@ -138,7 +138,7 @@ struct PresetDetails: View {
                 Text("\(Text("≈ Approximate").bold()) settings are converted, but not exactly; each preset lists what changed.")
             }
             if !package.leftOut.isEmpty {
-                Text("\(Text("Left out").bold()) settings have no Nitro counterpart in this converter yet. The rest of the preset is still written.")
+                Text("\(Text("Left out").bold()) settings are not written, mostly because Nitro has no counterpart. The rest of the preset is still written.")
             }
         }
         .font(.callout)

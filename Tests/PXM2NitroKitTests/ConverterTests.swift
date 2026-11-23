@@ -34,6 +34,16 @@ struct ConverterTests {
         #expect(skipped == [.blackAndWhite, .grain])
     }
 
+    @Test func skippedBlocksSayWhy() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "f": ["E": 1, "f": 0.9], "w": ["E": 1, "t": 0.2], "B": ["E": 1],
+        ])
+        let messages = Converter.convert(Fixtures.preset("Gaps", adjustments)).diagnostics.map(\.description)
+        #expect(messages.contains("skipped Fade: Nitro has no such adjustment"))
+        #expect(messages.contains("skipped Color Balance: Nitro has no such adjustment (Split Toning has no midtones)"))
+        #expect(messages.contains { $0.hasPrefix("skipped White Balance: Nitro stores absolute Kelvin") })
+    }
+
     @Test func convertsRGBLevels() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("filmic", "PT800"))
         let levels = try levelsCurves(result, curves: false)
