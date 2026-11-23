@@ -22,7 +22,7 @@ struct ConverterTests {
         // guard, black handle, 4 inner points, white handle, guard
         #expect(curves.master.count == rgb.count + 2)
         // A raised black handle is deletable, as Nitro writes it.
-        #expect(curves.master[1] == NitroCurvePoint(x: rgb[0].x, y: rgb[0].y, deletable: rgb[0].y != 0))
+        #expect(curves.master[1] == NitroCurvePoint(x: rgb[0].x, y: rgb[0].y, deletable: !isNearlyEqual(rgb[0].y, 0)))
         #expect(curves.master[2] == NitroCurvePoint(x: rgb[1].x, y: rgb[1].y, deletable: true))
         #expect(curves.master[rgb.count] == NitroCurvePoint(x: 1, y: rgb[rgb.count - 1].y, isWhitePoint: true))
         #expect(curves.red == curves.channel())

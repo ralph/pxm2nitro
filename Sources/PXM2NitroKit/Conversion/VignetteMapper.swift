@@ -3,9 +3,8 @@
 /// Exposure (the vignette's strength) becomes Nitro's `intensity`, clamped to Nitro's ±1
 /// (`docs/nitro-format.md` §3.12). A negative value brightens the corners in both apps, so
 /// brightening vignettes convert too. Nitro's `radius` is a different control from Photomator's
-/// softness, so it stays at Nitro's default and a
-/// non-default softness is reported, as is the black point. The scale factor is not
-/// calibrated yet (`MappingConstants`).
+/// softness, so it stays at Nitro's default and a non-default softness is reported, as is the
+/// black point. The scale factor is not calibrated yet (`MappingConstants`).
 enum VignetteMapper: BlockMapper {
     static let block = PhotomatorBlock.vignette
 
