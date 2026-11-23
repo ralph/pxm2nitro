@@ -4,6 +4,9 @@ enum ChannelMixerMapper: BlockMapper {
     static let block = PhotomatorBlock.channelMixer
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
+        context.reportUnreadableChannels(adjustments.channelMixer, in: adjustments, block: block) { raw, _ in
+            raw.objectValue == nil
+        }
         guard let mixer = adjustments.channelMixer else { return [] }
         let identity = NitroChannelMixer()
         func blended(_ row: ChannelMixerRow?, _ neutral: NitroChannelMixer.Row) -> NitroChannelMixer.Row {

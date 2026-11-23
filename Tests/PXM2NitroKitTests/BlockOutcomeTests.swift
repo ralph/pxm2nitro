@@ -39,6 +39,17 @@ struct BlockOutcomeTests {
         #expect(Converter.convert(preset).blocks == [BlockOutcome(.selectiveColor, .leftOut)])
     }
 
+    @Test func malformedChannelsAreLeftOut() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "L": ["E": 1, "rgb": "not an object"],
+            "C": ["E": 1, "rgb": ["p": "not an array"]],
+            "m": ["E": 1, "r": 3],
+        ])
+        let blocks = Converter.convert(Fixtures.preset("Broken", adjustments)).blocks
+        #expect(Set(blocks.map(\.block)) == [.levels, .curves, .channelMixer])
+        #expect(blocks.allSatisfy { $0.status == .leftOut })
+    }
+
     @Test func presetWithoutAdjustmentsHasNoBlocks() {
         let preset = Fixtures.preset("Empty", nil)
         #expect(Converter.convert(preset).blocks.isEmpty)

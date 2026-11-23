@@ -24,6 +24,23 @@ struct MappingContext {
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
     }
+
+    /// Reports channels of an enabled Curves/Levels/Channel Mixer block whose raw payload
+    /// could not be (fully) read, so the block is not mistaken for neutral.
+    mutating func reportUnreadableChannels<Value>(
+        _ channels: ColorChannels<Value>?, in adjustments: PhotomatorAdjustments, block: PhotomatorBlock,
+        isUnreadable: (_ raw: JSONValue, _ parsed: Value?) -> Bool
+    ) {
+        guard let payload = adjustments.enabledBlock(block) else { return }
+        let entries: [(key: String, name: String, parsed: Value?)] = [
+            ("rgb", "RGB", channels?.rgb), ("r", "red", channels?.red), ("g", "green", channels?.green),
+            ("b", "blue", channels?.blue), ("l", "luminance", channels?.luminance),
+        ]
+        for entry in entries {
+            guard let raw = payload[entry.key], isUnreadable(raw, entry.parsed) else { continue }
+            report(.skipped, block, "the \(entry.name) channel is malformed and could not be read completely")
+        }
+    }
 }
 
 /// Maps one Photomator block to zero or more Nitro adjustments.
