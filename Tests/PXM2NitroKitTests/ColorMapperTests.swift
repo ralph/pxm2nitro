@@ -11,7 +11,7 @@ struct ColorMapperTests {
         let (result, diagnostics) = enhance(["E": 1, "h": 0, "s": -0.2, "v": 0.15])
         let enhance = try #require(result)
         #expect(enhance.kind == .enhance)
-        #expect(abs(enhance["saturation"] - 0.84) < 1e-12)
+        #expect(isNearlyEqual(enhance["saturation"], 0.84))
         #expect(enhance["vibrancy"] == 0.15)
         #expect(enhance["contrast"] == 1)
         #expect(diagnostics.map(\.kind) == [.uncalibrated])
@@ -20,7 +20,7 @@ struct ColorMapperTests {
     @Test func appliesIntensity() throws {
         let (result, _) = enhance(["E": 1, "s": -0.4, "v": 0.2], intensity: 0.5)
         let enhance = try #require(result)
-        #expect(abs(enhance["saturation"] - 0.84) < 1e-12)
+        #expect(isNearlyEqual(enhance["saturation"], 0.84))
         #expect(enhance["vibrancy"] == 0.1)
     }
 
@@ -55,8 +55,8 @@ struct ColorMapperTests {
         let enhances = try #require(saturated.preset).adjustments.compactMap(\.content.sliders).filter { $0.kind == .enhance }
         #expect(enhances.count == 1)
         let enhance = try #require(enhances.first)
-        #expect(abs(enhance["saturation"] - 0.84) < 1e-12)
-        #expect(abs(enhance["contrast"] - 1.075) < 1e-12)
+        #expect(isNearlyEqual(enhance["saturation"], 0.84))
+        #expect(isNearlyEqual(enhance["contrast"], 1.075))
         // Saturation alone is calibrated, so Color carries over without a note.
         #expect(saturated.blocks.contains(BlockOutcome(.hueSaturation, .carriedOver)))
 

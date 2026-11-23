@@ -46,7 +46,7 @@ struct SharpenMapperTests {
         let preset = try #require(Converter.convert(Fixtures.preset("Sharp", adjustments)).preset)
         let details = preset.adjustments.compactMap(\.content.sliders).filter { $0.kind == .detail }
         #expect(details.count == 1)
-        #expect(abs((details.first?["clarity"] ?? 0) + 0.9) < 1e-12)
+        #expect(isNearlyEqual(try #require(details.first)["clarity"], -0.9))
         #expect(details.first?["sharpen"] == 0.5)
     }
 }

@@ -19,19 +19,9 @@ enum LightMapper: BlockMapper {
         guard let light: PhotomatorLight = context.sliders(block, in: adjustments) else { return [] }
         typealias Scale = MappingConstants.Light
 
-        /// How closely a slider's Nitro counterpart matches.
-        enum Match { case close, curveDiffers, placeholder }
-        // Sets a slider (clamped to Nitro's range) and remembers its Photomator name if it moved,
-        // for the approximated and uncalibrated notes.
-        var approximate: [String] = [], uncalibrated: [String] = []
-        func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double, as name: String, _ match: Match) {
-            context.set(&sliders, key, value, block, name)
-            guard !isNearlyEqual(sliders[key], sliders.kind.defaults[key] ?? 0) else { return }
-            switch match {
-            case .close: break
-            case .curveDiffers: approximate.append(name)
-            case .placeholder: uncalibrated.append(name)
-            }
+        var notes = ScaleNotes()
+        func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double, as name: String, _ match: ScaleMatch) {
+            context.set(&sliders, key, value, block, name, match, notes: &notes)
         }
 
         var tone = NitroSliders(.tone), enhance = NitroSliders(.enhance), detail = NitroSliders(.detail)
@@ -51,10 +41,7 @@ enum LightMapper: BlockMapper {
                               "raised highlights were dropped; Nitro can only recover highlights")
         context.reportDropped(light, .texture, block, "texture was dropped; Nitro has no texture slider")
 
-        if !approximate.isEmpty {
-            context.report(.approximated, block, "\(listed(approximate)): Nitro's tone curve differs from Photomator's")
-        }
-        context.reportUncalibrated(block, uncalibrated)
+        context.report(notes, block, curveDiffers: "Nitro's tone curve differs from Photomator's")
         return [tone, enhance, detail].filter { !$0.isNoOp }.map(NitroAdjustment.Content.sliders)
     }
 }

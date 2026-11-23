@@ -11,12 +11,13 @@ enum ColorMapper: BlockMapper {
         context.reportDropped(color, .hue, block, "hue was dropped; Nitro has no global hue shift")
 
         typealias Scale = MappingConstants.Color
-        var enhance = NitroSliders(.enhance)
+        var enhance = NitroSliders(.enhance), notes = ScaleNotes()
         context.set(&enhance, "saturation", context.factor(color[.saturation], scale: Scale.saturationScale),
-                    block, "saturation")
-        context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale), block, "vibrance")
+                    block, "saturation", .close, notes: &notes)
+        context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale),
+                    block, "vibrance", .placeholder, notes: &notes)
         guard !enhance.isNoOp else { return [] }
-        if !isNearlyEqual(enhance["vibrancy"], 0) { context.reportUncalibrated(block, "vibrance") }
+        context.report(notes, block)
         return [.sliders(enhance)]
     }
 }

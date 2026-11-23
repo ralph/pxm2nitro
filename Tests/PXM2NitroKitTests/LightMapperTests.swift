@@ -13,11 +13,11 @@ struct LightMapperTests {
         let toneSliders = try #require(sliders[.tone])
         #expect(toneSliders["exposure"] == 0.5)
         #expect(toneSliders["highlights"] == 0.9375)
-        #expect(abs(toneSliders["shadows"] - 0.024) < 1e-12)
+        #expect(isNearlyEqual(toneSliders["shadows"], 0.024))
         #expect(toneSliders["midtones"] == 0.95)
         #expect(toneSliders["boost"] == 1)
         #expect(toneSliders["boostShadowSliderValue"] == 0.9)
-        #expect(abs(try #require(sliders[.enhance])["contrast"] - 1.09) < 1e-12)
+        #expect(isNearlyEqual(try #require(sliders[.enhance])["contrast"], 1.09))
         #expect(sliders[.detail] == nil)
         #expect(diagnostics.map(\.message) == [
             "highlights, shadows, brightness and contrast: Nitro's tone curve differs from Photomator's",
@@ -28,7 +28,7 @@ struct LightMapperTests {
         let (sliders, _) = map(["E": 1, "e": 0.4, "h": -0.5, "c": -0.2], intensity: 0.5)
         #expect(sliders[.tone]?["exposure"] == 0.2)
         #expect(sliders[.tone]?["highlights"] == 0.9375)
-        #expect(abs((sliders[.enhance]?["contrast"] ?? 0) - 0.97) < 1e-12)
+        #expect(isNearlyEqual(try #require(sliders[.enhance])["contrast"], 0.97))
     }
 
     @Test func valuesAreClampedToNitrosRanges() throws {
@@ -66,7 +66,7 @@ struct LightMapperTests {
     @Test func clarityGoesToDetail() throws {
         let (sliders, diagnostics) = map(["E": 1, "C": -0.2], intensity: 0.5)
         #expect(Array(sliders.keys) == [.detail])
-        #expect(abs((sliders[.detail]?["clarity"] ?? 0) + 0.3) < 1e-12)
+        #expect(isNearlyEqual(try #require(sliders[.detail])["clarity"], -0.3))
         #expect(diagnostics.map(\.message) == ["clarity: placeholder scale, not calibrated yet"])
     }
 
