@@ -29,11 +29,16 @@ struct LightMapperTests {
         #expect(sliders[.enhance]?["contrast"] == 0.9)
     }
 
-    @Test func clampedMultipliersAreReported() throws {
-        let (sliders, diagnostics) = map(["E": 1, "b": -1.5])
-        #expect(try #require(sliders[.tone])["midtones"] == 0)
-        #expect(diagnostics.map(\.kind) == [.approximated, .uncalibrated])
-        #expect(diagnostics.last?.message.hasPrefix("brightness:") == true)
+    @Test func valuesAreClampedToNitrosRanges() throws {
+        let (sliders, diagnostics) = map(["E": 1, "b": -1.5, "e": 4])
+        let tone = try #require(sliders[.tone])
+        #expect(tone["midtones"] == 0.5)
+        #expect(tone["exposure"] == 3)
+        #expect(diagnostics.map(\.message) == [
+            "exposure was clamped to Nitro's range (-3 to 3)",
+            "brightness was clamped to Nitro's range (0.5 to 1.5)",
+            "exposure and brightness: placeholder scale, not calibrated yet",
+        ])
     }
 
     @Test func raisedHighlightsAreReported() {

@@ -8,7 +8,8 @@
 /// - contrast → Enhance `contrast` (neutral 1); merged with Color's Enhance by the converter
 /// - clarity → Detail `clarity`; merged with Sharpen's Detail by the converter
 ///
-/// Texture has no counterpart. The scale factors are not calibrated yet (`MappingConstants`).
+/// Texture has no counterpart. Every value is clamped to Nitro's slider range. The scale
+/// factors are not calibrated yet (`MappingConstants`).
 enum LightMapper: BlockMapper {
     static let block = PhotomatorBlock.light
 
@@ -16,23 +17,22 @@ enum LightMapper: BlockMapper {
         guard let light: PhotomatorLight = context.sliders(block, in: adjustments) else { return [] }
         typealias Scale = MappingConstants.Light
 
-        // Sets a slider and remembers its Photomator name if it moved, for the uncalibrated note.
+        // Sets a slider (clamped to Nitro's range) and remembers its Photomator name if it moved,
+        // for the uncalibrated note.
         var converted: [String] = []
         func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double, as name: String) {
-            sliders[key] = value
-            if !isNearlyEqual(value, sliders.kind.defaults[key] ?? 0) { converted.append(name) }
+            context.set(&sliders, key, value, block, name)
+            if !isNearlyEqual(sliders[key], sliders.kind.defaults[key] ?? 0) { converted.append(name) }
         }
 
         var tone = NitroSliders(.tone), enhance = NitroSliders(.enhance), detail = NitroSliders(.detail)
         set(&tone, "exposure", context.blend(0, light[.exposure] * Scale.exposureEVPerUnit), as: "exposure")
-        set(&tone, "highlights", context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale,
-                                                    block, "highlights"), as: "highlights")
+        set(&tone, "highlights", context.factor(min(light[.highlights], 0), scale: Scale.highlightsScale),
+            as: "highlights")
         set(&tone, "shadows", context.blend(0, light[.shadows] * Scale.shadowsScale), as: "shadows")
         set(&tone, "blackPointDelta", context.blend(0, light[.blackPoint] * Scale.blackPointScale), as: "black point")
-        set(&tone, "midtones", context.multiplier(light[.brightness], scale: Scale.brightnessScale, block, "brightness"),
-            as: "brightness")
-        set(&enhance, "contrast", context.multiplier(light[.contrast], scale: Scale.contrastScale, block, "contrast"),
-            as: "contrast")
+        set(&tone, "midtones", context.factor(light[.brightness], scale: Scale.brightnessScale), as: "brightness")
+        set(&enhance, "contrast", context.factor(light[.contrast], scale: Scale.contrastScale), as: "contrast")
         set(&detail, "clarity", context.blend(0, light[.clarity] * Scale.clarityScale), as: "clarity")
 
         context.reportDropped(max(light[.highlights], 0), block,

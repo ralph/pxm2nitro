@@ -39,6 +39,20 @@ struct SelectiveColorMapperTests {
         #expect(half?[.red].saturationDelta == 0.2)
     }
 
+    @Test func valuesAreClampedToNitrosRanges() throws {
+        // Brightness 4 (UI +200 %) gives lumaDelta 2; hue 4 at 7.5°/unit stays inside ±60°.
+        let ranges = [range(hue: 4, brightness: 4), range(brightness: -4)] + Array(repeating: range(), count: 6)
+        let (result, diagnostics) = hsl(adjustments(ranges: ranges))
+        let hsl = try #require(result)
+        #expect(hsl[.red].lumaDelta == 1)
+        #expect(hsl[.red].hueDelta == 30)
+        #expect(hsl[.orange].lumaDelta == -1)
+        #expect(diagnostics.map(\.message) == [
+            "brightness was clamped to Nitro's range for some colours",
+            "hue, saturation and brightness: placeholder scale, not calibrated yet",
+        ])
+    }
+
     @Test func neutralRangesProduceNothing() {
         let (result, diagnostics) = hsl(adjustments(ranges: Array(repeating: range(), count: 8)))
         #expect(result == nil)

@@ -312,7 +312,7 @@ The defaults are 0, 0, 0, 0.2, 0, 0.2.
 
 `{"center":[0.5,0.5], "numeric":{"intensity":0.37,"radius":0.71}}`. The defaults are intensity
 0.5 and radius 0.5. As with B&W, a default vignette still changes the image.
-✅ Ranges (N-3): `intensity` ±1, `radius` 0…1. A negative intensity probably brightens the corners (not checked visually ❓).
+✅ Ranges (N-3): `intensity` ±1, `radius` 0…1. A negative intensity brightens the corners ✅ (checked on DSC01548.ARW).
 
 ### 3.13 `LUT` ✅
 

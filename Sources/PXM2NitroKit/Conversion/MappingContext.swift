@@ -1,3 +1,5 @@
+import Foundation
+
 /// State shared by all block mappers during one conversion.
 struct MappingContext {
     /// Values closer than this count as equal (e.g. "this channel is unchanged").
@@ -28,6 +30,29 @@ struct MappingContext {
             report(.approximated, block, "\(what) was clamped to Nitro's minimum")
         }
         return max(0, raw)
+    }
+
+    /// A factor whose neutral is 1: `1 + scale · value` after intensity. Unlike `multiplier`
+    /// it is not clamped; `set` clamps it to the slider's range.
+    func factor(_ value: Double, scale: Double) -> Double {
+        1 + blend(0, value) * scale
+    }
+
+    /// `value` limited to `range`. Reports `what` as approximated when it had to be clamped.
+    mutating func clamp(_ value: Double, to range: ClosedRange<Double>,
+                        _ block: PhotomatorBlock, _ what: String) -> Double {
+        let clamped = min(max(value, range.lowerBound), range.upperBound)
+        if abs(clamped - value) > MappingContext.tolerance {
+            report(.approximated, block, String(format: "%@ was clamped to Nitro's range (%g to %g)",
+                                                what, range.lowerBound, range.upperBound))
+        }
+        return clamped
+    }
+
+    /// Sets a slider, clamped to Nitro's range for it (`NitroSliderKind.ranges`).
+    mutating func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double,
+                      _ block: PhotomatorBlock, _ what: String) {
+        sliders[key] = sliders.kind.ranges[key].map { clamp(value, to: $0, block, what) } ?? value
     }
 
     /// The fields of an enabled slider block or one of its sub-objects (`key`). Reports an
@@ -68,8 +93,8 @@ struct MappingContext {
 
     /// Same for a list of converted sliders ("a, b and c"); reports nothing for an empty list.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ sliders: [String]) {
-        guard let last = sliders.last else { return }
-        reportUncalibrated(block, sliders.count == 1 ? last : sliders.dropLast().joined(separator: ", ") + " and " + last)
+        guard !sliders.isEmpty else { return }
+        reportUncalibrated(block, listed(sliders))
     }
 
     /// Reports channels of an enabled Curves/Levels/Channel Mixer block whose raw payload
@@ -97,6 +122,12 @@ protocol BlockMapper {
     /// image but cannot be converted must report a diagnostic for `block`; otherwise it is
     /// treated as neutral (see `ConversionResult.blocks`).
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content]
+}
+
+/// "a", "a and b", "a, b and c".
+func listed(_ names: [String]) -> String {
+    guard let last = names.last else { return "" }
+    return names.count == 1 ? last : names.dropLast().joined(separator: ", ") + " and " + last
 }
 
 func isNearlyEqual(_ a: Double, _ b: Double) -> Bool {

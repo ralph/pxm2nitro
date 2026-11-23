@@ -122,7 +122,9 @@ struct NitroPresetTests {
             .channel(black: CurvePoint(x: 0.1, y: 0.05), inner: [CurvePoint(x: 0.5, y: 0.6)])
         #expect(points.map(\.x) == [0, 0.1, 0.5, 1, 2])
         #expect(points.map(\.invisible) == [true, false, false, false, true])
-        #expect(points.map(\.deletable) == [false, false, true, false, false])
+        // The black handle is raised (y 0.05), which makes it deletable, as in Nitro.
+        #expect(points.map(\.deletable) == [false, true, true, false, false])
+        #expect(NitroLevelsCurves(isCurves: true).channel().map(\.deletable) == [false, false, false, false])
         #expect(points.map(\.isWhitePoint) == [false, false, false, true, false])
     }
 

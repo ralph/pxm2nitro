@@ -151,13 +151,14 @@ public struct NitroLevelsCurves: Sendable, Equatable {
 
     /// Builds a channel with Nitro's fixed skeleton: invisible guard (0,0), black handle,
     /// `inner` user points (deletable), white handle, invisible guard (maxValue, maxValue).
+    /// Like Nitro, a black handle moved off y = 0 is marked deletable (`N2 curves ends`).
     public func channel(
         black: CurvePoint = CurvePoint(x: 0, y: 0),
         white: CurvePoint = CurvePoint(x: 1, y: 1),
         inner: [CurvePoint] = []
     ) -> [NitroCurvePoint] {
         [NitroCurvePoint(x: 0, y: 0, invisible: true),
-         NitroCurvePoint(x: black.x, y: black.y)]
+         NitroCurvePoint(x: black.x, y: black.y, deletable: !isNearlyEqual(black.y, 0))]
             + inner.map { NitroCurvePoint(x: $0.x, y: $0.y, deletable: true) }
             + [NitroCurvePoint(x: white.x, y: white.y, isWhitePoint: true),
                NitroCurvePoint(x: maxValue, y: maxValue, invisible: true)]
