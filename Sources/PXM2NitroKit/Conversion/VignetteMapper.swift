@@ -1,7 +1,8 @@
 /// Photomator Vignette (`v`) → Nitro Vignette. See `docs/mapping.md` §1.
 ///
-/// Exposure (the vignette's strength) becomes Nitro's `intensity`, clamped to 0…1 (assumed
-/// slider range). A negative, brightening vignette is not converted. Nitro's `radius` is a
+/// Exposure (the vignette's strength) becomes Nitro's `intensity`, clamped to at most 1
+/// (Nitro's range is ±1, `docs/nitro-format.md` §3.12). A negative, brightening vignette is
+/// not converted. Nitro's `radius` is a
 /// different control from Photomator's softness, so it stays at Nitro's default and a
 /// non-default softness is reported, as is the black point. The scale factor is not
 /// calibrated yet (`MappingConstants`).
