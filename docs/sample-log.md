@@ -182,6 +182,18 @@ applied per RGB channel does, while `gray false` stays muted, as a brightness-on
 So the UI's only mode (`true`) is the RGB curve, and the converter writes `false` only for a
 Photomator luminance curve.
 
+## Nitro: N-8 `operateOnGray` on Levels (L1008408.DNG, 2026-11-23, via computer use)
+
+Four Levels-only presets in `nitro_sample_presets/`, applied the same way as N-7:
+
+- `N8 strong levels true|false`: master black 0.2, white 0.8. Same contrast; `true` is clearly
+  more saturated (orange wood), `false` muted, exactly as with Curves in N-7.
+- `N8 LS002 levels true|false`: `LS 002`'s converted Levels (luminance white 0.876, which the
+  converter now writes with `false`). Both brighten the image equally and look almost the same,
+  since a white-point lift barely changes saturation; `false` loads and renders without problems.
+
+So Levels follows the same rule as Curves.
+
 ## Template for further samples
 
 | preset | app | adjustment | slider (UI label) | UI value | note |

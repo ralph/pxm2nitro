@@ -89,7 +89,7 @@ channel; `false` renders like a brightness-only curve).
 - `rgb` → master with `operateOnGray:true` (✅ N-7: same saturation boost as Photomator's RGB curve).
 - `l` (luminance) → master with `operateOnGray:false` (🟡 looks brightness-only, not compared with
   Photomator side by side), used only when `rgb` is identity. Levels follows the same rule
-  (🟡 only checked for Curves).
+  (✅ N-8: the flag acts on Levels exactly as on Curves).
   If both are non-identity, the `rgb` curve is used and the dropped `l` curve is reported
   (composing `l ∘ rgb` is not implemented). (In all 83 samples `l` is identity.)
 - `r`, `g`, `b` → slots 1…3.
