@@ -108,7 +108,7 @@ public enum Converter {
     }
 
     /// Why an enabled block without a mapper is skipped (`docs/sample-requests.md` N-6).
-    static func skipReason(_ block: PhotomatorBlock) -> String {
+    private static func skipReason(_ block: PhotomatorBlock) -> String {
         switch block {
         case .fade, .selectiveClarity, .replaceColor, .removeColor, .colorMonochrome, .sepia, .invert:
             "Nitro has no such adjustment"
@@ -118,8 +118,11 @@ public enum Converter {
             "Nitro has no such adjustment (Split Toning has no midtones)"
         case .whiteBalance:
             "Nitro stores absolute Kelvin, so a relative shift cannot be converted"
-        default:
-            "not converted yet"
+        case .lut:
+            "LUTs are not converted yet"
+        case .light, .hueSaturation, .levels, .curves, .sharpen, .selectiveColor, .channelMixer,
+             .blackAndWhite, .vignette: // have mappers; reached only if one is removed
+            "not converted"
         }
     }
 
