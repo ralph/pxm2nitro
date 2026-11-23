@@ -54,7 +54,7 @@ struct DoneView: View {
     private var notes: some View {
         VStack(spacing: 8) {
             ForEach(SummaryText.notes(for: report), id: \.self) { Text($0) }
-            if report.writtenWithLosses > 0 || !report.existing.isEmpty {
+            if report.writtenWithLosses > 0 || !report.existing.isEmpty || !report.failures.isEmpty {
                 Button("Back to the List", action: onBack).buttonStyle(.borderless)
             }
             ForEach(Array(report.failures.enumerated()), id: \.offset) { _, failure in

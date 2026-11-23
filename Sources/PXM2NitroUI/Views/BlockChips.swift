@@ -71,7 +71,9 @@ struct BlockChips: View {
         FlowLayout {
             ForEach(groups.indices, id: \.self) { index in
                 if index > 0 {
-                    Divider().frame(height: 16).padding(.horizontal, 4).accessibilityHidden(true)
+                    // Not a `Divider`: outside a stack it draws horizontally.
+                    Rectangle().fill(.separator).frame(width: 1, height: 16)
+                        .padding(.horizontal, 4).accessibilityHidden(true)
                 }
                 ForEach(groups[index], id: \.block) { BlockChip(outcome: $0) }
             }

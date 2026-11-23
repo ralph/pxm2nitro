@@ -81,7 +81,7 @@ struct PresetDetails: View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
             row(preset: Text("Preset"),
-                converted: Text(BlockOutcome.Status.carriedOver.title),
+                converted: Text("Converted"),
                 leftOut: Text(BlockOutcome.Status.leftOut.title))
                 .font(.caption.weight(.semibold))
                 .textCase(.uppercase)

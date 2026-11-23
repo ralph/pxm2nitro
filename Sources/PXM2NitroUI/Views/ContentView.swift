@@ -35,6 +35,8 @@ public struct ContentView: View {
             add(urls)
         }
         .dropDestination(for: URL.self) { urls, _ in
+            // `add` ignores files while the export result is shown, so refuse the drop.
+            guard session.lastExport == nil else { return false }
             add(urls)
             return true
         } isTargeted: { isDropTargeted = $0 }
@@ -44,7 +46,7 @@ public struct ContentView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button("Clear All", systemImage: "trash", action: session.reset)
-                    .disabled(session.packages.isEmpty)
+                    .disabled(session.packages.isEmpty && session.loadErrors.isEmpty)
                 Button("Add Presets…", systemImage: "plus") { isImportingPackages = true }
                     .disabled(session.lastExport != nil)
             }
