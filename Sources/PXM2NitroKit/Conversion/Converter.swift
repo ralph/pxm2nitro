@@ -122,7 +122,7 @@ public enum Converter {
             "LUTs are not converted yet"
         case .light, .hueSaturation, .levels, .curves, .sharpen, .selectiveColor, .channelMixer,
              .blackAndWhite, .vignette: // have mappers; reached only if one is removed
-            "not converted"
+            "this converter has no mapper for it"
         }
     }
 
