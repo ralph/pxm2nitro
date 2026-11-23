@@ -28,3 +28,5 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+      - name: Build library for iOS
+        run: xcodebuild -scheme PXM2NitroKit -destination 'generic/platform=iOS' -derivedDataPath .build/xcode build -quiet

@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "PXM2Nitro",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v14), .iOS(.v17)],
     products: [
         .library(name: "PXM2NitroKit", targets: ["PXM2NitroKit"]),
         .executable(name: "pxm2nitro", targets: ["pxm2nitro"]),
