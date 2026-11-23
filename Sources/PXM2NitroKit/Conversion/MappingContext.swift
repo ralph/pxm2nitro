@@ -147,8 +147,8 @@ func isNearlyEqual(_ a: Double, _ b: Double) -> Bool {
 /// (RGB or, if RGB is unchanged, luminance) plus red, green and blue. Unchanged channels are `nil`.
 struct NitroChannelLayout<Value: Sendable & Equatable> {
     var master: Value?
-    /// `false` only when `master` came from the luminance channel. Nitro's `true` (all its UI
-    /// saves) applies the master curve to each RGB channel; `false` renders like a brightness-only
+    /// `false` only when `master` came from the luminance channel. Nitro's UI always saves `true`,
+    /// which applies the master curve to each RGB channel; `false` renders like a brightness-only
     /// curve (`docs/nitro-format.md` §3.6).
     var operateOnGray: Bool
     var red: Value?
@@ -162,7 +162,7 @@ struct NitroChannelLayout<Value: Sendable & Equatable> {
         func edited(_ value: Value?) -> Value? { value.flatMap { isIdentity($0) ? nil : $0 } }
         let rgb = edited(channels.rgb), luminance = edited(channels.luminance)
         master = rgb ?? luminance
-        operateOnGray = rgb != nil || luminance == nil
+        operateOnGray = !(rgb == nil && luminance != nil)
         red = edited(channels.red)
         green = edited(channels.green)
         blue = edited(channels.blue)
