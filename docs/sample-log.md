@@ -171,6 +171,17 @@ Observations:
   converted before the sign fix in step 15.)
 - **N-6:** see the table in `sample-requests.md`.
 
+## Nitro: N-7 `operateOnGray` (L1008408.DNG, 2026-11-23, via computer use)
+
+Two hand-made presets, identical except for the flag: only `Curves`, master S-curve
+(0.25 → 0.08, 0.75 → 0.92), `N7 gray true` and `N7 gray false` in `nitro_sample_presets/` (shown in Nitro as `gray true` /
+`gray false`). Each was
+applied with "Bearbeitungen ersetzen Modus" to the unedited image (then *Original
+wiederherstellen*). Both give the same contrast, but `gray true` is clearly more saturated (the
+wood turns orange, the food more colourful), as a curve applied per RGB channel does, while
+`gray false` stays muted, as a brightness-only curve does. So the UI's only mode (`true`) is the
+RGB curve, and the converter writes `false` only for a Photomator luminance curve.
+
 ## Template for further samples
 
 | preset | app | adjustment | slider (UI label) | UI value | note |

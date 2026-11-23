@@ -24,7 +24,7 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 > [sample-log.md](sample-log.md)), except where an item is impossible: Nitro has no Grain panel
 > and no RGB curve mode. The presets `N0 defaults`, `N1 all`, `N1 WB jpg`,
 > `N2 curves slots|range2|ends`, `N3 max|min` and `N4 sony tone|applied` are in
-> `nitro_sample_presets/`. Still open: whether `operateOnGray: false` renders differently.
+> `nitro_sample_presets/`. N-7 (`N7 gray true|false`) showed that `operateOnGray: false` renders differently.
 
 ### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.
@@ -105,6 +105,11 @@ Fleck- und Drahtentfernung, Klonen) and the mask tab. The full edit list: Beschn
 Weißabgleich, Tonwert, Verbessern, Detail, RAW Tuning, Tonwerte, Kurven, HSL, Schwarzweiß,
 Split-Farbtöne, Chromatische Aberration, Objektiv, Kanalmischer, Vignette, plus LUTs in the
 presets tab.
+
+### N-7 `operateOnGray` rendering (done)
+Apply two presets that differ only in `operateOnGray` (strong master S-curve) to the same image
+and compare. Result: `true` renders like a per-channel RGB curve, `false` like a brightness-only
+curve (`sample-log.md`).
 
 ### N-5 Import test (P1, done for `BW 001` and `LS 002`)
 1. Generate presets: `swift run pxm2nitro convert sample_presets_photomator/*.adjustments -o ~/Desktop/pxm2nitro-out`
@@ -194,7 +199,7 @@ is identical and shows any extra properties Pixelmator Pro writes.
 | Nitro adjustment ID strings | ✅ N-0, N-1 |
 | Nitro neutral values (`highlights=1`?) | ✅ N-0 |
 | Nitro slider ranges | ✅ N-3 (`nitro-format.md` §3) |
-| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ N-2/N-5 (`operateOnGray:false` rendering still ❓) |
+| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ N-2/N-5/N-7 |
 | Preset application semantics | ✅ manual (per-adjustment replacement); ✅ N-4.2 for base black/white points |
 | Photomator RAW params in presets | 🟡 docs say no; P-1 confirms |
 | Selective Color index → colour, hue unit | ✅ P-2 (hue in Nitro degrees still ❓) |

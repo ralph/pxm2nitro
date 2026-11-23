@@ -17,7 +17,7 @@ struct ConverterTests {
         #expect(result.preset?.name == "BW 001")
 
         let curves = try levelsCurves(result, curves: true)
-        #expect(!curves.operateOnGray)
+        #expect(curves.operateOnGray)
         let rgb = try #require(preset.adjustments?.curves?.rgb)
         // guard, black handle, 4 inner points, white handle, guard
         #expect(curves.master.count == rgb.count + 2)
@@ -47,7 +47,7 @@ struct ConverterTests {
     @Test func convertsRGBLevels() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("filmic", "PT800"))
         let levels = try levelsCurves(result, curves: false)
-        #expect(!levels.operateOnGray)
+        #expect(levels.operateOnGray)
         #expect(abs(levels.master[1].x - 0.009124071608744393) < 1e-12)
         #expect(levels.master[1].y == 0)
         #expect(levels.master[2] == NitroCurvePoint(x: 1, y: 1, isWhitePoint: true))
@@ -60,7 +60,7 @@ struct ConverterTests {
         // LS 002: luminance white 0.876 with a moved gray; red/blue only move a quarter handle.
         let result = Converter.convert(try Fixtures.photomatorPreset("LS", "002"))
         let levels = try levelsCurves(result, curves: false)
-        #expect(levels.operateOnGray)
+        #expect(!levels.operateOnGray)
         #expect(abs(levels.master[2].x - 0.8758519575751356) < 1e-12)
         #expect(levels.red == levels.channel())
         #expect(levels.blue == levels.channel())

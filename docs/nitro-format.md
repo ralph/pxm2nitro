@@ -263,7 +263,9 @@ has this skeleton:
   `{x:1, y:0.9, isWhitePoint:true}`. Imported handles with y ≠ 0/1 also work (N-5).
 - The channel menu has only Grau, Rot, Grün, Blau and "Overlay anzeigen". There is no RGB
   master mode, and the UI always saves `operateOnGray: true`. Presets with `operateOnGray: false`
-  still load and show the curve under "Grau"; whether the two render differently is ❓. The
+  still load and show the curve under "Grau", but they **render differently** (N-7): with the same
+  strong S-curve, `true` boosts saturation like a per-channel RGB curve, `false` stays muted like
+  a brightness-only curve. The
   colour-wheel button next to "Auto" is "Auto RGB", which replaces the curves with automatic ones.
 
 ### 3.7 `HSL` ✅
