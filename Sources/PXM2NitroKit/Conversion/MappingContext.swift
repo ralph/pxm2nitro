@@ -30,11 +30,13 @@ struct MappingContext {
         return max(0, raw)
     }
 
-    /// The fields of an enabled slider block. Reports an enabled block that cannot be read.
-    mutating func sliders<Field>(_ block: PhotomatorBlock, in adjustments: PhotomatorAdjustments) -> PhotomatorSliders<Field>? {
+    /// The fields of an enabled slider block or one of its sub-objects (`key`). Reports an
+    /// enabled block that cannot be read.
+    mutating func sliders<Field>(_ block: PhotomatorBlock, key: String? = nil,
+                                 in adjustments: PhotomatorAdjustments) -> PhotomatorSliders<Field>? {
         guard adjustments.enabledBlock(block) != nil else { return nil }
-        guard let sliders = adjustments.sliders(block, as: Field.self) else {
-            report(.skipped, block, "a value is not a number")
+        guard let sliders = adjustments.sliders(block, key: key, as: Field.self) else {
+            report(.skipped, block, key.map { "the sub-object \($0) is malformed" } ?? "a value is not a number")
             return nil
         }
         return sliders

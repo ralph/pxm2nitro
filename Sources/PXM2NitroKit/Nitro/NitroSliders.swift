@@ -5,6 +5,7 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
     case enhance = "Enhance"
     case detail = "Detail"
     case vignette = "Vignette"
+    case blackAndWhite = "BlackAndWhite"
 
     /// Every slider with its default value, as Nitro writes them. A default is not always
     /// a no-op: Nitro's default B&W and Vignette still change the image.
@@ -14,6 +15,7 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
         case .enhance: Self.enhanceDefaults
         case .detail: Self.detailDefaults
         case .vignette: Self.vignetteDefaults
+        case .blackAndWhite: Self.blackAndWhiteDefaults
         }
     }
 
@@ -31,12 +33,17 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
         "jpegNoise": 0, "grainIntensity": 0, "grainDensity": 0.5,
     ]
     private static let vignetteDefaults: [String: Double] = ["intensity": 0.5, "radius": 0.5]
+    /// Rec. 601 luma weights.
+    private static let blackAndWhiteDefaults: [String: Double] = ["red": 0.299, "green": 0.587, "blue": 0.114]
 
     /// Slider values at which the adjustment changes nothing. Usually the defaults, but Nitro's
-    /// default vignette still darkens the edges, so only zero intensity is neutral there.
-    var neutral: [String: Double] {
+    /// default vignette still darkens the edges, so only zero intensity is neutral there, and
+    /// black & white always changes the image (`nil`). Never use `[:]`: it would mean "always
+    /// a no-op".
+    var neutral: [String: Double]? {
         switch self {
         case .vignette: ["intensity": 0]
+        case .blackAndWhite: nil
         default: defaults
         }
     }
@@ -51,6 +58,7 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
         // matters with grain, which the converter does not write.
         case .detail: ["preserve": false, "defaultsUpdated": true, "grainSeed": 25.016823]
         case .vignette: ["center": [0.5, 0.5]]
+        case .blackAndWhite: [:]
         }
     }
 }
@@ -85,7 +93,7 @@ public struct NitroSliders: Sendable, Equatable {
     /// Whether the adjustment changes nothing (see `NitroSliderKind.neutral`), so there is
     /// nothing to write.
     public var isNoOp: Bool {
-        kind.neutral.allSatisfy { key, value in isNearlyEqual(self[key], value) }
+        kind.neutral?.allSatisfy { key, value in isNearlyEqual(self[key], value) } ?? false
     }
 
     /// Takes over every slider `other` set. Two mappers writing the same adjustment must set

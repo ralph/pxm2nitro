@@ -24,8 +24,8 @@ struct ConversionSessionTests {
         #expect(bw.convertibleCount == 4)
         #expect(bw.losslessCount == 0)
         #expect(bw.blocks.blocks(.carriedOver) == [.curves])
-        #expect(bw.blocks.blocks(.approximated) == [.light, .selectiveColor, .vignette])
-        #expect(bw.blocks.blocks(.leftOut) == [.fade, .blackAndWhite, .grain])
+        #expect(bw.blocks.blocks(.approximated) == [.light, .selectiveColor, .blackAndWhite, .vignette])
+        #expect(bw.blocks.blocks(.leftOut) == [.fade, .grain])
     }
 
     @Test func packageBlocksUseTheLeastFavourableStatus() async throws {

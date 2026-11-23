@@ -54,7 +54,8 @@ public enum Converter {
     /// The block mappers, in the order their Nitro adjustments are written.
     static var mappers: [any BlockMapper.Type] {
         [LevelsMapper.self, CurvesMapper.self, ChannelMixerMapper.self, SelectiveColorMapper.self,
-         LightMapper.self, ColorMapper.self, SharpenMapper.self, VignetteMapper.self]
+         LightMapper.self, ColorMapper.self, SharpenMapper.self, VignetteMapper.self,
+         BlackAndWhiteMapper.self]
     }
 
     /// Photomator blocks this converter maps.

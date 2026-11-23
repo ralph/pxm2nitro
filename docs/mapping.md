@@ -14,6 +14,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`; placeholder scales, reports `uncalibrated`. Black point (RAW-only in Nitro) and texture are skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
+| Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
 | Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
@@ -60,7 +61,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `B` Color Balance | default: **skip and warn**. Opt-in: baked into R/G/B curves, or `SplitToning` | 🟠 | see §2.3. Frequent (31/83), so this is the most valuable opt-in |
 | `ca` Selective Color (8 hues) | `HSL` (9 hues) | 🟡 | see §2.2 |
 | `m` Channel Mixer | `ChannelMixer` | 🟢 1:1 | see §2.4 |
-| `b` Black & White | `BlackAndWhite` (+ `SplitToning` for tone) | 🟠 | Nitro shape ❓ |
+| `b` Black & White | `BlackAndWhite` (`red`/`green`/`blue` weights); toning would need `SplitToning` plus a hue Photomator does not store | 🟠 | implemented, see the status table |
 | `M` Color Monochrome | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `s` Sepia | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: `intensity`, `radius` (both default 0.5) and `center`. Softness and black point are dropped |
