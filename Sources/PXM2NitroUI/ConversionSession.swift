@@ -58,8 +58,10 @@ public final class ConversionSession {
     public var presetCount: Int { packages.reduce(0) { $0 + $1.presets.count } }
     public var convertibleCount: Int { packages.reduce(0) { $0 + $1.convertibleCount } }
 
-    /// Loads packages. A package added again replaces the earlier copy in place.
+    /// Loads packages. A package added again replaces the earlier copy in place. Ignored while
+    /// an export result is shown.
     public func add(_ urls: [URL]) async {
+        guard lastExport == nil else { return }
         activeOperations += 1
         defer { activeOperations -= 1 }
         let startGeneration = generation
@@ -89,6 +91,11 @@ public final class ConversionSession {
         generation += 1
         packages = []
         loadErrors = []
+        lastExport = nil
+    }
+
+    /// Goes back from the export result to the package list.
+    public func dismissExport() {
         lastExport = nil
     }
 

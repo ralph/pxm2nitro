@@ -5,10 +5,19 @@ import PXM2NitroKit
 public struct PresetSummary: Identifiable, Sendable {
     public let preset: PhotomatorPreset
     public let result: ConversionResult
+    /// Adjustments that carry over (exactly first, then approximately) and those left out.
+    public let converted: [BlockOutcome], leftOut: [BlockOutcome]
+    /// What changed beyond the left-out adjustments: approximations and dropped preset properties.
+    public let notes: [String]
 
     init(_ preset: PhotomatorPreset) {
         self.preset = preset
         result = Converter.convert(preset)
+        (converted, leftOut) = result.blocks.partitionedByConversion()
+        let approximated = Set(result.blocks.filter { $0.status == .approximated }.map(\.block))
+        notes = result.diagnostics
+            .filter { $0.block.map(approximated.contains) ?? true }
+            .map { [$0.block?.displayName, $0.message].compactMap { $0 }.joined(separator: ": ") }
     }
 
     public var id: String { preset.id }
@@ -32,6 +41,10 @@ public struct PackageSummary: Identifiable, Sendable {
     /// Every adjustment used by the package's presets, in Photomator's order, with the least
     /// favourable status it got in any preset.
     public let blocks: [BlockOutcome]
+    /// `blocks` split like `PresetSummary.converted` / `leftOut`.
+    public let converted: [BlockOutcome], leftOut: [BlockOutcome]
+    public let convertibleCount: Int
+    public let losslessCount: Int
 
     init(url: URL, package: LoadedPackage) {
         self.url = url
@@ -42,17 +55,23 @@ public struct PackageSummary: Identifiable, Sendable {
         let worst = Dictionary(presets.flatMap(\.result.blocks).map { ($0.block, $0.status) },
                                uniquingKeysWith: max)
         blocks = PhotomatorBlock.allCases.compactMap { block in worst[block].map { BlockOutcome(block, $0) } }
+        (converted, leftOut) = blocks.partitionedByConversion()
+        convertibleCount = presets.count(where: \.isConvertible)
+        losslessCount = presets.count(where: \.result.isLossless)
     }
 
     public var id: URL { url }
     public var fileName: String { url.lastPathComponent }
-    public var convertibleCount: Int { presets.count(where: \.isConvertible) }
-    public var losslessCount: Int { presets.count(where: \.result.isLossless) }
 }
 
 extension [BlockOutcome] {
     /// The adjustments with the given status, in order.
     public func blocks(_ status: BlockOutcome.Status) -> [PhotomatorBlock] {
         filter { $0.status == status }.map(\.block)
+    }
+
+    /// Converted outcomes (carried over before approximated, otherwise in order) and left-out ones.
+    func partitionedByConversion() -> (converted: [BlockOutcome], leftOut: [BlockOutcome]) {
+        (filter { $0.status != .leftOut }.sorted { $0.status < $1.status }, filter { $0.status == .leftOut })
     }
 }
