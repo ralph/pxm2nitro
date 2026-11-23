@@ -72,7 +72,7 @@ can carry y ≠ 0/1.
 2. `N3 min`: the same at the **minimum**.
 3. Log the displayed min and max values.
 
-### N-4 Apply behaviour (P2), no file needed, just observations
+### N-4 Apply behaviour (P2; item 2 is P1 now that black point maps to Nitro's Black slider), no file needed, just observations
 1. ~~Do adjustments missing from a preset stay?~~ The manual answers this: presets replace each
    adjustment block they contain and leave the others untouched.
 2. Does applying a preset change Boost / black point for a different camera's RAW (are
@@ -137,6 +137,8 @@ Log the swatch colours in UI order. Closes: index → colour, and the hue and br
    Clarity, Texture, Dehaze if present in the Light section), each at a distinct odd value.
    Log the displayed values **and units** (EV? %?).
 2. `P3 light max`: all of them at maximum. Log the values.
+3. On a RAW file: apply a converted preset with a black point and compare Nitro's Black slider
+   with Photomator's look (does positive mean deeper blacks in both? how far?).
 
 ### P-4 Fade (P1)
 `P4 fade`: Fade only, at a distinct value (log all controls the Fade panel shows).

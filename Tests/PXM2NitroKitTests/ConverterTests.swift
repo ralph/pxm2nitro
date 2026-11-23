@@ -30,7 +30,7 @@ struct ConverterTests {
     @Test func reportsSkippedBlocks() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("BW", "001"))
         let skipped = Set(result.diagnostics.filter { $0.kind == .skipped }.compactMap(\.block))
-        #expect(skipped == [.light, .blackAndWhite, .grain])
+        #expect(skipped == [.blackAndWhite, .grain])
     }
 
     @Test func convertsRGBLevels() throws {
