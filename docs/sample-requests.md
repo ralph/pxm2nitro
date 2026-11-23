@@ -24,7 +24,8 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 > [sample-log.md](sample-log.md)), except where an item is impossible: Nitro has no Grain panel
 > and no RGB curve mode. The presets `N0 defaults`, `N1 all`, `N1 WB jpg`,
 > `N2 curves slots|range2|ends`, `N3 max|min` and `N4 sony tone|applied` are in
-> `nitro_sample_presets/`. N-7 (`N7 gray true|false`) showed that `operateOnGray: false` renders differently.
+> `nitro_sample_presets/`. N-7 (`N7 gray true|false`) showed that `operateOnGray: false` renders differently,
+> and N-8 (`N8 strong levels true|false`, `N8 LS002 levels true|false`) showed the same for Levels.
 
 ### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.

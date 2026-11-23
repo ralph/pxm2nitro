@@ -265,7 +265,8 @@ has this skeleton:
   master mode, and the UI always saves `operateOnGray: true`. Presets with `operateOnGray: false`
   still load and show the curve under "Grau", but they **render differently** (N-7): with the same
   strong S-curve, `true` boosts saturation like a per-channel RGB curve, `false` stays muted like
-  a brightness-only curve. Levels behaves the same (N-8). The colour-wheel button next to "Auto" is "Auto RGB", which replaces the curves with automatic ones.
+  a brightness-only curve. Levels behaves the same (N-8). The colour-wheel button next to "Auto"
+  is "Auto RGB", which replaces the curves with automatic ones.
 
 ### 3.7 `HSL` ✅
 
