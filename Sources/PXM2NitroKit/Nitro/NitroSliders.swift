@@ -3,8 +3,9 @@
 public enum NitroSliderKind: String, CaseIterable, Sendable {
     case enhance = "Enhance"
 
-    /// Every slider with its neutral value, as Nitro writes them.
-    public var neutral: [String: Double] {
+    /// Every slider with its default value, as Nitro writes them. A default is not always
+    /// a no-op: Nitro's default B&W and Vignette still change the image.
+    public var defaults: [String: Double] {
         switch self {
         case .enhance: ["deepen": 0, "lighten": 0, "contrast": 1, "saturation": 1, "vibrancy": 0]
         }
@@ -18,33 +19,33 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
     }
 }
 
-/// One slider adjustment. New values start from the neutral template, so the written key set
-/// is always one Nitro writes itself (`docs/mapping.md` §0.3).
+/// One slider adjustment. New values start from Nitro's defaults, so the written key set is
+/// always one Nitro writes itself (`docs/mapping.md` §0.3).
 public struct NitroSliders: Sendable, Equatable {
     public let kind: NitroSliderKind
-    /// Slider values, including ones that were read but are not in `kind.neutral`.
-    public private(set) var numeric: [String: Double]
+    /// Slider values, including ones that were read but are not in `kind.defaults`.
+    private(set) var numeric: [String: Double]
     /// Non-slider keys, from the template or as read.
     var otherKeys: [String: JSONValue]
 
-    /// The adjustment with every slider at its neutral value.
+    /// The adjustment with every slider at its default value.
     public init(_ kind: NitroSliderKind) {
         self.kind = kind
-        numeric = kind.neutral
+        numeric = kind.defaults
         otherKeys = kind.fixedKeys
     }
 
     public subscript(key: String) -> Double {
-        get { numeric[key] ?? kind.neutral[key] ?? 0 }
+        get { numeric[key] ?? kind.defaults[key] ?? 0 }
         set {
-            assert(kind.neutral[key] != nil, "\(kind.rawValue) has no slider \(key)")
+            assert(kind.defaults[key] != nil, "\(kind.rawValue) has no slider \(key)")
             numeric[key] = newValue
         }
     }
 
-    /// Whether every slider is at its neutral value.
-    public var isNeutral: Bool {
-        kind.neutral.allSatisfy { key, neutral in isNearlyEqual(self[key], neutral) }
+    /// Whether every slider is at its default value.
+    public var isDefault: Bool {
+        kind.defaults.allSatisfy { key, value in isNearlyEqual(self[key], value) }
     }
 
     var json: [String: JSONValue] {
@@ -57,6 +58,7 @@ public struct NitroSliders: Sendable, Equatable {
         else { return nil }
         let numeric = raw.compactMapValues(\.doubleValue)
         guard numeric.count == raw.count else { return nil }
+        // `NitroAdjustment` owns these; dropping them keeps a parsed block equal to a built one.
         object["enabled"] = nil
         object["disclosed"] = nil
         self.kind = kind

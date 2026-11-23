@@ -20,7 +20,7 @@ enum ColorMapper: BlockMapper {
         var enhance = NitroSliders(.enhance)
         enhance["saturation"] = context.blend(1, max(0, 1 + color.saturation * Scale.saturationScale))
         enhance["vibrancy"] = context.blend(0, color.vibrancy * Scale.vibrancyScale)
-        guard !enhance.isNeutral else { return [] }
+        guard !enhance.isDefault else { return [] }
         context.reportUncalibrated(block, "saturation and vibrance")
         return [.sliders(enhance)]
     }

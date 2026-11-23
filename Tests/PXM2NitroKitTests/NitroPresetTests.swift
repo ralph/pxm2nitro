@@ -60,15 +60,15 @@ struct NitroPresetTests {
         let enhance = try #require(preset.adjustments.compactMap(\.content.sliders).first { $0.kind == .enhance })
         #expect(enhance["saturation"] == 0.8)
         #expect(enhance["vibrancy"] == -0.2)
-        #expect(!enhance.isNeutral)
+        #expect(!enhance.isDefault)
     }
 
-    @Test func sliderTemplatesAreNeutralAndWriteEveryKey() throws {
+    @Test func sliderTemplatesWriteEveryDefault() throws {
         for kind in NitroSliderKind.allCases {
             let sliders = NitroSliders(kind)
-            #expect(sliders.isNeutral)
+            #expect(sliders.isDefault)
             let json = try #require(NitroAdjustment(.sliders(sliders)).json.objectValue)
-            #expect(json["numeric"]?.objectValue?.keys.sorted() == kind.neutral.keys.sorted())
+            #expect(json["numeric"]?.objectValue?.keys.sorted() == kind.defaults.keys.sorted())
             #expect(json["enabled"] == true)
         }
     }
