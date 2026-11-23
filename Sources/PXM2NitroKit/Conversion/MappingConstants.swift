@@ -1,6 +1,7 @@
 /// Scale factors from Photomator's stored values to Nitro's. Values marked *measured* were
 /// matched on screen (`docs/mapping.md` §3.1, `docs/sample-log.md` C-2); the rest are
-/// placeholders, and mappers that use them must call `MappingContext.reportUncalibrated`.
+/// placeholders, and mappers that use them must report them (`MappingContext.reportUncalibrated`,
+/// or `ScaleMatch.placeholder` with `MappingContext.report(_:_:curveDiffers:)`).
 enum MappingConstants {
     /// Photomator Selective Color → Nitro HSL. Storage scales differ per slider (sample `C`).
     enum SelectiveColor {

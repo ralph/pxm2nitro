@@ -208,7 +208,7 @@ is identical and shows any extra properties Pixelmator Pro writes.
 | Preset application semantics | ✅ manual (per-adjustment replacement); ✅ N-4.2 for base black/white points |
 | Photomator RAW params in presets | 🟡 docs say no; P-1 confirms |
 | Selective Color index → colour, hue unit | ✅ P-2 (hue in Nitro degrees still ❓) |
-| Light units | ✅ P-3 (black point sign ✅; scales ❓) |
+| Light units | ✅ P-3 (black point sign ✅); scales ✅ measured (`sample-log.md` C-2), clarity still rough |
 | Fade semantics | ✅ P-4 (keys; the tone curve it applies is still ❓) |
 | WB relative vs absolute | ✅ Photomator relative even on RAW (P-5); Nitro Kelvin on RAW and JPEG (N-1) |
 | Colour balance UI ↔ storage | 🟡 P-6 (3-way mode only) |

@@ -43,18 +43,18 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 
 | Photomator block | → Nitro | quality | notes |
 |---|---|---|---|
-| `l` Light: exposure | `Tone.exposure` | 🟢 likely good | scale ❓ (EV vs %) |
-| `l` Light: highlights | `Tone.highlights` = 1 + k·h, negative (recover) only; raised highlights skipped | 🟡 | ✅ Nitro neutral is 1.0. Scale ❓; `Tone.recovery` may fit better |
-| `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
+| `l` Light: exposure | `Tone.exposure` | 🟢 likely good | ✅ 100 % ≈ 1 EV (§3.1) |
+| `l` Light: highlights | `Tone.highlights` = 1 + k·h, negative (recover) only; raised highlights skipped | 🟡 | ✅ Nitro neutral is 1.0. ✅ scale measured (§3.1), Nitro also darkens the midtones; `Tone.recovery` may fit better |
+| `l` Light: shadows | `Tone.shadows` | 🟡 | ✅ scale measured (§3.1); Nitro reaches further into the midtones |
 | `l` Light: brightness | `Tone.midtones` = 1 + k·b (alternative: `Enhance.lighten` / `deepen`) | 🟠 | revisit after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
-| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider exists on RAW files only (Nitro's main use case); a JPEG's Tone panel has none (nitro-format §3.2). Sign is opposite (checked on a RAW), scale ❓ |
+| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider exists on RAW files only (Nitro's main use case); a JPEG's Tone panel has none (nitro-format §3.2). Sign is opposite (checked on a RAW), ✅ scale measured (§3.1) |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
 | `f` Fade | default: **skip and warn** (N-6: no Nitro Fade). Opt-in: bake into the master curve | 🟠 | `f` = Blacks, `c` = Whites ✅ (photomator-format §3.2); their curve shape ❓ |
 | `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ✅ Also on JPEG (nitro-format §3.5) |
 | `hS` saturation | `Enhance.saturation` = 1 + k·s | 🟢 | |
-| `hS` vibrancy | `Enhance.vibrancy` | 🟢 | scale ❓ |
+| `hS` vibrancy | `Enhance.vibrancy` | 🟠 | no linear scale fits (§3.1) |
 | `hS` hue | default: **skip and warn**. Opt-in: the same `HSL.hueDelta_*` shift on all 9 colours | 🟠 | approximation of a global hue rotation |
 | `L` Levels | Nitro `Levels` (black/white input only) | 🟠 | ✅ Nitro Levels stores only the black and white input handles per channel, with no gamma or output values. Photomator's gray, quarter and output handles have no target, so: black/white → Levels, the rest skipped with a warning. Opt-in: bake into curves |
 | `C` Curves (rgb, r, g, b, l) | `Curves.levelsCurvesData.pointsArray` | 🟢 | see §2.1 |

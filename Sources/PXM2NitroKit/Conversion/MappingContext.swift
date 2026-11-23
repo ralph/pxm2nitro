@@ -114,7 +114,9 @@ struct MappingContext {
 
     /// Reports the noted sliders: approximated with `reason`, then the placeholders as uncalibrated.
     mutating func report(_ notes: ScaleNotes, _ block: PhotomatorBlock, curveDiffers reason: String = "") {
-        if !notes.curveDiffers.isEmpty { report(.approximated, block, "\(listed(notes.curveDiffers)): \(reason)") }
+        if !notes.curveDiffers.isEmpty {
+            report(.approximated, block, listed(notes.curveDiffers) + (reason.isEmpty ? ": approximated" : ": \(reason)"))
+        }
         reportUncalibrated(block, notes.placeholders)
     }
 
