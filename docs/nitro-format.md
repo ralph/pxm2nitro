@@ -1,8 +1,8 @@
 # Nitro preset format (`.nitropreset`)
 
-Status: reverse-engineered from 5 sample presets in `nitro_sample_presets/`, the strings and
-Swift reflection data in `Nitro.app` (2026.09.01, build 247), and the UI itself. `N0 defaults`
-and `N1 all` were created on purpose with known UI values; see
+Status: reverse-engineered from the sample presets in `nitro_sample_presets/`, the strings and
+Swift reflection data in `Nitro.app` (2026.09.01, build 247), and the UI itself. The `N…` presets
+were created on purpose with known UI values; see
 [sample-log.md](sample-log.md) for every value that was set. Nitro is made by Gentlemen
 Coders (the RAW Power team), and its edit model comes from RAW Power.
 
@@ -34,8 +34,8 @@ Nitro manual <https://www.gentlemencoders.com/nitro/user-manual/index.html>, RAW
 - **Only changed adjustments are saved** ✅ (observed). The save dialog lists only adjustments
   whose values differ from neutral. An adjustment switched on at its defaults is not offered,
   and a preset without any edit cannot be saved at all.
-- **Save dialog defaults** ✅ (observed): there is one switch per adjustment. Tone, Enhance and
-  Detail are switched **off** by default; every other adjustment is switched on.
+- **Save dialog defaults** ✅ (observed): there is one switch per adjustment, and the switches
+  remember the last choice (on first use Tone, Enhance and Detail were off; see sample-log).
 - Per-image edits live in XMP sidecars (namespace `http://com.gentlemencoders/xmp/nitro/1.0/`).
 
 ---
@@ -153,9 +153,15 @@ The numeric values are stored exactly as the UI shows them ✅.
 | `boostShadowSliderValue` | Schatten verstärken (RAW only) | **0.9** |
 | `toneMap` | not shown here (`supportsToneMap:false`) | 0 |
 
-`baseBlackPoint` and `baseWhitePoint` were identical (5 / 0.15) in every sample, from
-different images, so they are probably constants rather than per-image values.
-❓ Whether Nitro recomputes them when a preset is applied is still open (N-4.2).
+✅ Slider ranges (N-3, `N3 max` / `N3 min`): `boost` 0…1, `exposure` ±3, `highlights` 0…1 (so it can
+only recover), `shadows` ±1, `midtones` 0.5…1.5, `blackPointDelta` ±1, `whitePointDelta` ±1,
+`recovery` ±1, `boostShadowSliderValue` 0…1. On a JPEG the Tone panel shows only Belichtung,
+Glanzlichter, Schatten, Mitteltöne and Wiederherstellen.
+
+✅ `baseBlackPoint` and `baseWhitePoint` depend on the camera (N-4.2): 5 / 0.15 on the Leica
+M11 (every earlier sample), 3 / 0.35 on a Sony ARW. Nitro **ignores the preset's values** and
+keeps the image's own: applying a preset with 5 / 0.15 to the Sony and saving again still gives
+3 / 0.35 (`N4 sony applied`). So the converter's fixed 5 / 0.15 template values are harmless.
 
 Earlier samples had `whitePointDelta` set to 0.225 or 0.375. That means the "Weiß" slider had
 been moved in those presets.
@@ -169,6 +175,8 @@ been moved in those presets.
 | `contrast` | Kontrast | **1.0** (multiplier) |
 | `saturation` | Sättigung | **1.0** (multiplier) |
 | `vibrancy` | Farbdynamik | 0 |
+
+✅ Ranges (N-3): `deepen` and `lighten` 0…≈2 (dragging reached 1.99), `contrast` and `saturation` 0…2, `vibrancy` ±1.
 
 ### 3.4 `Detail`
 
@@ -188,6 +196,9 @@ been moved in those presets.
 | `blur`, `jpegNoise`, `grainIntensity`, `grainDensity` | **not in the UI** | 0, 0, 0, 0.5 |
 | `grainSeed` | — | random float. The converter writes a fixed seed so its output is reproducible; it only matters with grain, which the converter does not write |
 
+✅ Ranges (N-3): `clarity` ±1, `sharpen` ±1, `lumaNoise` 0…1. `grainSeed` differs per save
+(25.016823 in `N1 all`, 22.054216 in `N3 max`/`N3 min`).
+
 🟡 `grainIntensity`/`grainDensity` look like a working film grain. A test preset with a
 non-zero value would show whether Nitro actually renders it (❓).
 
@@ -201,7 +212,12 @@ non-zero value would show whether Nitro actually renders it (❓).
 `temperature` is in **Kelvin** and `tint` is on Nitro's ±175 scale. The values are written
 exactly as the UI shows them. This RAW's as-shot values were 5277 K and tint 25.
 `autoWB` and `applyFaceBalance` correspond to the Auto button and face-based auto WB.
-❓ Behaviour on JPEG/HEIC files is untested (N-1 `WB jpg`).
+✅ Ranges (N-3): `temperature` 1000…20000 K, `tint` ±175.
+
+✅ JPEG (N-1 `WB jpg`, IMG_6659.JPG): the panel also shows Kelvin. The untouched JPEG shows
+5001 K / tint 10, a nominal neutral rather than a measured as-shot value. Raising it to 7851 K warms
+the image, and it is stored the same way (`temperature: 7850.726`, `tint: -42.883476`). So a
+JPEG preset is still absolute: its values only mean "neutral + shift" relative to 5001 K / 10.
 
 ### 3.6 `Levels` and `Curves` (`levelsCurvesData`)
 
@@ -210,12 +226,12 @@ Both adjustments share the same struct:
 ```jsonc
 "levelsCurvesData": {
   "curves": false,            // false = Levels, true = Curves ✅
-  "operateOnGray": true,      // 🟡 UI selector Grau (luminance) vs RGB
+  "operateOnGray": true,      // ✅ always true when saved from the UI (N-2); see below
   "gamma": true,              // 🟡 Gamma vs Linear mode
-  "maxValue": 2,              // always 2 in every sample, including with the UI "1|2" toggle on "1". The toggle is NOT this field ❓
-  "histogramMaxValue": 1,
+  "maxValue": 2,              // ✅ always 2
+  "histogramMaxValue": 1,     // ✅ the UI "1 | 2" toggle: 1 or 2 (the graph's x range)
   "autoAlgorithm": 0,         // 0 = no Auto button used
-  "pointsArray": [ [pts], [pts], [pts], [pts] ]   // 4 channels 🟡 [gray/master, R, G, B]
+  "pointsArray": [ [pts], [pts], [pts], [pts] ]   // 4 channels ✅ [master, R, G, B]
 }
 ```
 
@@ -225,9 +241,9 @@ has this skeleton:
 | point | x,y | flags |
 |---|---|---|
 | guard | 0,0 | `invisible:true` |
-| black handle | (bx, 0) | `deletable:false` |
+| black handle | (bx, by), by usually 0 | `deletable:false` (true once moved up, see below) |
 | user points (Curves only) | … | `deletable:true` |
-| white handle | (wx, 1) | `isWhitePoint:true` |
+| white handle | (wx, wy), wy usually 1 | `isWhitePoint:true` |
 | guard | 2,2 | `invisible:true` |
 
 - **Levels** ✅ (`N1 all`): the black input 0.07 is stored as black handle `x:0.072164945`.
@@ -237,7 +253,18 @@ has this skeleton:
 - **Curves** ✅: the added point 0.25 → 0.37 is stored as `{x:0.25, y:0.3736842}`. The
   Curves inner object also repeats `"id":"Curves","name":"Curves","localizedName":"Kurven"`
   and has `"numeric":{}`. Levels does not repeat these.
-- ❓ Still open: the order of the 4 channels, and what the "1 | 2" toggle does.
+- ✅ Channel order (N-2 `N2 curves slots`): a master point at 0.25 → 0.40 and R 0.5 → 0.7,
+  G 0.5 → 0.3, B 0.75 → 0.9 land in `pointsArray[0…3]` in that order. N-5 confirmed it the other
+  way round with the curves overlay.
+- ✅ The "1 | 2" toggle (`N2 curves range2`) only changes `histogramMaxValue` (1 → 2) and extends
+  the graph to x = 0…2. The points do not change.
+- ✅ End handles (`N2 curves ends`): the UI can move the black handle to (0, 0.1) and the white
+  handle to (1, 0.9). They are stored as `{x:0, y:0.1}` (now with `deletable:true`) and
+  `{x:1, y:0.9, isWhitePoint:true}`. Imported handles with y ≠ 0/1 also work (N-5).
+- The channel menu has only Grau, Rot, Grün, Blau and "Overlay anzeigen". There is no RGB
+  master mode, and the UI always saves `operateOnGray: true`. Presets with `operateOnGray: false`
+  still load and show the curve under "Grau"; whether the two render differently is ❓. The
+  colour-wheel button next to "Auto" is "Auto RGB", which replaces the curves with automatic ones.
 
 ### 3.7 `HSL` ✅
 
@@ -248,7 +275,8 @@ The keys follow the pattern `<param>_<colour>`:
 - `<colour>` is one of `red, orange, yellow, green, cyan, lightBlue, blue, purple, magenta`.
 
 All 36 keys are always written, and 0 is neutral. The block also has an inner `"version":1`.
-UI values are stored 1:1 (red: 11 / 0.23 / −0.17 / 0.31).
+UI values are stored 1:1 (red: 11 / 0.23 / −0.17 / 0.31). ✅ Ranges (N-3): `hueDelta` ±60°,
+`saturationDelta`, `lumaDelta` and `range` ±1.
 
 ### 3.8 `ChannelMixer` ✅
 
@@ -272,6 +300,8 @@ rounds them to 0.3 / 0.59 / 0.11.
 - `*_saturation` is 0…1, the distance from the wheel's centre.
 - `*_luma` is the "Luminanz" slider for the selected wheel.
 - `balance` defaults to 0.5.
+- ✅ Ranges (N-3): `*_saturation` 0…1 (the wheel's rim), `*_luma` ±1, `balance` 0…1. There is
+  no midtones wheel, so this is close to Photomator's Color Balance but not the same.
 
 ### 3.11 `ChromaticAberration` ✅
 
@@ -282,6 +312,7 @@ The defaults are 0, 0, 0, 0.2, 0, 0.2.
 
 `{"center":[0.5,0.5], "numeric":{"intensity":0.37,"radius":0.71}}`. The defaults are intensity
 0.5 and radius 0.5. As with B&W, a default vignette still changes the image.
+✅ Ranges (N-3): `intensity` ±1, `radius` 0…1. A negative intensity probably brightens the corners (not checked visually ❓).
 
 ### 3.13 `LUT` ✅
 
