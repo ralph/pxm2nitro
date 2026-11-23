@@ -49,7 +49,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | Nitro's Black slider acts on RAW files only (Nitro's main use case), no effect on JPEG/HEIC. Sign is opposite (checked on a RAW), scale ❓ |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
-| `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | semantics ❓ |
+| `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | `f` = Blacks, `c` = Whites ✅ (photomator-format §3.2); their curve shape ❓ |
 | `w` White Balance (relative temp/tint) | default: **skip and warn** | 🔴 | ✅ Nitro stores absolute Kelvin (`temperature: 4321`) and tint, while Photomator stores a relative shift. A preset cannot know the as-shot value. ❓ N-1 `WB jpg` shows whether Nitro behaves relatively on non-RAW files |
 | `hS` saturation | `Enhance.saturation` = 1 + k·s | 🟢 | |
 | `hS` vibrancy | `Enhance.vibrancy` | 🟢 | scale ❓ |
@@ -114,8 +114,8 @@ the master between luminance ("Grau") and RGB.
 | 6 violet | `purple` |
 | 7 magenta | `magenta` |
 
-- `hue` → `hueDelta_<c>` = k_hue · hue. Nitro uses degrees. Photomator stores percent/100
-  (UI ±400 %). Which angle 100 % equals is ❓ and needs a visual calibration.
+- `hue` → `hueDelta_<c>` = k_hue · hue. Nitro uses degrees. Photomator stores ±4 for its UI ±100 %
+  (storage scales: photomator-format §3.10). Which angle that equals is ❓ and needs a visual calibration.
 - `saturation` → `saturationDelta_<c>` = k_sat · saturation.
 - `brightness` → `lumaDelta_<c>` = k_lum · brightness.
 - `range_<c>` = 0 (Nitro default; Photomator has no per-colour range).
@@ -162,8 +162,9 @@ otherwise bake into the curves.
 
 ### 2.6 Fade (`f`): skip unless N-6 finds a Nitro equivalent; the curve baking below is opt-in
 
-❓ Semantics are pending. Working hypothesis: fade raises black output and/or lowers white
-output. Bake it into the master curve by moving the black and white handle outputs.
+✅ `f` = Blacks (default 1) and `c` = Whites (default 0), photomator-format §3.2. How they shape
+the curve is ❓. Working hypothesis: they raise the black output and lower the white output, so bake
+them into the master curve by moving the black and white handle outputs.
 
 ### 2.7 Light (`l`)
 

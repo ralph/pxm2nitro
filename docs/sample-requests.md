@@ -26,8 +26,7 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 > N-3, N-4.2, and N-6.
 >
 > **Status 2026-11-23:** N-5 is **done** for `BW 001` and `LS 002`; the curve slot order is
-> confirmed with the curves overlay. P-3.3 is done: the black point signs are opposite (see
-> [sample-log.md](sample-log.md)).
+> confirmed with the curves overlay (see [sample-log.md](sample-log.md)).
 
 ### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.

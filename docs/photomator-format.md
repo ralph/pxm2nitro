@@ -193,7 +193,7 @@ UI ranges from the Pixelmator guides (typed entry; option-drag can exceed the no
 | Hue & Saturation | Hue ±100 %, Saturation ±100 %, Vibrance ±200 % ✅ |
 | Light / Basic | Exposure ±400 % (slider ±200 %), Highlights ±100 %, Shadows ±100 %, Brightness ±200 %, Contrast ±200 %, Black Point ±200 %, Clarity ±100 %, Texture ±100 % ✅ |
 | Selective Clarity | Clarity / Texture ±100 % per tone range |
-| Selective Color | Hue ±100 %, Saturation ?, Brightness ±200 % ✅ (hue and brightness are stored ×4 and ×2, see above) |
+| Selective Color | Hue ±100 % (stored ±4), Saturation ?, Brightness ±200 % (stored ±4) ✅ |
 | Black & White | Red/Green/Blue ±100 %, Tone ±200 %, Intensity |
 | Fade | Blacks (default 100 %) / Whites (default 0 %), 0…200 % ✅ (Photomator shows them too) |
 | Channel Mixer | Red, Green, Blue, Constant ±200 % |
@@ -203,8 +203,8 @@ UI ranges from the Pixelmator guides (typed entry; option-drag can exceed the no
 | Color Monochrome, Sepia, Invert, LUT | Intensity |
 
 Below, *range seen* is the observed min…max over all 83 presets where the block is enabled,
-and *default* is the value seen in disabled blocks. UI ranges are ❓ until checked against a
-calibration sample.
+and *default* is the value seen in disabled blocks. UI ranges in rows without ✅ are
+❓ until checked against a calibration sample.
 
 ### 3.1 `l` Light (lightness)
 
@@ -230,14 +230,8 @@ not present in the samples ❓.
 | `f` | 1 (some disabled blocks have 0.5) | 0.35 … 1.10 | ✅ Blacks ("Schwarztöne"), UI % / 100, 0…2 |
 | `c` | 0 | 0 … 0.2 | ✅ Whites ("Weißtöne"), UI % / 100, 0…2 |
 
-✅ Sample `C` (P-4) settles the keys: Photomator's Fade panel shows Blacks and Whites, like
-Pixelmator Pro. The older notes below are kept for context.
-
-pxdlib documents `f` = intensity and leaves `c` unexplained. Photomator's guide shows only an
-Intensity slider, while Pixelmator Pro has Blacks/Whites (the Swift fields `fadeBlack`/`fadeWhite`).
-Working assumption: `f` = intensity (100 % = 1, values up to 110 % seen) and `c` = an additional
-control (blacks?). How intensity becomes a tone curve is unknown. **This still needs a
-calibration sample (P-4).**
+✅ Sample `C` (P-4): Photomator's Fade panel shows Blacks and Whites, like Pixelmator Pro
+(`fadeBlack`/`fadeWhite`); pxdlib's "`f` = intensity" is wrong. How they shape the tone curve is ❓.
 
 ### 3.3 `w` White Balance
 

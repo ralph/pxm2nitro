@@ -20,8 +20,7 @@ enum MappingConstants {
         static let vibrancyScale = 1.0
     }
 
-    /// Photomator Light (`l`) → Nitro Tone and Enhance. Stored as UI percent / 100, except
-    /// highlights and shadows (stored ±2 = UI ±100 %).
+    /// Photomator Light (`l`) → Nitro Tone and Enhance. Stored as UI percent / 100 unless noted.
     enum Light {
         /// Exposure (±1 = ±100 %, UI range ±400 %) → `exposure` in EV. Placeholder: 100 % = 1 EV.
         static let exposureEVPerUnit = 1.0
@@ -36,9 +35,8 @@ enum MappingConstants {
         static let contrastScale = 1.0
         /// Clarity (±1 = ±100 %) → Detail `clarity`. Placeholder.
         static let clarityScale = 1.0
-        /// Black point (±1 = ±100 %, UI range ±200 %) → Tone `blackPointDelta` (Nitro's Black
-        /// slider, ±1). The signs are opposite (checked on a RAW): a positive Photomator black
-        /// point deepens the blacks, a positive Nitro Black lifts them. The magnitude is a placeholder.
+        /// Black point (±1 = ±100 %) → Tone `blackPointDelta` (Nitro's Black slider). Negative
+        /// because the signs are opposite (`docs/mapping.md` §2.7); the magnitude is a placeholder.
         static let blackPointScale = -1.0
     }
 
