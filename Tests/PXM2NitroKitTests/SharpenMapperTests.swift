@@ -25,6 +25,12 @@ struct SharpenMapperTests {
         #expect(diagnostics.map(\.kind) == [.uncalibrated, .skipped])
     }
 
+    @Test func missingFieldsAreAtPhotomatorsDefaults() {
+        let (result, diagnostics) = detail(["E": 1])
+        #expect(result?["sharpen"] == 0.5)
+        #expect(diagnostics.map(\.kind) == [.uncalibrated])
+    }
+
     @Test func zeroOrDisabledProducesNothing() {
         for sharpen: JSONValue in [["E": 1, "i": 0, "r": 1], ["E": 0, "i": 0.5]] {
             let (result, diagnostics) = detail(sharpen)

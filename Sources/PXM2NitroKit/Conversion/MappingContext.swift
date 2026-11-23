@@ -47,7 +47,7 @@ struct MappingContext {
 
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
-        report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
+        report(.uncalibrated, block, "\(what): placeholder scale, not calibrated yet")
     }
 
     /// The sliders as Nitro content, with their placeholder scales reported; nothing if every

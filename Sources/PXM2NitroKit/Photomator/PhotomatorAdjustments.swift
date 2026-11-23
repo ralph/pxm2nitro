@@ -200,6 +200,8 @@ public enum ColorField: String, CaseIterable, Sendable {
 public enum SharpenField: String, CaseIterable, Sendable {
     case intensity = "i", radius = "r"
 
+    /// Photomator's default intensity.
+    public static let defaultIntensity = 0.5
     /// Photomator's default radius.
     public static let defaultRadius = 2.5
 }

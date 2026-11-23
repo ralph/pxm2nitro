@@ -34,7 +34,7 @@ struct LightMapperTests {
         let (sliders, diagnostics) = map(["E": 1, "b": -1.5])
         #expect(try #require(sliders[.tone])["midtones"] == 0)
         #expect(diagnostics.map(\.kind) == [.approximated, .uncalibrated])
-        #expect(diagnostics.last?.message.hasPrefix("brightness use") == true)
+        #expect(diagnostics.last?.message.hasPrefix("brightness:") == true)
     }
 
     @Test func raisedHighlightsAreReported() {
@@ -53,7 +53,7 @@ struct LightMapperTests {
         let (sliders, diagnostics) = map(["E": 1, "C": -0.2], intensity: 0.5)
         #expect(Array(sliders.keys) == [.detail])
         #expect(sliders[.detail]?["clarity"] == -0.1)
-        #expect(diagnostics.map(\.message) == ["clarity use placeholder scale factors until calibrated"])
+        #expect(diagnostics.map(\.message) == ["clarity: placeholder scale, not calibrated yet"])
     }
 
     @Test func neutralOrDisabledProducesNothing() {
