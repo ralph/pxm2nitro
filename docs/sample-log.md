@@ -11,8 +11,9 @@ Decimal commas in the UI are written as dots here.
 - **Enabled-but-neutral adjustments are not saved:** the save dialog lists only adjustments
   whose values differ from neutral. Enabling Tone/Enhance/Levels/Curves/HSL/… at defaults
   doesn't count; Black & White and Vignette do (they change the image even at default values).
-- **Save dialog defaults:** it has one switch per changed adjustment. **Tone, Enhance and
-  Detail are switched OFF by default**, LUT/Levels/Curves/RAW/WB/B&W/CA/Vignette/Split are ON.
+- **Save dialog defaults:** it has one switch per changed adjustment. On 2026-11-22 Tone, Enhance
+  and Detail were switched OFF by default and the others ON. On 2026-11-23 all switches were ON;
+  the dialog seems to remember the last choice.
   HSL did not appear in the list for `N1 all` (❓ check the file).
 - **Decoder v8 vs v9:** v8 adds sliders: Detail → *Farbrauschen* (color noise, default 0.5) and
   *Rauschdetails* (noise detail, 0.0). RAW Tuning → *Moiré* (default 0.55 on this image).
@@ -131,6 +132,44 @@ Observations:
     is still open.
 - Opening a `.nitropreset` with `open -a Nitro` does not import it. Nitro treats it as an image
   and asks for folder access.
+
+## Nitro: N-1 `WB jpg`, N-2, N-3, N-4.2, N-6 (2026-11-23, via computer use)
+
+- **`N1 WB jpg`** (IMG_6659.JPG): the untouched JPEG shows 5001 K / tint 10 (a nominal neutral,
+  not as-shot data). Three clicks on each arrow give 7851 K / −43 (one click ≈ 950 K / 17.7
+  tint), stored as `temperature: 7850.726`, `tint: -42.883476`; the image turns warmer. The
+  JPEG's Tone panel has no Verstärkung, Schwarz, Weiß or Schatten verstärken.
+- **`N2 curves slots`** (L1008408.DNG): points set with the E/A fields; master 0.25 → 0.40,
+  Rot 0.5 → 0.7, Grün 0.5 → 0.3, Blau 0.75 → 0.9 → `pointsArray[0…3]` in that order.
+  `operateOnGray: true` (the only mode the UI has), `maxValue: 2`, `histogramMaxValue: 1`.
+- **`N2 curves range2`**: the same with the "1 | 2" toggle on 2 → only `histogramMaxValue: 2`
+  changes. The graph then spans x = 0…2 with the white handle in the middle.
+- **`N2 curves ends`**: black handle moved to 0 → 0.1, white handle to 1 → 0.9 in the UI.
+  Stored as `{x:0, y:0.1, deletable:true}` and `{x:1, y:0.9, isWhitePoint:true}`.
+- `N2 curves rgb` was not possible: the channel menu has only Grau / Rot / Grün / Blau /
+  Overlay anzeigen. The colour-wheel button is "Auto RGB" and the half-filled circle is
+  probably "Auto contrast".
+- **`N3 max` / `N3 min`** (sliders dragged to their ends; slider limits, typed or arrow values
+  were not tried):
+
+  | adjustment | slider: min … max |
+  |---|---|
+  | White Balance | Temperatur 1000 … 20000 K, Farbstich −175 … 175 |
+  | Tone | Verstärkung 0 … 1, Belichtung −3 … 3, Glanzlichter 0 … 1, Schatten −1 … 1, Mitteltöne 0.5 … 1.5, Schwarz −1 … 1, Weiß −1 … 1, Wiederherstellen −1 … 1, Schatten verstärken 0 … 1 |
+  | Enhance | Tiefen 0 … ≈2, Lichter 0 … ≈2 (dragging reached 1.99), Kontrast 0 … 2, Sättigung 0 … 2, Farbdynamik −1 … 1 |
+  | Detail | Klarheit −1 … 1, Schärfen −1 … 1, Bildrauschen 0 … 1 |
+  | HSL (red) | Farbton −60 … 60, Sättigung / Luminanz / Bereich −1 … 1 |
+  | Split-Farbtöne | wheel saturation 0 … 1, Luminanz −1 … 1, Balance 0 … 1 |
+  | Vignette | Intensität −1 … 1, Radius 0 … 1 |
+
+- **N-4.2** (DSC01548.ARW, Sony): `N4 sony tone` (exposure +0.6 from the image's own defaults)
+  stores `baseBlackPoint: 3`, `baseWhitePoint: 0.35`, against 5 / 0.15 for the Leica M11. So the
+  base values **depend on the camera** (and `decoderVersionString` is `9` instead of `9.dng`).
+  `N4 sony applied` is the Sony after applying `C Voreinstellung` (a converted preset with
+  base 5 / 0.15), saved again: it still has **3 / 0.35**, so Nitro keeps the image's own base
+  values and ignores the preset's. (Its `blackPointDelta` is +0.13 because that preset was
+  converted before the sign fix in step 15.)
+- **N-6:** see the table in `sample-requests.md`.
 
 ## Template for further samples
 

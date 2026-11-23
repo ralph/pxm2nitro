@@ -26,7 +26,10 @@ are ordered by priority. **P1 blocks the MVP, P2 is needed for good quality, P3 
 > N-3, N-4.2, and N-6.
 >
 > **Status 2026-11-23:** N-5 is **done** for `BW 001` and `LS 002`; the curve slot order is
-> confirmed with the curves overlay (see [sample-log.md](sample-log.md)).
+> confirmed with the curves overlay. Later the same day N-1 `WB jpg`, N-2 (except `N2 curves rgb`,
+> since the UI has no RGB master mode), N-3, N-4.2 and N-6 were done via computer use. Presets
+> `N1 WB jpg`, `N2 curves slots|range2|ends`, `N3 max|min` and `N4 sony tone|applied` are in
+> `nitro_sample_presets/` (see [sample-log.md](sample-log.md)).
 
 ### N-0 Baseline (P1, done; Nitro never saves neutral blocks, so only B&W and Vignette were saved)
 1. Open the RAW, choose *Revert to Original* (or reset all), save a preset as `N0 raw`.
@@ -79,7 +82,8 @@ can carry y ≠ 0/1.
 1. ~~Do adjustments missing from a preset stay?~~ The manual answers this: presets replace each
    adjustment block they contain and leave the others untouched.
 2. Does applying a preset change Boost / black point for a different camera's RAW (are
-   `baseBlackPoint/baseWhitePoint` from the preset used or recomputed)?
+   `baseBlackPoint/baseWhitePoint` from the preset used or recomputed)? ✅ Recomputed: the image
+   keeps its own base values (`N4 sony tone`, `N4 sony applied`).
 
 ### N-6 Feature check: does Nitro really lack these? (P1, no files, just answers)
 For each Photomator adjustment below, check whether Nitro has an equivalent control
@@ -87,19 +91,25 @@ For each Photomator adjustment below, check whether Nitro has an equivalent cont
 
 | Photomator adjustment | Nitro equivalent? |
 |---|---|
-| Fade (lift blacks / matte look) | |
-| Color Balance (shadows / midtones / highlights colour wheels) | (Split Toning is similar, but is it the same?) |
-| Global Hue shift (Hue & Saturation → Hue) | |
-| Selective Clarity (clarity per shadows / midtones / highlights) | |
-| Texture | |
-| Dehaze | |
-| White Balance on a JPEG: relative shift or Kelvin? | |
-| Sharpen radius | |
-| Color Monochrome / Sepia (tint the whole image one colour) | |
-| Replace Color / Remove Color | |
-| Invert | |
-| Levels output handles (output black/white) | |
-| Curves black/white handle with output ≠ 0/1 | (see N-2.4) |
+| Fade (lift blacks / matte look) | no (only via the Curves end handles) |
+| Color Balance (shadows / midtones / highlights colour wheels) | no. Split-Farbtöne has highlights, shadows and overall wheels plus luminance and balance, but no midtones |
+| Global Hue shift (Hue & Saturation → Hue) | no (HSL works per colour only) |
+| Selective Clarity (clarity per shadows / midtones / highlights) | no (Detail → Klarheit is global) |
+| Texture | no |
+| Dehaze | no |
+| White Balance on a JPEG: relative shift or Kelvin? | Kelvin, from a nominal 5001 K / tint 10 (N-1 `WB jpg`) |
+| Sharpen radius | no (Detail → Schärfen, RAW Tuning → RAW-Schärfe) |
+| Color Monochrome / Sepia (tint the whole image one colour) | no (B&W + Split-Farbtöne at most) |
+| Replace Color / Remove Color | no |
+| Invert | no (only via Curves) |
+| Levels output handles (output black/white) | no (input black / gray / white only) |
+| Curves black/white handle with output ≠ 0/1 | yes (N-2.4) |
+
+Checked 2026-11-23 in every panel of the edit tab, Quick Fixes (Auto-Verbessern, KI-Radierer,
+Fleck- und Drahtentfernung, Klonen) and the mask tab. The full edit list: Beschnitt & Perspektive,
+Weißabgleich, Tonwert, Verbessern, Detail, RAW Tuning, Tonwerte, Kurven, HSL, Schwarzweiß,
+Split-Farbtöne, Chromatische Aberration, Objektiv, Kanalmischer, Vignette, plus LUTs in the
+presets tab.
 
 ### N-5 Import test (P1, possible now)
 1. Generate presets: `swift run pxm2nitro convert sample_presets_photomator/*.adjustments -o ~/Desktop/pxm2nitro-out`
@@ -188,15 +198,15 @@ is identical and shows any extra properties Pixelmator Pro writes.
 |---|---|
 | Nitro adjustment ID strings | N-0, N-1 |
 | Nitro neutral values (`highlights=1`?) | N-0 |
-| Nitro slider ranges | N-3 |
-| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ slot order and end-point handles (N-5); `operateOnGray`, `maxValue`: N-2 |
-| Preset application semantics | ✅ manual (per-adjustment replacement); N-4.2 for base black/white points |
+| Nitro slider ranges | ✅ N-3 (`nitro-format.md` §3) |
+| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ N-2/N-5 (`operateOnGray:false` rendering still ❓) |
+| Preset application semantics | ✅ manual (per-adjustment replacement); base black/white points are recomputed per image (N-4.2) |
 | Photomator RAW params in presets | 🟡 docs say no; P-1 confirms |
 | Selective Color index → colour, hue unit | ✅ P-2 (hue in Nitro degrees still ❓) |
 | Light units | ✅ P-3 (black point sign ✅; scales ❓) |
 | Fade semantics | ✅ P-4 (keys; the tone curve it applies is still ❓) |
-| WB relative vs absolute | ✅ Photomator relative even on RAW (P-5); Nitro RAW Kelvin (N-1); Nitro JPEG ❓ |
+| WB relative vs absolute | ✅ Photomator relative even on RAW (P-5); Nitro Kelvin on RAW and JPEG (N-1) |
 | Colour balance UI ↔ storage | 🟡 P-6 (3-way mode only) |
 | LUT storage | N-1 LUT, P-8 |
-| Which adjustments Nitro truly lacks | N-6 |
+| Which adjustments Nitro truly lacks | ✅ N-6 |
 | Pixelmator Pro format identical | P-10 |
