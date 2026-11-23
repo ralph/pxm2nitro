@@ -18,6 +18,8 @@ enum MappingConstants {
         /// Saturation (±1 = ±100 %) → `saturation` multiplier `1 + scale · s`. Measured:
         /// +50 % raises saturation 1.41×, Nitro's multiplier acts 1:1.
         static let saturationScale = 0.8
+        /// Negative saturation keeps 1:1, so −100 % (grey) stays Nitro's 0 (grey). Not measured.
+        static let desaturationScale = 1.0
         /// Vibrance (±1 = ±100 %) → `vibrancy`. Placeholder: Nitro's vibrance boosts muted
         /// colours far more and saturated ones far less than Photomator's, so no factor fits.
         static let vibrancyScale = 1.0

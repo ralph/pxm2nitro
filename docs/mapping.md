@@ -15,7 +15,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`, brightening (negative) included; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
-| Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + 0.8·s (measured, §3.1), vibrance → `vibrancy` (placeholder, reports `uncalibrated`). Hue is skipped |
+| Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + 0.8·s for s > 0 (measured, §3.1), 1 + s below 0 so −100 % stays grey, vibrance → `vibrancy` (placeholder, reports `uncalibrated`). Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
 ## 0. Ground rules
@@ -254,7 +254,7 @@ Results (L1008408.DNG, `sample-log.md` C-1 and C-2), per stored Photomator unit:
 | brightness | `midtones` = 1 + k·b | 0.5 | midtones match; Nitro lifts the shadows more |
 | contrast | `contrast` = 1 + k·c | 0.3 | tone-curve slope matches; Nitro also darkens and saturates |
 | clarity | `clarity` | 3.0 (rough) | different effects: Nitro's is weak and local, Photomator's acts like contrast; Nitro +1 ≈ Photomator +30 % |
-| Color saturation | `saturation` = 1 + k·s | 0.8 | close (both scale saturation evenly) |
+| Color saturation | `saturation` = 1 + k·s | 0.8 (raising); 1.0 (lowering, not measured, keeps −100 % = grey) | close (both scale saturation evenly) |
 | Color vibrance | `vibrancy` | 1.0 (unchanged) | no fit: Nitro boosts muted colours far more and saturated ones far less |
 | Selective Color hue (orange) | `hueDelta_orange` | 7.5°/unit (unchanged) | no fit on this image: Nitro +36° moved the wood's hue by +6°, Photomator 83 % by +34°. Needs a test chart with pure colour patches |
 
