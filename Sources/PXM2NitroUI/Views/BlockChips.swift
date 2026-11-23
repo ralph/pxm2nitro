@@ -46,6 +46,8 @@ struct FlowLayout: Layout {
 /// One adjustment and how it converts.
 struct BlockChip: View {
     let outcome: BlockOutcome
+    /// Shown as a tooltip, e.g. why the adjustment was left out.
+    var reason: String?
 
     var body: some View {
         HStack(spacing: 4) {
@@ -59,12 +61,15 @@ struct BlockChip: View {
         .background(outcome.status.tint.opacity(0.13), in: .rect(cornerRadius: 6))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(outcome.block.displayName), \(outcome.status.label)")
+        .help(reason ?? "")
+        .accessibilityHint(reason ?? "")
     }
 }
 
 /// Tag groups in one wrapping row, with a divider between non-empty groups.
 struct BlockChips: View {
     let groups: [[BlockOutcome]]
+    var reasons: [PhotomatorBlock: String] = [:]
 
     var body: some View {
         let groups = groups.filter { !$0.isEmpty }
@@ -75,7 +80,7 @@ struct BlockChips: View {
                     Rectangle().fill(.separator).frame(width: 1, height: 16)
                         .padding(.horizontal, 4).accessibilityHidden(true)
                 }
-                ForEach(groups[index], id: \.block) { BlockChip(outcome: $0) }
+                ForEach(groups[index], id: \.block) { BlockChip(outcome: $0, reason: reasons[$0.block]) }
             }
         }
     }

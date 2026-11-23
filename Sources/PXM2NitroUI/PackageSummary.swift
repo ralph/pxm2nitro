@@ -9,6 +9,8 @@ public struct PresetSummary: Identifiable, Sendable {
     public let converted: [BlockOutcome], leftOut: [BlockOutcome]
     /// What changed beyond the left-out adjustments: approximations and dropped preset properties.
     public let notes: [String]
+    /// Why each left-out adjustment was left out, one line per diagnostic.
+    public let leftOutReasons: [PhotomatorBlock: String]
 
     init(_ preset: PhotomatorPreset) {
         self.preset = preset
@@ -18,6 +20,18 @@ public struct PresetSummary: Identifiable, Sendable {
         notes = result.diagnostics
             .filter { $0.block.map(approximated.contains) ?? true }
             .map { [$0.block?.displayName, $0.message].compactMap { $0 }.joined(separator: ": ") }
+        leftOutReasons = Self.reasons(for: leftOut, in: [result])
+    }
+
+    /// The distinct diagnostic messages for each of `outcomes`' blocks across `results`.
+    static func reasons(for outcomes: [BlockOutcome], in results: [ConversionResult]) -> [PhotomatorBlock: String] {
+        let diagnostics = results.flatMap(\.diagnostics)
+        return Dictionary(uniqueKeysWithValues: outcomes.map { outcome in
+            var seen = Set<String>()
+            let messages = diagnostics.filter { $0.block == outcome.block }.map(\.message)
+                .filter { seen.insert($0).inserted }
+            return (outcome.block, messages.joined(separator: "\n"))
+        })
     }
 
     public var id: String { preset.id }
@@ -43,6 +57,8 @@ public struct PackageSummary: Identifiable, Sendable {
     public let blocks: [BlockOutcome]
     /// `blocks` split like `PresetSummary.converted` / `leftOut`.
     public let converted: [BlockOutcome], leftOut: [BlockOutcome]
+    /// Why each left-out adjustment was left out, merged across presets.
+    public let leftOutReasons: [PhotomatorBlock: String]
     public let convertibleCount: Int
     public let losslessCount: Int
 
@@ -56,6 +72,7 @@ public struct PackageSummary: Identifiable, Sendable {
                                uniquingKeysWith: max)
         blocks = PhotomatorBlock.allCases.compactMap { block in worst[block].map { BlockOutcome(block, $0) } }
         (converted, leftOut) = blocks.partitionedByConversion()
+        leftOutReasons = PresetSummary.reasons(for: leftOut, in: presets.map(\.result))
         convertibleCount = presets.count(where: \.isConvertible)
         losslessCount = presets.count(where: \.result.isLossless)
     }
