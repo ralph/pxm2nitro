@@ -43,7 +43,7 @@ struct SummaryTextTests {
         let ls002 = try #require(ls.presets.first { $0.preset.name == "002" })
         #expect(ls002.notes.contains { $0.hasPrefix("Levels: ") })
         #expect(ls002.notes.contains { $0.hasPrefix("Selective Color: ") })
-        #expect(!ls002.notes.contains { $0.hasPrefix("Light: ") })   // left out, shown as a tag
+        #expect(!ls002.notes.contains { $0.hasPrefix("Color Balance: ") })   // left out, shown as a tag
     }
 
     #if os(macOS)

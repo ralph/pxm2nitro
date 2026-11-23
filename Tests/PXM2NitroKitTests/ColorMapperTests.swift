@@ -52,9 +52,13 @@ struct ColorMapperTests {
     }
 
     @Test func samplePresets() throws {
+        // LS 002: Color saturation −20 %, plus Light contrast +25 % merged into the same Enhance.
         let saturated = Converter.convert(try Fixtures.photomatorPreset("LS", "002"))
-        let enhance = try #require(saturated.preset?.adjustments.compactMap(\.content.sliders).first)
+        let enhances = try #require(saturated.preset).adjustments.compactMap(\.content.sliders).filter { $0.kind == .enhance }
+        #expect(enhances.count == 1)
+        let enhance = try #require(enhances.first)
         #expect(abs(enhance["saturation"] - 0.8) < 1e-12)
+        #expect(enhance["contrast"] == 1.25)
         #expect(saturated.blocks.contains(BlockOutcome(.hueSaturation, .approximated)))
 
         let hueOnly = Converter.convert(try Fixtures.photomatorPreset("LS", "005"))

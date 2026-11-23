@@ -11,7 +11,7 @@ struct BlockOutcomeTests {
     @Test func classifiesEveryEnabledBlockInPhotomatorOrder() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("BW", "001"))
         #expect(result.blocks == [
-            BlockOutcome(.light, .leftOut),
+            BlockOutcome(.light, .approximated),
             BlockOutcome(.curves, .carriedOver),
             BlockOutcome(.selectiveColor, .approximated),
             BlockOutcome(.blackAndWhite, .leftOut),

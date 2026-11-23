@@ -54,7 +54,7 @@ public enum Converter {
     /// The block mappers, in the order their Nitro adjustments are written.
     static var mappers: [any BlockMapper.Type] {
         [LevelsMapper.self, CurvesMapper.self, ChannelMixerMapper.self, SelectiveColorMapper.self,
-         ColorMapper.self]
+         LightMapper.self, ColorMapper.self]
     }
 
     /// Photomator blocks this converter maps.
@@ -97,12 +97,33 @@ public enum Converter {
 
         let nitroPreset = contents.isEmpty ? nil : NitroPreset(
             name: nitroName(for: preset),
-            adjustments: contents.map { NitroAdjustment($0) })
+            adjustments: mergingSliders(contents).map { NitroAdjustment($0) })
         let blocks = enabled.compactMap { block in
             BlockOutcome.Status(converted: converted.contains(block),
                                 reported: context.diagnostics.contains { $0.block == block })
                 .map { BlockOutcome(block, $0) }
         }
         return ConversionResult(preset: nitroPreset, diagnostics: context.diagnostics, blocks: blocks)
+    }
+
+    /// Combines slider adjustments of the same kind (e.g. Enhance from Light and from Color),
+    /// since a Nitro preset holds each adjustment once. Keeps the position of the first one.
+    static func mergingSliders(_ contents: [NitroAdjustment.Content]) -> [NitroAdjustment.Content] {
+        var merged: [NitroAdjustment.Content] = []
+        var positions: [NitroSliderKind: Int] = [:]
+        for content in contents {
+            guard case .sliders(let sliders) = content else {
+                merged.append(content)
+                continue
+            }
+            if let position = positions[sliders.kind], case .sliders(var existing) = merged[position] {
+                existing.merge(sliders)
+                merged[position] = .sliders(existing)
+            } else {
+                positions[sliders.kind] = merged.count
+                merged.append(content)
+            }
+        }
+        return merged
     }
 }

@@ -19,4 +19,18 @@ enum MappingConstants {
         /// Vibrance (±1 = ±100 %) → `vibrancy`. Placeholder.
         static let vibrancyScale = 1.0
     }
+
+    /// Photomator Light (`l`, UI values stored as percent / 100) → Nitro Tone and Enhance.
+    enum Light {
+        /// Exposure (±1 = ±100 %) → `exposure` in EV. Placeholder: 100 % = 1 EV.
+        static let exposureEVPerUnit = 1.0
+        /// Highlights (negative = recover) → `highlights` = 1 + scale · h (Nitro's neutral is 1). Placeholder.
+        static let highlightsScale = 1.0
+        /// Shadows (±1 = ±100 %) → `shadows`. Placeholder.
+        static let shadowsScale = 1.0
+        /// Brightness (±1 = ±100 %) → `midtones` = 1 + scale · b (Nitro's neutral is 1). Placeholder.
+        static let brightnessScale = 1.0
+        /// Contrast (±1 = ±100 %) → Enhance `contrast` = 1 + scale · c. Placeholder.
+        static let contrastScale = 1.0
+    }
 }

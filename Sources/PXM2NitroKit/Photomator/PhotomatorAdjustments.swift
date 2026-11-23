@@ -166,6 +166,19 @@ public struct SelectiveColorRange: Sendable, Equatable {
     public var brightness: Double
 }
 
+/// Light (`l`), stored as UI percent / 100.
+public struct PhotomatorLight: Sendable, Equatable {
+    static let keys = ["e", "h", "s", "b", "c", "B", "C", "T"]
+    public var exposure: Double
+    public var highlights: Double
+    public var shadows: Double
+    public var brightness: Double
+    public var contrast: Double
+    public var blackPoint: Double
+    public var clarity: Double
+    public var texture: Double
+}
+
 /// Color (`hS`): global hue, saturation and vibrance, stored as UI percent / 100.
 public struct PhotomatorColor: Sendable, Equatable {
     static let keys = ["h", "s", "v"]
@@ -212,6 +225,17 @@ extension PhotomatorAdjustments {
                     blue: row["blue"]?.doubleValue ?? 0,
                     constant: row["constant"]?.doubleValue ?? 0)
             }
+        }
+    }
+
+    /// Light (`l`); `nil` if the block is disabled or one of its values is not a number.
+    public var light: PhotomatorLight? {
+        enabledBlock(.light).flatMap { payload in
+            guard JSONValue.object(payload).isObject(withNumericFields: PhotomatorLight.keys) else { return nil }
+            func value(_ key: String) -> Double { payload[key]?.doubleValue ?? 0 }
+            return PhotomatorLight(exposure: value("e"), highlights: value("h"), shadows: value("s"),
+                                   brightness: value("b"), contrast: value("c"), blackPoint: value("B"),
+                                   clarity: value("C"), texture: value("T"))
         }
     }
 
