@@ -20,18 +20,7 @@ public struct PresetSummary: Identifiable, Sendable {
         notes = result.diagnostics
             .filter { $0.block.map(approximated.contains) ?? true }
             .map { [$0.block?.displayName, $0.message].compactMap { $0 }.joined(separator: ": ") }
-        leftOutReasons = Self.reasons(for: leftOut, in: [result])
-    }
-
-    /// The distinct diagnostic messages for each of `outcomes`' blocks across `results`.
-    static func reasons(for outcomes: [BlockOutcome], in results: [ConversionResult]) -> [PhotomatorBlock: String] {
-        let diagnostics = results.flatMap(\.diagnostics)
-        return Dictionary(uniqueKeysWithValues: outcomes.map { outcome in
-            var seen = Set<String>()
-            let messages = diagnostics.filter { $0.block == outcome.block }.map(\.message)
-                .filter { seen.insert($0).inserted }
-            return (outcome.block, messages.joined(separator: "\n"))
-        })
+        leftOutReasons = reasons(for: leftOut, result.diagnostics)
     }
 
     public var id: String { preset.id }
@@ -66,19 +55,33 @@ public struct PackageSummary: Identifiable, Sendable {
         self.url = url
         presets = package.presets.map(PresetSummary.init)
         failures = package.failures
-        var seen = Set<String>()
-        collectionNames = package.presets.compactMap(\.collectionName).filter { seen.insert($0).inserted }
+        collectionNames = package.presets.compactMap(\.collectionName).uniqued()
         let worst = Dictionary(presets.flatMap(\.result.blocks).map { ($0.block, $0.status) },
                                uniquingKeysWith: max)
         blocks = PhotomatorBlock.allCases.compactMap { block in worst[block].map { BlockOutcome(block, $0) } }
         (converted, leftOut) = blocks.partitionedByConversion()
-        leftOutReasons = PresetSummary.reasons(for: leftOut, in: presets.map(\.result))
+        leftOutReasons = reasons(for: leftOut, presets.flatMap(\.result.diagnostics))
         convertibleCount = presets.count(where: \.isConvertible)
         losslessCount = presets.count(where: \.result.isLossless)
     }
 
     public var id: URL { url }
     public var fileName: String { url.lastPathComponent }
+}
+
+/// The distinct diagnostic messages for each of `outcomes`' blocks, one per line.
+private func reasons(for outcomes: [BlockOutcome], _ diagnostics: [ConversionDiagnostic]) -> [PhotomatorBlock: String] {
+    Dictionary(uniqueKeysWithValues: outcomes.map { outcome in
+        (outcome.block, diagnostics.filter { $0.block == outcome.block }.map(\.message).uniqued().joined(separator: "\n"))
+    })
+}
+
+extension Sequence where Element: Hashable {
+    /// The elements in order, without repeats.
+    func uniqued() -> [Element] {
+        var seen = Set<Element>()
+        return filter { seen.insert($0).inserted }
+    }
 }
 
 extension [BlockOutcome] {
