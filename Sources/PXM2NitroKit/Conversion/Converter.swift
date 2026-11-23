@@ -1,12 +1,22 @@
 /// How one enabled Photomator adjustment fared in a conversion.
 public struct BlockOutcome: Sendable, Equatable {
-    public enum Status: String, Sendable {
+    public enum Status: Sendable {
         /// Converted exactly.
         case carriedOver
         /// Converted, but with diagnostics (approximated, uncalibrated or partly dropped).
         case approximated
         /// Not converted at all.
         case leftOut
+
+        /// `nil` for a block that produced nothing and reported nothing, i.e. was neutral.
+        init?(converted: Bool, reported: Bool) {
+            switch (converted, reported) {
+            case (true, false): self = .carriedOver
+            case (true, true): self = .approximated
+            case (false, true): self = .leftOut
+            case (false, false): return nil
+            }
+        }
     }
 
     public let block: PhotomatorBlock
@@ -63,31 +73,27 @@ public enum Converter {
         }
         var context = MappingContext(intensity: adjustments.intensity)
         var contents: [NitroAdjustment.Content] = []
-        var statuses: [PhotomatorBlock: BlockOutcome.Status] = [:]
+        var converted: Set<PhotomatorBlock> = []
         for mapper in mappers {
-            let firstNewDiagnostic = context.diagnostics.endIndex
             let mapped = mapper.map(adjustments, context: &context)
+            if !mapped.isEmpty { converted.insert(mapper.block) }
             contents += mapped
-            let reported = context.diagnostics[firstNewDiagnostic...].filter { $0.block == mapper.block }
-            if !mapped.isEmpty {
-                statuses[mapper.block] = reported.isEmpty ? .carriedOver : .approximated
-            } else if !reported.isEmpty {
-                statuses[mapper.block] = .leftOut
-            }
         }
 
         let supported = supportedBlocks
-        for block in adjustments.enabledBlocks where !supported.contains(block) {
+        let enabled = adjustments.enabledBlocks
+        for block in enabled where !supported.contains(block) {
             context.report(.skipped, block, "no Nitro equivalent is implemented yet")
-            statuses[block] = .leftOut
         }
         reportOtherProperties(&context)
 
         let nitroPreset = contents.isEmpty ? nil : NitroPreset(
             name: nitroName(for: preset),
             adjustments: contents.map { NitroAdjustment($0) })
-        let blocks = adjustments.enabledBlocks.compactMap { block in
-            statuses[block].map { BlockOutcome(block, $0) }
+        let blocks = enabled.compactMap { block in
+            BlockOutcome.Status(converted: converted.contains(block),
+                                reported: context.diagnostics.contains { $0.block == block })
+                .map { BlockOutcome(block, $0) }
         }
         return ConversionResult(preset: nitroPreset, diagnostics: context.diagnostics, blocks: blocks)
     }

@@ -77,8 +77,7 @@ struct ConverterTests {
             "C": ["E": 1, "rgb": ["p": [[0, 0.2], [0.5, 0.7], [1, 1]]]],
             "m": ["E": 1, "r": ["red": 2, "green": 0, "blue": 0, "constant": 0.4]],
         ])
-        let preset = PhotomatorPreset(id: "x", name: "Half", collectionName: nil,
-                                      adjustments: adjustments, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Half", adjustments)
         let result = Converter.convert(preset)
         #expect(result.preset?.name == "Half")
 
@@ -95,8 +94,7 @@ struct ConverterTests {
             "in": 0,
             "C": ["E": 1, "rgb": ["p": [[0, 0.2], [0.5, 0.7], [1, 1]]]],
         ])
-        let preset = PhotomatorPreset(id: "x", name: "Zero", collectionName: nil,
-                                      adjustments: adjustments, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Zero", adjustments)
         #expect(Converter.convert(preset).preset == nil)
     }
 
@@ -104,8 +102,7 @@ struct ConverterTests {
         let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
             "C": ["E": 1, "rgb": ["p": [[0, 0], [1, 1]], "d": 0.3, "l": 0, "s": 0, "h": -0.1]],
         ])
-        let preset = PhotomatorPreset(id: "x", name: "Sliders", collectionName: nil,
-                                      adjustments: adjustments, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Sliders", adjustments)
         let diagnostics = Converter.convert(preset).diagnostics
         #expect(diagnostics.contains { $0.kind == .skipped && $0.block == .curves && $0.message.contains("d, h") })
     }

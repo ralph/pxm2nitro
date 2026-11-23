@@ -35,14 +35,12 @@ struct BlockOutcomeTests {
         let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
             "ca": ["E": 1, "a": "not an array"],
         ])
-        let preset = PhotomatorPreset(id: "x", name: "Broken", collectionName: nil,
-                                      adjustments: adjustments, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Broken", adjustments)
         #expect(Converter.convert(preset).blocks == [BlockOutcome(.selectiveColor, .leftOut)])
     }
 
     @Test func presetWithoutAdjustmentsHasNoBlocks() {
-        let preset = PhotomatorPreset(id: "x", name: "Empty", collectionName: nil,
-                                      adjustments: nil, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Empty", nil)
         #expect(Converter.convert(preset).blocks.isEmpty)
     }
 }

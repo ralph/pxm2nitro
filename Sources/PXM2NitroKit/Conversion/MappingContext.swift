@@ -29,7 +29,9 @@ struct MappingContext {
 /// Maps one Photomator block to zero or more Nitro adjustments.
 protocol BlockMapper {
     static var block: PhotomatorBlock { get }
-    /// Returns nothing if the block is disabled or neutral.
+    /// Returns nothing if the block is disabled or neutral. An enabled block that changes the
+    /// image but cannot be converted must report a diagnostic for `block`; otherwise it is
+    /// treated as neutral (see `ConversionResult.blocks`).
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content]
 }
 
