@@ -14,7 +14,7 @@ struct BlockOutcomeTests {
             BlockOutcome(.light, .approximated),
             BlockOutcome(.curves, .carriedOver),
             BlockOutcome(.selectiveColor, .approximated),
-            BlockOutcome(.blackAndWhite, .leftOut),
+            BlockOutcome(.blackAndWhite, .approximated),
             BlockOutcome(.grain, .leftOut),
         ])
     }

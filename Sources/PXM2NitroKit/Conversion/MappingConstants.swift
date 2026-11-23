@@ -47,4 +47,11 @@ enum MappingConstants {
         /// Exposure (vignette strength, default 0.5) → `intensity` (Nitro's default 0.5). Placeholder.
         static let intensityScale = 1.0
     }
+
+    /// Photomator Black & White (`b`) filter colour → Nitro BlackAndWhite channel weights.
+    enum BlackAndWhite {
+        /// A filter offset `o` (±1) scales a channel's Rec. 601 weight by `1 + scale · o` before
+        /// the weights are normalised to sum 1. Placeholder.
+        static let filterScale = 1.0
+    }
 }

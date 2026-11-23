@@ -231,6 +231,19 @@ public enum VignetteField: String, PhotomatorSliderField {
     }
 }
 
+/// Fields of Black & White (`b`); the filter colour is the sub-object `b` (`ColorWheelField`).
+public enum BlackAndWhiteField: String, PhotomatorSliderField {
+    case tone = "t", intensity = "i"
+
+    public var defaultValue: Double { self == .intensity ? 1 : 0 }
+}
+
+/// A colour-wheel position stored as R/G/B offsets plus luminance and saturation (0 = neutral),
+/// as in B&W's filter colour and Color Balance's ranges.
+public enum ColorWheelField: String, PhotomatorSliderField {
+    case red, green, blue, luminance, saturation
+}
+
 public typealias PhotomatorLight = PhotomatorSliders<LightField>
 public typealias PhotomatorSharpen = PhotomatorSliders<SharpenField>
 public typealias PhotomatorColor = PhotomatorSliders<ColorField>
@@ -277,10 +290,15 @@ extension PhotomatorAdjustments {
         }
     }
 
-    /// The fields of an enabled slider block such as Light or Color; `nil` if the block is
-    /// disabled or a field is not a number.
-    public func sliders<Field>(_ block: PhotomatorBlock, as _: Field.Type = Field.self) -> PhotomatorSliders<Field>? {
-        enabledBlock(block).flatMap(PhotomatorSliders.init)
+    /// The fields of an enabled slider block such as Light or Color, or of one of its
+    /// sub-objects (`key`, e.g. B&W's filter colour; all defaults if missing). `nil` if the
+    /// block is disabled or a value is not a number.
+    public func sliders<Field>(_ block: PhotomatorBlock, key: String? = nil,
+                               as _: Field.Type = Field.self) -> PhotomatorSliders<Field>? {
+        guard let payload = enabledBlock(block) else { return nil }
+        guard let key else { return PhotomatorSliders(payload) }
+        guard let sub = payload[key] else { return PhotomatorSliders([:]) }
+        return sub.objectValue.flatMap(PhotomatorSliders.init)
     }
 
     /// Selective Color (`ca`): eight ranges in UI order

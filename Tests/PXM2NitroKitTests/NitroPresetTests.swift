@@ -66,7 +66,7 @@ struct NitroPresetTests {
     @Test func sliderTemplatesWriteEveryDefault() throws {
         for kind in NitroSliderKind.allCases {
             let sliders = NitroSliders(kind)
-            #expect(sliders.isNoOp == (kind != .vignette))
+            #expect(sliders.isNoOp == ![.vignette, .blackAndWhite].contains(kind))
             let json = try #require(NitroAdjustment(.sliders(sliders)).json.objectValue)
             #expect(json["numeric"]?.objectValue?.keys.sorted() == kind.defaults.keys.sorted())
             #expect(json["enabled"] == true)
@@ -74,7 +74,7 @@ struct NitroPresetTests {
     }
 
     /// Nitro's own blocks at their defaults equal the converter's templates.
-    @Test(arguments: [("N0 defaults", "Vignette"), ("Lebendig", "Tone")])
+    @Test(arguments: [("N0 defaults", "Vignette"), ("N0 defaults", "BlackAndWhite"), ("Lebendig", "Tone")])
     func sliderTemplatesMatchNitrosBlocks(sample: String, id: String) throws {
         let preset = try NitroPreset(data: Data(contentsOf: Fixtures.nitroPreset(sample)))
         var sliders = try #require(preset.adjustments.first { $0.id == id }?.content.sliders)
