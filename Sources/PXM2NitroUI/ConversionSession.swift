@@ -44,7 +44,11 @@ public final class ConversionSession {
     /// The result of the last export; `nil` until something was exported.
     public private(set) var lastExport: ExportReport?
     /// Whether packages are being loaded or presets written.
-    public private(set) var isBusy = false
+    public var isBusy: Bool { activeOperations > 0 }
+    /// Loads and exports in flight; several can overlap since each awaits work off the actor.
+    private var activeOperations = 0
+    /// Bumped by `reset`, so a load that was in flight does not bring packages back.
+    private var generation = 0
 
     public init() {}
 
@@ -53,9 +57,11 @@ public final class ConversionSession {
 
     /// Loads packages. A package added again replaces the earlier copy in place.
     public func add(_ urls: [URL]) async {
-        isBusy = true
-        defer { isBusy = false }
+        activeOperations += 1
+        defer { activeOperations -= 1 }
+        let startGeneration = generation
         let results = await Task.detached { urls.map(Self.load) }.value
+        guard generation == startGeneration else { return }
         loadErrors = []
         for result in results {
             switch result {
@@ -77,6 +83,7 @@ public final class ConversionSession {
 
     /// Starts over: no packages, no errors, no export.
     public func reset() {
+        generation += 1
         packages = []
         loadErrors = []
         lastExport = nil
@@ -86,19 +93,22 @@ public final class ConversionSession {
     /// presets are collected in the report; nothing is thrown.
     @discardableResult
     public func export(to folder: URL) async -> ExportReport {
-        isBusy = true
-        defer { isBusy = false }
+        activeOperations += 1
+        defer { activeOperations -= 1 }
+        let startGeneration = generation
         let presets = packages.flatMap(\.presets)
         let replace = replaceExisting
         let report = await Task.detached { Self.write(presets, to: folder, replacing: replace) }.value
-        lastExport = report
+        if generation == startGeneration { lastExport = report }
         return report
     }
 
     nonisolated static func load(_ url: URL) -> Result<PackageSummary, LoadError> {
         do {
             let package = try withSecurityScopedAccess(to: url) { try AdjustmentsPackage.load(from: url) }
-            return .success(PackageSummary(url: url.standardizedFileURL, package: package))
+            // One form per folder, whether or not the received URL ends in a slash.
+            let id = URL(filePath: url.standardizedFileURL.path(percentEncoded: false), directoryHint: .isDirectory)
+            return .success(PackageSummary(url: id, package: package))
         } catch {
             return .failure(LoadError(url: url, message: message(for: error, url: url)))
         }

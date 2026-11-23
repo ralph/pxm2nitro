@@ -49,6 +49,13 @@ struct ConversionSessionTests {
         #expect(session.packages.map(\.fileName) == ["BW.adjustments", "LS.adjustments"])
     }
 
+    @Test func trailingSlashStillMatchesTheSamePackage() async {
+        let session = await session("BW")
+        let path = SampleFiles.photomatorPackage("BW").path(percentEncoded: false)
+        await session.add([URL(filePath: path + "/"), URL(filePath: path, directoryHint: .notDirectory)])
+        #expect(session.packages.count == 1)
+    }
+
     @Test func reportsFilesThatAreNotPackages() async {
         let session = ConversionSession()
         let missing = SampleFiles.repositoryRoot.appending(path: "sample_presets_photomator/missing.adjustments")
