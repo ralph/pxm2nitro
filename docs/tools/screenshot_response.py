@@ -6,7 +6,7 @@ Usage:
 
 Each image is a capture of the same preview region (same app, same zoom), once without
 and once with the adjustment. For the pixels whose linear luminance lies between 0.02 and
-0.35 in the base capture (and is neither black nor near white in any adjusted one; the same
+0.35 in the base capture (and has no channel clipped at 0 or 255 in any capture; the same
 pixels are used for every label), the script prints the
 median change in log2 luminance (displayed stops), plus the mean luminance and saturation
 before and after. Comparing these numbers between Photomator and Nitro at several slider
@@ -70,9 +70,14 @@ def main(base_path, *specs):
     # One pixel set for all labels: midtones in the base that stay unclipped (and non-black) in
     # every capture. A per-capture mask would drop the brightest midtones only at high values
     # and bias those medians low.
-    mask = (base_l > 0.02) & (base_l < 0.35)
-    for _, _, adjusted_l in captures:
-        mask &= (adjusted_l > 0) & (adjusted_l < 0.9)
+    # A saturated colour can clip in one channel while its luminance stays low, so every
+    # channel must stay inside the encoded range in the base and in every capture.
+    def unclipped(rgb):
+        return (rgb.max(-1) < 250 / 255) & (rgb.min(-1) > 2 / 255)
+
+    mask = (base_l > 0.02) & (base_l < 0.35) & unclipped(base)
+    for _, adjusted, adjusted_l in captures:
+        mask &= (adjusted_l < 0.9) & unclipped(adjusted)
     if not mask.any():
         sys.exit("no midtone pixels (base luminance 0.02-0.35) stay unclipped in all captures")
     print(f"{mask.sum()} pixels ({mask.mean():.1%} of the region)")

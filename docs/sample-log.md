@@ -197,15 +197,15 @@ So Levels follows the same rule as Curves.
 ## Calibration C-1: Nitro exposure (L1008408.DNG, 2026-11-23, via computer use)
 
 Preview captures of the unedited image in Nitro's editor (image region only), exposure set
-with the ‹ › arrows, analysed with `docs/tools/screenshot_response.py` (117 812 pixels, 79.5 % of
-the region, unclipped in every capture):
+with the ‹ › arrows, analysed with `docs/tools/screenshot_response.py` (112 215 pixels, 75.7 % of
+the region, with no channel clipped in any capture):
 
 | Nitro exposure | midtones (displayed stops) | mean saturation |
 |---|---|---|
 | 0.3 | +0.383 | 0.424 → 0.412 |
-| 0.6 | +0.753 | 0.424 → 0.398 |
-| 0.9 | +1.097 | 0.424 → 0.381 |
-| 1.2 | +1.410 | 0.424 → 0.362 |
+| 0.6 | +0.749 | 0.424 → 0.398 |
+| 0.9 | +1.089 | 0.424 → 0.381 |
+| 1.2 | +1.396 | 0.424 → 0.362 |
 
 The Photomator side was not measured: in the background it stayed at "Wird geladen …" and its
 preview did not change when Exposure was set to +50 %. Afterwards both images were reset
