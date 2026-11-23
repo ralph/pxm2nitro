@@ -11,7 +11,7 @@ struct PackageCard: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             if !package.blocks.isEmpty {
-                BlockChips(groups: [package.converted, package.leftOut])
+                BlockChips(groups: [package.converted, package.leftOut], reasons: package.leftOutReasons)
             }
             if !package.failures.isEmpty {
                 WarningLabel(text: SummaryText.unreadableFiles(package.failures.count)).font(.callout)
@@ -93,7 +93,7 @@ struct PresetDetails: View {
                 VStack(alignment: .leading, spacing: 6) {
                     row(preset: name(of: preset),
                         converted: BlockChips(groups: [preset.converted]),
-                        leftOut: BlockChips(groups: [preset.leftOut]))
+                        leftOut: BlockChips(groups: [preset.leftOut], reasons: preset.leftOutReasons))
                     ForEach(preset.notes, id: \.self) { note in
                         Text(note)
                             .font(.caption)
@@ -138,7 +138,7 @@ struct PresetDetails: View {
                 Text("\(Text("≈ Approximate").bold()) settings are converted, but not exactly; each preset lists what changed.")
             }
             if !package.leftOut.isEmpty {
-                Text("\(Text("Left out").bold()) settings are not written, mostly because Nitro has no counterpart. The rest of the preset is still written.")
+                Text("\(Text("Left out").bold()) settings are not written, mostly because Nitro has no counterpart; hover over one to see why. The rest of the preset is still written.")
             }
         }
         .font(.callout)

@@ -28,6 +28,15 @@ struct ConversionSessionTests {
         #expect(bw.blocks.blocks(.leftOut) == [.fade, .grain])
     }
 
+    @Test func leftOutAdjustmentsSayWhy() async throws {
+        let bw = try #require(await session("BW").packages.first)
+        #expect(bw.leftOutReasons[.fade] == "Nitro has no such adjustment")
+        #expect(Set(bw.leftOutReasons.keys) == [.fade, .grain])
+        let preset = try #require(bw.presets.first { !$0.leftOut.isEmpty })
+        #expect(Set(preset.leftOutReasons.keys) == Set(preset.leftOut.map(\.block)))
+        #expect(preset.leftOutReasons.values.allSatisfy { !$0.isEmpty })
+    }
+
     @Test func packageBlocksUseTheLeastFavourableStatus() async throws {
         // Only LS 002 approximates Levels; the other LS presets do not use Levels at all.
         let ls = try #require(await session("LS").packages.first)

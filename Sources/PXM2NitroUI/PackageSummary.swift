@@ -9,6 +9,8 @@ public struct PresetSummary: Identifiable, Sendable {
     public let converted: [BlockOutcome], leftOut: [BlockOutcome]
     /// What changed beyond the left-out adjustments: approximations and dropped preset properties.
     public let notes: [String]
+    /// Why each left-out adjustment was left out, one line per diagnostic.
+    public let leftOutReasons: [PhotomatorBlock: String]
 
     init(_ preset: PhotomatorPreset) {
         self.preset = preset
@@ -18,6 +20,7 @@ public struct PresetSummary: Identifiable, Sendable {
         notes = result.diagnostics
             .filter { $0.block.map(approximated.contains) ?? true }
             .map { [$0.block?.displayName, $0.message].compactMap { $0 }.joined(separator: ": ") }
+        leftOutReasons = reasons(for: leftOut, result.diagnostics)
     }
 
     public var id: String { preset.id }
@@ -43,6 +46,8 @@ public struct PackageSummary: Identifiable, Sendable {
     public let blocks: [BlockOutcome]
     /// `blocks` split like `PresetSummary.converted` / `leftOut`.
     public let converted: [BlockOutcome], leftOut: [BlockOutcome]
+    /// Why each left-out adjustment was left out, merged across presets.
+    public let leftOutReasons: [PhotomatorBlock: String]
     public let convertibleCount: Int
     public let losslessCount: Int
 
@@ -50,18 +55,37 @@ public struct PackageSummary: Identifiable, Sendable {
         self.url = url
         presets = package.presets.map(PresetSummary.init)
         failures = package.failures
-        var seen = Set<String>()
-        collectionNames = package.presets.compactMap(\.collectionName).filter { seen.insert($0).inserted }
+        collectionNames = package.presets.compactMap(\.collectionName).uniqued()
         let worst = Dictionary(presets.flatMap(\.result.blocks).map { ($0.block, $0.status) },
                                uniquingKeysWith: max)
         blocks = PhotomatorBlock.allCases.compactMap { block in worst[block].map { BlockOutcome(block, $0) } }
         (converted, leftOut) = blocks.partitionedByConversion()
+        // Only the diagnostics of presets that left the block out, so another preset's
+        // approximation note does not show up as a reason for leaving it out.
+        leftOutReasons = reasons(for: leftOut, presets.flatMap { preset in
+            preset.result.diagnostics.filter { $0.block.map(preset.leftOutReasons.keys.contains) ?? false }
+        })
         convertibleCount = presets.count(where: \.isConvertible)
         losslessCount = presets.count(where: \.result.isLossless)
     }
 
     public var id: URL { url }
     public var fileName: String { url.lastPathComponent }
+}
+
+/// The distinct diagnostic messages for each of `outcomes`' blocks, one per line.
+private func reasons(for outcomes: [BlockOutcome], _ diagnostics: [ConversionDiagnostic]) -> [PhotomatorBlock: String] {
+    Dictionary(uniqueKeysWithValues: outcomes.map { outcome in
+        (outcome.block, diagnostics.filter { $0.block == outcome.block }.map(\.message).uniqued().joined(separator: "\n"))
+    })
+}
+
+extension Sequence where Element: Hashable {
+    /// The elements in order, without repeats.
+    func uniqued() -> [Element] {
+        var seen = Set<Element>()
+        return filter { seen.insert($0).inserted }
+    }
 }
 
 extension [BlockOutcome] {
