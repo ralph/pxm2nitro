@@ -31,4 +31,4 @@ jobs:
       - name: Test
         run: swift test
       - name: Build macOS app
-        run: xcodebuild -project App/PXM2Nitro.xcodeproj -scheme PXM2Nitro -destination 'generic/platform=macOS' -derivedDataPath "$RUNNER_TEMP/app" CODE_SIGNING_ALLOWED=NO build -quiet
+        run: xcodebuild -project App/PXM2Nitro.xcodeproj -scheme PXM2Nitro -destination 'generic/platform=macOS' -derivedDataPath "$RUNNER_TEMP/xcode" CODE_SIGNING_ALLOWED=NO build -quiet

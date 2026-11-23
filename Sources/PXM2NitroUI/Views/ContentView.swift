@@ -3,13 +3,16 @@ import SwiftUI
 
 /// The app's single screen: drop zone → package list → export result.
 public struct ContentView: View {
-    @State private var session = ConversionSession()
+    let session: ConversionSession
     @State private var isImportingPackages = false
     @State private var isChoosingFolder = false
     @State private var isDropTargeted = false
     @State private var expanded: Set<PackageSummary.ID> = []
 
-    public init() {}
+    /// The session is owned by the app, so menu commands or file opening can reach it later.
+    public init(session: ConversionSession) {
+        self.session = session
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -35,37 +38,28 @@ public struct ContentView: View {
             add(urls)
             return true
         } isTargeted: { isDropTargeted = $0 }
+        .onChange(of: session.packages.map(\.id)) { _, ids in
+            expanded.formIntersection(ids)
+        }
         .toolbar {
             ToolbarItemGroup {
-                Button("Clear All", systemImage: "trash") {
-                    expanded = []
-                    session.reset()
-                }
-                .disabled(session.packages.isEmpty)
+                Button("Clear All", systemImage: "trash", action: session.reset)
+                    .disabled(session.packages.isEmpty)
                 Button("Add Presets…", systemImage: "plus") { isImportingPackages = true }
                     .disabled(session.lastExport != nil)
             }
         }
-        #if os(macOS)
-        .navigationSubtitle("Photomator to Nitro")
-        #endif
     }
 
     @ViewBuilder private var content: some View {
         if let report = session.lastExport {
-            DoneView(report: report,
-                     onShowDetails: { session.dismissExport() },
-                     onConvertMore: {
-                         expanded = []
-                         session.reset()
-                     })
+            DoneView(report: report, onBack: session.dismissExport, onConvertMore: session.reset)
         } else if session.packages.isEmpty {
             VStack(spacing: 16) {
                 LoadErrors(errors: session.loadErrors)
                 DropZone(isTargeted: isDropTargeted, isBusy: session.isBusy) { isImportingPackages = true }
             }
-            .padding(24)
-            .frame(maxWidth: 880)
+            .contentColumn(maxWidth: 880, padding: 24)
         } else {
             PackageList(session: session, expanded: $expanded, isDropTargeted: isDropTargeted) {
                 isImportingPackages = true
@@ -74,7 +68,6 @@ public struct ContentView: View {
     }
 
     private func add(_ urls: [URL]) {
-        guard session.lastExport == nil else { return }
         Task { await session.add(urls) }
     }
 }
@@ -86,50 +79,31 @@ struct DropZone: View {
     let onChoose: () -> Void
 
     var body: some View {
-        Button(action: onChoose) {
+        DropTarget(cornerRadius: 18, lineWidth: 2, isTargeted: isTargeted, action: onChoose) {
             VStack(spacing: 14) {
-                Image(systemName: "square.and.arrow.down")
-                    .font(.system(size: 30, weight: .medium))
-                    .foregroundStyle(.tint)
-                    .frame(width: 72, height: 72)
-                    .background(Color.accentColor.opacity(0.12), in: .circle)
+                IconBadge(systemName: "square.and.arrow.down", tint: .accentColor)
                 Text("Drop Photomator or Pixelmator Pro presets")
                     .font(.title2.weight(.semibold))
                 Text("Drag .adjustments files here, or click to choose them.\nYou can add several at once.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
-                if isBusy {
-                    ProgressView().controlSize(.small).padding(.top, 8)
-                } else {
-                    Text("Choose Files…")
-                        .font(.callout.weight(.medium))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(.background, in: .rect(cornerRadius: 8))
-                        .overlay { RoundedRectangle(cornerRadius: 8).strokeBorder(.quaternary) }
-                        .padding(.top, 8)
+                Group {
+                    if isBusy {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text("Choose Files…")
+                            .font(.callout.weight(.medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .card(cornerRadius: 8)
+                    }
                 }
+                .padding(.top, 8)
             }
             .padding(40)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(.background, in: .rect(cornerRadius: 18))
-            .overlay { DashedBorder(cornerRadius: 18, lineWidth: 2, isHighlighted: isTargeted) }
-            .contentShape(.rect(cornerRadius: 18))
+            .frame(maxHeight: .infinity)
         }
-        .buttonStyle(.plain)
         .accessibilityLabel("Choose Photomator or Pixelmator Pro presets")
-    }
-}
-
-struct DashedBorder: View {
-    let cornerRadius: CGFloat
-    let lineWidth: CGFloat
-    let isHighlighted: Bool
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius)
-            .strokeBorder(isHighlighted ? Color.accentColor : Color.secondary.opacity(0.5),
-                          style: StrokeStyle(lineWidth: lineWidth, dash: [8, 6]))
     }
 }
 
@@ -140,15 +114,12 @@ struct LoadErrors: View {
     var body: some View {
         if !errors.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(errors) { Text($0.message) }
+                ForEach(errors) { WarningLabel(text: $0.message) }
             }
             .font(.callout)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Color.orange.opacity(0.12), in: .rect(cornerRadius: 10))
-            .overlay(alignment: .topTrailing) {
-                Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange).padding(12)
-            }
         }
     }
 }
@@ -168,30 +139,23 @@ struct PackageList: View {
                     VStack(alignment: .leading, spacing: 8) { title; BlockLegend() }
                 }
                 LoadErrors(errors: session.loadErrors)
-                Button(action: onAdd) {
+                DropTarget(cornerRadius: 12, lineWidth: 1.5, isTargeted: isDropTargeted, action: onAdd) {
                     Label("Drop more .adjustments files here, or click to add", systemImage: "square.and.arrow.down")
                         .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, minHeight: 56)
-                        .background(.background, in: .rect(cornerRadius: 12))
-                        .overlay { DashedBorder(cornerRadius: 12, lineWidth: 1.5, isHighlighted: isDropTargeted) }
-                        .contentShape(.rect(cornerRadius: 12))
+                        .frame(minHeight: 56)
                 }
-                .buttonStyle(.plain)
                 ForEach(session.packages) { package in
                     PackageCard(package: package, isExpanded: binding(for: package.id)) {
-                        expanded.remove(package.id)
                         session.remove(package.id)
                     }
                 }
             }
-            .padding(24)
-            .frame(maxWidth: 880)
-            .frame(maxWidth: .infinity)
+            .contentColumn(maxWidth: 880, padding: 24)
         }
     }
 
     private var title: some View {
-        Text("\(SummaryText.count(session.packages.count, "package")) · \(SummaryText.count(session.presetCount, "preset"))")
+        Text(SummaryText.listTitle(packages: session.packages.count, presets: session.presetCount))
             .font(.title3.weight(.semibold))
     }
 
@@ -208,16 +172,15 @@ struct FooterBar: View {
     let onChooseFolder: () -> Void
 
     var body: some View {
+        let presets = session.presetCount, convertible = session.convertibleCount
         HStack(spacing: 24) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(SummaryText.exportSummary(convertible: session.convertibleCount, presets: session.presetCount))
-                    .font(.callout.weight(session.presetCount == 0 ? .regular : .medium))
-                    .foregroundStyle(session.presetCount == 0 ? .secondary : .primary)
-                if session.presetCount > 0 {
+                Text(SummaryText.exportSummary(convertible: convertible, presets: presets))
+                    .font(.callout.weight(presets == 0 ? .regular : .medium))
+                    .foregroundStyle(presets == 0 ? .secondary : .primary)
+                if presets > 0 {
                     Toggle("Replace files that already exist", isOn: $session.replaceExisting)
-                        #if os(macOS)
-                        .toggleStyle(.checkbox)
-                        #endif
+                        .checkboxToggleStyle()
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -231,7 +194,7 @@ struct FooterBar: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
-            .disabled(session.convertibleCount == 0 || session.isBusy)
+            .disabled(convertible == 0 || session.isBusy)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)

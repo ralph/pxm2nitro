@@ -11,23 +11,22 @@ struct PackageCard: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             if !package.blocks.isEmpty {
-                BlockChips(outcomes: package.blocks)
+                BlockChips(groups: [package.converted, package.leftOut])
             }
             if !package.failures.isEmpty {
-                Label(SummaryText.count(package.failures.count, "preset file") + " could not be read",
-                      systemImage: "exclamationmark.triangle")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
+                WarningLabel(text: SummaryText.unreadableFiles(package.failures.count)).font(.callout)
             }
             Button {
                 withAnimation(.snappy) { isExpanded.toggle() }
             } label: {
-                Label(isExpanded ? "Hide Details" : "Show Details",
-                      systemImage: isExpanded ? "chevron.up" : "chevron.down")
-                    .labelStyle(TrailingIconLabelStyle())
+                HStack(spacing: 4) {
+                    Text(isExpanded ? "Hide Details" : "Show Details")
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down").imageScale(.small)
+                }
             }
             .buttonStyle(.borderless)
             .font(.callout.weight(.medium))
+            .accessibilityValue(isExpanded ? "expanded" : "collapsed")
 
             if isExpanded {
                 PresetDetails(package: package)
@@ -35,11 +34,7 @@ struct PackageCard: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
-        .background(.background, in: .rect(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(isExpanded ? Color.accentColor.opacity(0.35) : Color.primary.opacity(0.1))
-        }
+        .card(cornerRadius: 14, border: isExpanded ? .accentColor.opacity(0.35) : .primary.opacity(0.12))
     }
 
     private var header: some View {
@@ -75,78 +70,79 @@ struct PackageCard: View {
     }
 }
 
-/// One row per preset: Nitro file name, converted and left-out adjustments.
+/// One row per preset: Nitro file name, converted and left-out adjustments, and what changed.
 struct PresetDetails: View {
+    private static let nameWidth: CGFloat = 170
+    private static let columnSpacing: CGFloat = 16
+
     let package: PackageSummary
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Divider()
-            row(preset: Text("Preset"), converted: Text("Carried over"), leftOut: Text("Left out"))
+            row(preset: Text("Preset"),
+                converted: Text(BlockOutcome.Status.carriedOver.title),
+                leftOut: Text(BlockOutcome.Status.leftOut.title))
                 .font(.caption.weight(.semibold))
                 .textCase(.uppercase)
                 .foregroundStyle(.secondary)
                 .padding(.vertical, 8)
             Divider()
+            // Offsets as IDs: preset IDs come from the files and need not be unique.
             ForEach(Array(package.presets.enumerated()), id: \.offset) { _, preset in
-                row(
-                    preset: VStack(alignment: .leading, spacing: 2) {
-                        Text(preset.preset.name).font(.callout.weight(.medium))
-                        if let file = preset.nitroFileName {
-                            Text("→ \(file)").font(.caption).foregroundStyle(.secondary)
-                        } else {
-                            Text("Nothing to convert").font(.caption).foregroundStyle(.orange)
-                        }
-                    },
-                    converted: BlockChips(outcomes: preset.result.blocks.filter { $0.status != .leftOut }),
-                    leftOut: BlockChips(outcomes: preset.result.blocks.filter { $0.status == .leftOut }))
-                    .padding(.vertical, 10)
-                    .help(preset.result.diagnostics.map(\.description).joined(separator: "\n"))
+                VStack(alignment: .leading, spacing: 6) {
+                    row(preset: name(of: preset),
+                        converted: BlockChips(groups: [preset.converted]),
+                        leftOut: BlockChips(groups: [preset.leftOut]))
+                    ForEach(preset.notes, id: \.self) { note in
+                        Text(note)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, Self.nameWidth + Self.columnSpacing)
+                    }
+                }
+                .padding(.vertical, 10)
                 Divider()
             }
             ForEach(package.failures, id: \.file) { failure in
-                Label("\(failure.file.lastPathComponent) could not be read: \(failure.reason)",
-                      systemImage: "exclamationmark.triangle")
+                WarningLabel(text: "\(failure.file.lastPathComponent) could not be read: \(failure.reason)")
                     .font(.caption)
-                    .foregroundStyle(.orange)
                     .padding(.vertical, 8)
             }
-            notes.padding(.top, 12)
+            legendNotes.padding(.top, 12)
+        }
+    }
+
+    private func name(of preset: PresetSummary) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(preset.preset.name).font(.callout.weight(.medium))
+            if let file = preset.nitroFileName {
+                Text("→ \(file)").font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text("Nothing to convert").font(.caption).foregroundStyle(.orange)
+            }
         }
     }
 
     private func row(preset: some View, converted: some View, leftOut: some View) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            preset.frame(width: 170, alignment: .leading)
+        HStack(alignment: .top, spacing: Self.columnSpacing) {
+            preset.frame(width: Self.nameWidth, alignment: .leading)
             converted.frame(maxWidth: .infinity, alignment: .leading)
             leftOut.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private var notes: some View {
+    private var legendNotes: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if package.blocks.contains(where: { $0.status == .approximated }) {
-                Text("**≈ Approximate** settings are converted, but not exactly. Selective Color becomes Nitro HSL with a strength that isn’t calibrated yet, so colour shifts may come out stronger or weaker than in Photomator.")
+            if !package.converted.allSatisfy({ $0.status == .carriedOver }) {
+                Text("\(Text("≈ Approximate").bold()) settings are converted, but not exactly; each preset lists what changed.")
             }
-            if package.blocks.contains(where: { $0.status == .leftOut }) {
-                Text("**Left out** settings have no Nitro counterpart in this converter yet. The rest of the preset is still written.")
+            if !package.leftOut.isEmpty {
+                Text("\(Text("Left out").bold()) settings have no Nitro counterpart in this converter yet. The rest of the preset is still written.")
             }
-            #if os(macOS)
-            Text("Hover over a preset to see exactly what changed.")
-            #endif
         }
         .font(.callout)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
-    }
-}
-
-/// Title first, icon after it ("Show Details ⌄").
-struct TrailingIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 4) {
-            configuration.title
-            configuration.icon.imageScale(.small)
-        }
     }
 }

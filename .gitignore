@@ -1,7 +1,5 @@
 .DS_Store
 .build/
 .swiftpm/
-# SwiftPM-generated projects; the app project in App/ is committed
-/*.xcodeproj
 xcuserdata/
 DerivedData/

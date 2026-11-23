@@ -26,9 +26,31 @@ struct SummaryTextTests {
         #expect(SummaryText.exportSummary(convertible: 1, presets: 3) == "1 Nitro preset will be written")
     }
 
-    @Test func displayPathShortensTheHomeFolder() {
+    @Test func exportNotes() {
+        var report = ExportReport(folder: URL(filePath: "/tmp/out"))
+        report.written = [URL(filePath: "/tmp/out/a"), URL(filePath: "/tmp/out/b")]
+        report.writtenWithLosses = 1
+        report.existing = [URL(filePath: "/tmp/out/c")]
+        #expect(SummaryText.title(for: report) == "2 Nitro presets written")
+        #expect(SummaryText.notes(for: report) == [
+            "1 preset left out or approximated at least one setting.",
+            "1 preset was not written because a file with the same name exists. Turn on “Replace files that already exist” to overwrite them.",
+        ])
+    }
+
+    @Test func presetNotesListApproximationsOnly() async throws {
+        let ls = try await package("LS")
+        let ls002 = try #require(ls.presets.first { $0.preset.name == "002" })
+        #expect(ls002.notes.contains { $0.hasPrefix("Levels: ") })
+        #expect(ls002.notes.contains { $0.hasPrefix("Selective Color: ") })
+        #expect(!ls002.notes.contains { $0.hasPrefix("Light: ") })   // left out, shown as a tag
+    }
+
+    #if os(macOS)
+    @Test func displayLocationShortensTheHomeFolder() {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let path = DoneView.displayPath(of: home.appending(path: "Desktop/Nitro Presets", directoryHint: .isDirectory))
+        let path = Platform.displayLocation(of: home.appending(path: "Desktop/Nitro Presets", directoryHint: .isDirectory))
         #expect(path == "~/Desktop/Nitro Presets")
     }
+    #endif
 }

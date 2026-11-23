@@ -3,27 +3,15 @@ import SwiftUI
 
 @main
 struct PXM2NitroApp: App {
-    #if os(macOS)
-    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
-    #endif
+    @State private var session = ConversionSession()
 
     var body: some Scene {
-        #if os(macOS)
+        // A single Window (not a WindowGroup): the app quits when it is closed.
         Window("pxm2nitro", id: "main") {
-            ContentView()
+            ContentView(session: session)
                 .frame(minWidth: 620, minHeight: 480)
+                .navigationSubtitle("Photomator to Nitro")
         }
         .defaultSize(width: 960, height: 720)
-        #else
-        WindowGroup {
-            ContentView()
-        }
-        #endif
     }
 }
-
-#if os(macOS)
-final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
-}
-#endif

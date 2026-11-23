@@ -1,7 +1,7 @@
 /// How one enabled Photomator adjustment fared in a conversion.
 public struct BlockOutcome: Sendable, Equatable {
     /// Ordered from best to worst, so `max` gives the least favourable status.
-    public enum Status: Sendable, Comparable {
+    public enum Status: Sendable, Comparable, CaseIterable {
         /// Converted exactly.
         case carriedOver
         /// Converted, but with diagnostics (approximated, uncalibrated or partly dropped).

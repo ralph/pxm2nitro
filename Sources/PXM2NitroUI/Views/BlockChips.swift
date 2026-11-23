@@ -3,88 +3,78 @@ import SwiftUI
 
 /// Lays out its children left to right and wraps them onto new lines.
 struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
-    var lineSpacing: CGFloat = 6
+    private static let spacing: CGFloat = 6
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        arrange(maxWidth: proposal.width ?? .infinity, subviews: subviews).size
+    /// Child sizes do not depend on the proposal, so they are measured once per update.
+    func makeCache(subviews: Subviews) -> [CGSize] {
+        subviews.map { $0.sizeThatFits(.unspecified) }
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let frames = arrange(maxWidth: bounds.width, subviews: subviews).frames
-        for (subview, frame) in zip(subviews, frames) {
+    func updateCache(_ cache: inout [CGSize], subviews: Subviews) {
+        cache = makeCache(subviews: subviews)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout [CGSize]) -> CGSize {
+        arrange(cache, maxWidth: proposal.width ?? .infinity).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout [CGSize]) {
+        for (subview, frame) in zip(subviews, arrange(cache, maxWidth: bounds.width).frames) {
             subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
                           proposal: ProposedViewSize(frame.size))
         }
     }
 
-    private func arrange(maxWidth: CGFloat, subviews: Subviews) -> (frames: [CGRect], size: CGSize) {
+    private func arrange(_ sizes: [CGSize], maxWidth: CGFloat) -> (frames: [CGRect], size: CGSize) {
         var frames: [CGRect] = []
         var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0, width: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
+        for size in sizes {
             if x > 0, x + size.width > maxWidth {
                 x = 0
-                y += lineHeight + lineSpacing
+                y += lineHeight + Self.spacing
                 lineHeight = 0
             }
             frames.append(CGRect(origin: CGPoint(x: x, y: y), size: size))
-            x += size.width + spacing
+            x += size.width + Self.spacing
             lineHeight = max(lineHeight, size.height)
-            width = max(width, x - spacing)
+            width = max(width, x - Self.spacing)
         }
         return (frames, CGSize(width: width, height: frames.isEmpty ? 0 : y + lineHeight))
     }
 }
 
-/// One adjustment and how it converts. The symbol carries the status, so it does not rely on colour.
+/// One adjustment and how it converts.
 struct BlockChip: View {
     let outcome: BlockOutcome
 
     var body: some View {
         HStack(spacing: 4) {
-            symbol.foregroundStyle(tint)
+            StatusMark(status: outcome.status)
             Text(outcome.block.displayName)
         }
         .font(.caption.weight(outcome.status == .leftOut ? .regular : .medium))
         .foregroundStyle(outcome.status == .leftOut ? .secondary : .primary)
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
-        .background(tint.opacity(outcome.status == .leftOut ? 0.12 : 0.14), in: .rect(cornerRadius: 6))
+        .background(outcome.status.tint.opacity(0.13), in: .rect(cornerRadius: 6))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(outcome.block.displayName), \(outcome.status.label)")
     }
-
-    @ViewBuilder private var symbol: some View {
-        switch outcome.status {
-        case .carriedOver: Image(systemName: "checkmark").imageScale(.small)
-        case .approximated: Text("≈")
-        case .leftOut: Image(systemName: "minus").imageScale(.small)
-        }
-    }
-
-    private var tint: Color {
-        switch outcome.status {
-        case .carriedOver: .accentColor
-        case .approximated: .orange
-        case .leftOut: .gray
-        }
-    }
 }
 
-/// The adjustments of a preset or package: converted ones first, then those left out.
+/// Tag groups in one wrapping row, with a divider between non-empty groups.
 struct BlockChips: View {
-    let outcomes: [BlockOutcome]
+    let groups: [[BlockOutcome]]
 
     var body: some View {
-        let converted = outcomes.filter { $0.status != .leftOut }.sorted { $0.status < $1.status }
-        let leftOut = outcomes.filter { $0.status == .leftOut }
+        let groups = groups.filter { !$0.isEmpty }
         FlowLayout {
-            ForEach(converted, id: \.block) { BlockChip(outcome: $0) }
-            if !converted.isEmpty, !leftOut.isEmpty {
-                Divider().frame(height: 16).padding(.horizontal, 4).accessibilityHidden(true)
+            ForEach(groups.indices, id: \.self) { index in
+                if index > 0 {
+                    Divider().frame(height: 16).padding(.horizontal, 4).accessibilityHidden(true)
+                }
+                ForEach(groups[index], id: \.block) { BlockChip(outcome: $0) }
             }
-            ForEach(leftOut, id: \.block) { BlockChip(outcome: $0) }
         }
     }
 }
@@ -93,27 +83,15 @@ struct BlockChips: View {
 struct BlockLegend: View {
     var body: some View {
         HStack(spacing: 14) {
-            ForEach([BlockOutcome.Status.carriedOver, .approximated, .leftOut], id: \.self) {
-                LegendItem(status: $0)
+            ForEach(BlockOutcome.Status.allCases, id: \.self) { status in
+                HStack(spacing: 4) {
+                    StatusMark(status: status)
+                    Text(status.title)
+                }
+                .fixedSize()
             }
-        }
-    }
-}
-
-private struct LegendItem: View {
-    let status: BlockOutcome.Status
-
-    var body: some View {
-        HStack(spacing: 4) {
-            switch status {
-            case .carriedOver: Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
-            case .approximated: Text("≈").foregroundStyle(.orange)
-            case .leftOut: Image(systemName: "minus").foregroundStyle(.gray)
-            }
-            Text(status.label.prefix(1).uppercased() + status.label.dropFirst())
         }
         .font(.caption)
         .foregroundStyle(.secondary)
-        .fixedSize()
     }
 }
