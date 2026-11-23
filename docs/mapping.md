@@ -176,8 +176,9 @@ exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. 
 - Negative Photomator `highlights` (recover) may fit `Tone.recovery` better than
   `Tone.highlights`.
 - Photomator `blackPoint` raises or lowers the black level. Nitro `blackPointDelta` is an offset to
-  `baseBlackPoint` (5 in every sample, probably a constant; N-4.2). Implemented as `blackPointDelta = k · blackPoint`, sign assumed to
-  match (positive = deeper blacks). It only takes effect on RAW files, Nitro's main use case.
+  `baseBlackPoint` (5 in every sample, probably a constant; N-4.2). Implemented as
+  `blackPointDelta = k · blackPoint`, sign assumed to match (positive = deeper blacks). It only
+  takes effect on RAW files, Nitro's main use case.
 
 ### 2.8 RAW
 
