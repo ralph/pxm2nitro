@@ -233,3 +233,24 @@ first:
 
 The library keeps all factors in one table (`MappingConstants.swift`) so that calibration does
 not change any logic.
+
+### 3.1 Measuring from screenshots
+
+Visual matching can be done numerically without exporting files. Capture the same preview
+region in one app with the slider at 0 and at a few values, then run
+`docs/tools/screenshot_response.py` on the captures: it prints the median change in displayed
+stops for the midtones, and the mean saturation. The same numbers for the other app give the
+value that matches, by interpolation. Base renders differ between the apps, so only the
+*changes* are compared.
+
+Findings so far (L1008408.DNG, `sample-log.md` C-1):
+
+- Nitro `exposure` is roughly linear: each EV shifts the displayed midtones by about 1.2 stops
+  (0.3 → +0.38, 0.6 → +0.75, 0.9 → +1.09, 1.2 → +1.40). The slope falls slightly (1.28 → 1.16
+  stops/EV) as the tone curve compresses the brighter values.
+- Photomator still needs measuring. It renders its preview only while it is the front app,
+  so the captures need full-screen control (or someone at the Mac).
+
+Practical notes: Nitro's value fields do not commit typed values while Nitro is in the
+background; its ‹ › arrows do, in steps of 1/20 of the range (0.3 EV for exposure, 0.1 for
+±1 and 0…2 sliders).
