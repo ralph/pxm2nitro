@@ -10,6 +10,12 @@ extension JSONValue {
         }
     }
 
+    /// Whether this is an object whose listed fields are numbers wherever they are present.
+    func isObject(withNumericFields keys: [String]) -> Bool {
+        guard let object = objectValue else { return false }
+        return keys.allSatisfy { key in object[key].map { $0.doubleValue != nil } ?? true }
+    }
+
     /// Removes PTFoundation's version containers recursively. Two styles exist:
     /// compact `[version, {…}]` and verbose `{"version": v, "versionSpecifiContainer": {…}}`
     /// (sic: "Specifi").

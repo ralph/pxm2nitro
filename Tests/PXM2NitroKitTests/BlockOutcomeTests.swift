@@ -50,6 +50,23 @@ struct BlockOutcomeTests {
         #expect(blocks.allSatisfy { $0.status == .leftOut })
     }
 
+    @Test func nonObjectCurveChannelIsLeftOut() {
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: ["C": ["E": 1, "rgb": "broken"]])
+        #expect(Converter.convert(Fixtures.preset("Broken", adjustments)).blocks == [BlockOutcome(.curves, .leftOut)])
+    }
+
+    @Test func nonNumericFieldsMakeAChannelUnreadable() throws {
+        // The broken red row must not become an all-zero row; the readable blue row still converts.
+        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: [
+            "m": ["E": 1, "r": ["red": "broken"], "b": ["red": 0, "green": 0, "blue": 0.5]],
+            "L": ["E": 1, "rgb": ["black": "broken"]],
+        ])
+        let result = Converter.convert(Fixtures.preset("Broken", adjustments))
+        #expect(result.blocks == [BlockOutcome(.levels, .leftOut), BlockOutcome(.channelMixer, .approximated)])
+        let mixer = try #require(result.preset?.adjustments.compactMap(\.content.channelMixer).first)
+        #expect(mixer.red == NitroChannelMixer().red)
+    }
+
     @Test func presetWithoutAdjustmentsHasNoBlocks() {
         let preset = Fixtures.preset("Empty", nil)
         #expect(Converter.convert(preset).blocks.isEmpty)

@@ -7,8 +7,8 @@ enum LevelsMapper: BlockMapper {
     static let block = PhotomatorBlock.levels
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
-        context.reportUnreadableChannels(adjustments.levels, in: adjustments, block: block) { raw, _ in
-            raw.objectValue == nil
+        context.reportUnreadableChannels(adjustments.levels, in: adjustments, block: block) { _, parsed in
+            parsed == nil
         }
         guard let levels = adjustments.levels,
               let layout = NitroChannelLayout(levels, isIdentity: isIdentity, block: block, context: &context)

@@ -9,6 +9,7 @@ enum CurvesMapper: BlockMapper {
         reportParametricSliders(adjustments, context: &context)
         // A channel without `p` only carries sliders; otherwise every stored point must parse.
         context.reportUnreadableChannels(adjustments.curves, in: adjustments, block: block) { raw, parsed in
+            guard raw.objectValue != nil else { return true }
             guard let points = raw["p"] else { return false }
             guard let stored = points.arrayValue else { return true }
             return stored.count != parsed?.count
