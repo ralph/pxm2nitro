@@ -38,7 +38,8 @@ public enum NitroSliderKind: String, CaseIterable, Sendable {
 
     /// Slider values at which the adjustment changes nothing. Usually the defaults, but Nitro's
     /// default vignette still darkens the edges, so only zero intensity is neutral there, and
-    /// black & white always changes the image (`nil`).
+    /// black & white always changes the image (`nil`). Never use `[:]`: it would mean "always
+    /// a no-op".
     var neutral: [String: Double]? {
         switch self {
         case .vignette: ["intensity": 0]

@@ -14,16 +14,17 @@ enum BlackAndWhiteMapper: BlockMapper {
         else { return [] }
 
         var nitro = NitroSliders(.blackAndWhite)
-        let offsets = [("red", filter[.red]), ("green", filter[.green]), ("blue", filter[.blue])]
-            .map { key, offset in (key, context.blend(0, offset)) }
-        if offsets.contains(where: { !isNearlyEqual($0.1, 0) }) {
+        // ColorWheelField's raw values are Nitro's channel keys.
+        let channels: [ColorWheelField] = [.red, .green, .blue]
+        if channels.contains(where: { !isNearlyEqual(context.blend(0, filter[$0]), 0) }) {
             // Tilt each Rec. 601 weight, then normalise so the weights still sum to 1.
-            let weights = offsets.map { key, offset in
-                nitro[key] * max(0, 1 + offset * MappingConstants.BlackAndWhite.filterScale)
+            let weights = channels.map { channel in
+                nitro[channel.rawValue] * context.multiplier(filter[channel], scale: MappingConstants.BlackAndWhite.filterScale,
+                                                             block, "the \(channel.rawValue) filter")
             }
             let total = weights.reduce(0, +)
             if total > MappingContext.tolerance {
-                for ((key, _), weight) in zip(offsets, weights) { nitro[key] = weight / total }
+                for (channel, weight) in zip(channels, weights) { nitro[channel.rawValue] = weight / total }
             }
             context.reportUncalibrated(block, "the filter colour")
         }
