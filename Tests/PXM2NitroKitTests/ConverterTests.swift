@@ -28,6 +28,17 @@ struct ConverterTests {
         #expect(curves.red == curves.channel())
     }
 
+    @Test func onlyALuminanceMasterOperatesOffGray() throws {
+        func operateOnGray(_ curves: JSONValue) throws -> Bool {
+            let contents = Fixtures.map(CurvesMapper.self, curves).contents
+            return try #require(contents.compactMap(\.levelsCurves).first).operateOnGray
+        }
+        let sCurve: JSONValue = ["p": [[0, 0], [0.25, 0.1], [1, 1]]]
+        #expect(try !operateOnGray(["E": 1, "l": sCurve]))
+        #expect(try operateOnGray(["E": 1, "rgb": sCurve]))
+        #expect(try operateOnGray(["E": 1, "r": sCurve]))
+    }
+
     @Test func reportsSkippedBlocks() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("BW", "001"))
         let skipped = Set(result.diagnostics.filter { $0.kind == .skipped }.compactMap(\.block))

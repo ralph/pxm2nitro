@@ -82,15 +82,16 @@ White Balance 10, Vignette 6, Sharpen 5, Channel Mixer 2. **Curves + Selective C
 ### 2.1 Curves
 
 Photomator `C` has five curves: `rgb`, `r`, `g`, `b`, `l` (luminance). Nitro has one curve
-set with 4 slots (✅ `[master, red, green, blue]`, N-2/N-5) and a flag `operateOnGray` (✅ N-7, nitro-format §3.6: `true`, all the UI saves, applies the master
-curve to each RGB channel; `false` renders like a brightness-only curve).
+set with 4 slots (✅ `[master, red, green, blue]`, N-2/N-5) and a flag `operateOnGray`
+(✅ N-7, nitro-format §3.6: `true`, all the UI saves, applies the master curve to each RGB
+channel; `false` renders like a brightness-only curve).
 
 - `rgb` → master with `operateOnGray:true` (✅ N-7: same saturation boost as Photomator's RGB curve).
 - `l` (luminance) → master with `operateOnGray:false` (🟡 looks brightness-only, not compared with
   Photomator side by side), used only when `rgb` is identity. Levels follows the same rule
   (🟡 only checked for Curves).
-  If both are non-identity, compose `l ∘ rgb` into one RGB master curve and warn. (In all
-  83 samples `l` is identity.)
+  If both are non-identity, the `rgb` curve is used and the dropped `l` curve is reported
+  (composing `l ∘ rgb` is not implemented). (In all 83 samples `l` is identity.)
 - `r`, `g`, `b` → slots 1…3.
 - Points: Photomator `p` gives `[[x,y],…]`, with the first and last points as end points.
   Nitro keeps a skeleton: guard `(0,0)`, black handle, inner points, white handle
