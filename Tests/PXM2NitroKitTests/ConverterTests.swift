@@ -17,7 +17,7 @@ struct ConverterTests {
         #expect(result.preset?.name == "BW 001")
 
         let curves = try levelsCurves(result, curves: true)
-        #expect(!curves.operateOnGray)
+        #expect(curves.operateOnGray)
         let rgb = try #require(preset.adjustments?.curves?.rgb)
         // guard, black handle, 4 inner points, white handle, guard
         #expect(curves.master.count == rgb.count + 2)
@@ -26,6 +26,17 @@ struct ConverterTests {
         #expect(curves.master[2] == NitroCurvePoint(x: rgb[1].x, y: rgb[1].y, deletable: true))
         #expect(curves.master[rgb.count] == NitroCurvePoint(x: 1, y: rgb[rgb.count - 1].y, isWhitePoint: true))
         #expect(curves.red == curves.channel())
+    }
+
+    @Test func onlyALuminanceMasterOperatesOffGray() throws {
+        func operateOnGray(_ curves: JSONValue) throws -> Bool {
+            let contents = Fixtures.map(CurvesMapper.self, curves).contents
+            return try #require(contents.compactMap(\.levelsCurves).first).operateOnGray
+        }
+        let sCurve: JSONValue = ["p": [[0, 0], [0.25, 0.1], [1, 1]]]
+        #expect(try !operateOnGray(["E": 1, "l": sCurve]))
+        #expect(try operateOnGray(["E": 1, "rgb": sCurve]))
+        #expect(try operateOnGray(["E": 1, "r": sCurve]))
     }
 
     @Test func reportsSkippedBlocks() throws {
@@ -47,7 +58,7 @@ struct ConverterTests {
     @Test func convertsRGBLevels() throws {
         let result = Converter.convert(try Fixtures.photomatorPreset("filmic", "PT800"))
         let levels = try levelsCurves(result, curves: false)
-        #expect(!levels.operateOnGray)
+        #expect(levels.operateOnGray)
         #expect(abs(levels.master[1].x - 0.009124071608744393) < 1e-12)
         #expect(levels.master[1].y == 0)
         #expect(levels.master[2] == NitroCurvePoint(x: 1, y: 1, isWhitePoint: true))
@@ -60,7 +71,7 @@ struct ConverterTests {
         // LS 002: luminance white 0.876 with a moved gray; red/blue only move a quarter handle.
         let result = Converter.convert(try Fixtures.photomatorPreset("LS", "002"))
         let levels = try levelsCurves(result, curves: false)
-        #expect(levels.operateOnGray)
+        #expect(!levels.operateOnGray)
         #expect(abs(levels.master[2].x - 0.8758519575751356) < 1e-12)
         #expect(levels.red == levels.channel())
         #expect(levels.blue == levels.channel())
