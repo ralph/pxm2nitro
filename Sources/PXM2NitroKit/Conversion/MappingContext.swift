@@ -20,6 +20,26 @@ struct MappingContext {
         diagnostics.append(ConversionDiagnostic(kind, block, message))
     }
 
+    /// A Nitro multiplier whose neutral is 1: `1 + scale · value` after intensity, never below 0.
+    func multiplier(_ value: Double, scale: Double) -> Double {
+        max(0, 1 + blend(0, value) * scale)
+    }
+
+    /// The fields of an enabled slider block. Reports an enabled block that cannot be read.
+    mutating func sliders<Field>(_ block: PhotomatorBlock, in adjustments: PhotomatorAdjustments) -> PhotomatorSliders<Field>? {
+        guard adjustments.enabledBlock(block) != nil else { return nil }
+        guard let sliders = adjustments.sliders(block, as: Field.self) else {
+            report(.skipped, block, "a value is not a number")
+            return nil
+        }
+        return sliders
+    }
+
+    /// Reports a value that has no Nitro counterpart, unless it has no effect (0 after intensity).
+    mutating func reportDropped(_ value: Double, _ block: PhotomatorBlock, _ message: String) {
+        if !isNearlyEqual(blend(0, value), 0) { report(.skipped, block, message) }
+    }
+
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")

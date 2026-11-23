@@ -4,10 +4,9 @@ import Testing
 
 struct LightMapperTests {
     private func map(_ light: JSONValue, intensity: Double = 1) -> (tone: NitroSliders?, enhance: NitroSliders?, [ConversionDiagnostic]) {
-        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: ["in": .number(intensity), "l": light])
-        var context = MappingContext(intensity: adjustments.intensity)
-        let sliders = LightMapper.map(adjustments, context: &context).compactMap(\.sliders)
-        return (sliders.first { $0.kind == .tone }, sliders.first { $0.kind == .enhance }, context.diagnostics)
+        let (contents, diagnostics) = Fixtures.map(LightMapper.self, light, intensity: intensity)
+        let sliders = contents.compactMap(\.sliders)
+        return (sliders.first { $0.kind == .tone }, sliders.first { $0.kind == .enhance }, diagnostics)
     }
 
     @Test func mapsToneSlidersAndContrast() throws {
@@ -63,13 +62,5 @@ struct LightMapperTests {
         var lebendig = try #require(preset.adjustments.compactMap(\.content.sliders).first { $0.kind == .tone })
         lebendig["whitePointDelta"] = 0
         #expect(lebendig == NitroSliders(.tone))
-    }
-
-    @Test func mergeKeepsSlidersFromBothSides() {
-        var a = NitroSliders(.enhance), b = NitroSliders(.enhance)
-        a["contrast"] = 1.2
-        b["saturation"] = 0.8
-        a.merge(b)
-        #expect(a["contrast"] == 1.2 && a["saturation"] == 0.8)
     }
 }

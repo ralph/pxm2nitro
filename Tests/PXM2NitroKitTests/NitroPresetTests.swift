@@ -73,6 +73,17 @@ struct NitroPresetTests {
         }
     }
 
+    @Test func mergesSliderAdjustmentsByID() {
+        var contrast = NitroSliders(.enhance), saturation = NitroSliders(.enhance)
+        contrast["contrast"] = 1.2
+        saturation["saturation"] = 1   // set on purpose, even though it is the default
+        let curves = NitroAdjustment(.levelsCurves(NitroLevelsCurves(isCurves: true)))
+        let merged = Converter.merged([NitroAdjustment(.sliders(contrast)), curves, NitroAdjustment(.sliders(saturation))])
+        #expect(merged.map(\.id) == ["Enhance", "Curves"])
+        let enhance = merged[0].content.sliders
+        #expect(enhance?["contrast"] == 1.2 && enhance?["saturation"] == 1)
+    }
+
     @Test func encodesAdjustmentsAsJSONStrings() throws {
         var curves = NitroLevelsCurves(isCurves: true)
         curves.master = curves.channel(inner: [CurvePoint(x: 0.25, y: 0.4)])

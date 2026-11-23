@@ -3,10 +3,8 @@ import Testing
 
 struct ColorMapperTests {
     private func enhance(_ color: JSONValue, intensity: Double = 1) -> (NitroSliders?, [ConversionDiagnostic]) {
-        let adjustments = PhotomatorAdjustments(formatVersion: 2, root: ["in": .number(intensity), "hS": color])
-        var context = MappingContext(intensity: adjustments.intensity)
-        let enhance = ColorMapper.map(adjustments, context: &context).compactMap(\.sliders).first
-        return (enhance, context.diagnostics)
+        let (contents, diagnostics) = Fixtures.map(ColorMapper.self, color, intensity: intensity)
+        return (contents.compactMap(\.sliders).first, diagnostics)
     }
 
     @Test func mapsSaturationAndVibrance() throws {

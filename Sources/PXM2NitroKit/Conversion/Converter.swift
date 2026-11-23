@@ -97,7 +97,7 @@ public enum Converter {
 
         let nitroPreset = contents.isEmpty ? nil : NitroPreset(
             name: nitroName(for: preset),
-            adjustments: mergingSliders(contents).map { NitroAdjustment($0) })
+            adjustments: merged(contents.map { NitroAdjustment($0) }))
         let blocks = enabled.compactMap { block in
             BlockOutcome.Status(converted: converted.contains(block),
                                 reported: context.diagnostics.contains { $0.block == block })
@@ -106,23 +106,20 @@ public enum Converter {
         return ConversionResult(preset: nitroPreset, diagnostics: context.diagnostics, blocks: blocks)
     }
 
-    /// Combines slider adjustments of the same kind (e.g. Enhance from Light and from Color),
-    /// since a Nitro preset holds each adjustment once. Keeps the position of the first one.
-    static func mergingSliders(_ contents: [NitroAdjustment.Content]) -> [NitroAdjustment.Content] {
-        var merged: [NitroAdjustment.Content] = []
-        var positions: [NitroSliderKind: Int] = [:]
-        for content in contents {
-            guard case .sliders(let sliders) = content else {
-                merged.append(content)
+    /// A Nitro preset holds each adjustment once. Slider adjustments written by several
+    /// mappers (e.g. Enhance from Light and Color) are combined at the first one's position;
+    /// any other duplicate is a programming error.
+    static func merged(_ adjustments: [NitroAdjustment]) -> [NitroAdjustment] {
+        var merged: [NitroAdjustment] = []
+        for adjustment in adjustments {
+            guard let index = merged.firstIndex(where: { $0.id == adjustment.id }) else {
+                merged.append(adjustment)
                 continue
             }
-            if let position = positions[sliders.kind], case .sliders(var existing) = merged[position] {
-                existing.merge(sliders)
-                merged[position] = .sliders(existing)
-            } else {
-                positions[sliders.kind] = merged.count
-                merged.append(content)
-            }
+            guard case .sliders(var existing) = merged[index].content, case .sliders(let other) = adjustment.content
+            else { preconditionFailure("two mappers wrote \(adjustment.id), which cannot be merged") }
+            existing.merge(other)
+            merged[index].content = .sliders(existing)
         }
         return merged
     }

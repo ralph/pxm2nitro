@@ -13,33 +13,23 @@ enum LightMapper: BlockMapper {
     static let block = PhotomatorBlock.light
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
-        guard adjustments.enabledBlock(block) != nil else { return [] }
-        guard let light = adjustments.light else {
-            context.report(.skipped, block, "a value is not a number")
-            return []
-        }
+        guard let light: PhotomatorLight = context.sliders(block, in: adjustments) else { return [] }
         typealias Scale = MappingConstants.Light
-        let highlights = context.blend(0, light.highlights)
 
         var tone = NitroSliders(.tone)
-        tone["exposure"] = context.blend(0, light.exposure * Scale.exposureEVPerUnit)
-        tone["highlights"] = max(0, 1 + min(highlights, 0) * Scale.highlightsScale)
-        tone["shadows"] = context.blend(0, light.shadows * Scale.shadowsScale)
-        tone["midtones"] = max(0, 1 + context.blend(0, light.brightness) * Scale.brightnessScale)
+        tone["exposure"] = context.blend(0, light[.exposure] * Scale.exposureEVPerUnit)
+        tone["highlights"] = context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale)
+        tone["shadows"] = context.blend(0, light[.shadows] * Scale.shadowsScale)
+        tone["midtones"] = context.multiplier(light[.brightness], scale: Scale.brightnessScale)
         var enhance = NitroSliders(.enhance)
-        enhance["contrast"] = max(0, 1 + context.blend(0, light.contrast) * Scale.contrastScale)
+        enhance["contrast"] = context.multiplier(light[.contrast], scale: Scale.contrastScale)
 
-        if highlights > MappingContext.tolerance {
-            context.report(.skipped, block, "raised highlights were dropped; Nitro can only recover highlights")
-        }
-        let dropped = [
-            (light.blackPoint, "black point was dropped; Nitro's Black slider works on RAW files only"),
-            (light.clarity, "clarity is not converted yet"),
-            (light.texture, "texture was dropped; Nitro has no texture slider"),
-        ]
-        for (value, message) in dropped where !isNearlyEqual(context.blend(0, value), 0) {
-            context.report(.skipped, block, message)
-        }
+        context.reportDropped(max(light[.highlights], 0), block,
+                              "raised highlights were dropped; Nitro can only recover highlights")
+        context.reportDropped(light[.blackPoint], block,
+                              "black point was dropped; Nitro's Black slider works on RAW files only")
+        context.reportDropped(light[.clarity], block, "clarity is not converted yet")
+        context.reportDropped(light[.texture], block, "texture was dropped; Nitro has no texture slider")
 
         let contents = [tone, enhance].filter { !$0.isDefault }.map(NitroAdjustment.Content.sliders)
         if !contents.isEmpty {
