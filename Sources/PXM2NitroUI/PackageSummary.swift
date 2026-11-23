@@ -60,7 +60,11 @@ public struct PackageSummary: Identifiable, Sendable {
                                uniquingKeysWith: max)
         blocks = PhotomatorBlock.allCases.compactMap { block in worst[block].map { BlockOutcome(block, $0) } }
         (converted, leftOut) = blocks.partitionedByConversion()
-        leftOutReasons = reasons(for: leftOut, presets.flatMap(\.result.diagnostics))
+        // Only the diagnostics of presets that left the block out, so another preset's
+        // approximation note does not show up as a reason for leaving it out.
+        leftOutReasons = reasons(for: leftOut, presets.flatMap { preset in
+            preset.result.diagnostics.filter { $0.block.map(preset.leftOutReasons.keys.contains) ?? false }
+        })
         convertibleCount = presets.count(where: \.isConvertible)
         losslessCount = presets.count(where: \.result.isLossless)
     }
