@@ -22,7 +22,7 @@ enum SelectiveColorMapper: BlockMapper {
         }
 
         var hsl = NitroHSL()
-        var clamped: [String] = []
+        var clamped = Set<String>()
         for (color, range) in zip(colors, ranges) {
             hsl[color] = values(for: range, context: context, clamped: &clamped)
         }
@@ -46,21 +46,20 @@ enum SelectiveColorMapper: BlockMapper {
         }
     }
 
-    /// Nitro's HSL ranges (N-3): hue in degrees, the other fields ±1.
-    static let hueRange = -60.0...60.0, deltaRange = -1.0...1.0
-
     /// One Nitro swatch, clamped to Nitro's ranges; appends the names of clamped fields.
     static func values(for range: SelectiveColorRange, context: MappingContext,
-                       clamped: inout [String]) -> NitroHSL.Values {
+                       clamped: inout Set<String>) -> NitroHSL.Values {
         typealias Scale = MappingConstants.SelectiveColor
+        typealias Values = NitroHSL.Values
         func limit(_ value: Double, _ bounds: ClosedRange<Double>, _ name: String) -> Double {
-            let limited = min(max(value, bounds.lowerBound), bounds.upperBound)
-            if abs(limited - value) > MappingContext.tolerance { clamped.append(name) }
+            let limited = bounds.clamping(value)
+            if !isNearlyEqual(limited, value) { clamped.insert(name) }
             return limited
         }
-        return NitroHSL.Values(
-            hueDelta: limit(context.blend(0, range.hue * Scale.hueDegreesPerUnit), hueRange, "hue"),
-            saturationDelta: limit(context.blend(0, range.saturation * Scale.saturationScale), deltaRange, "saturation"),
-            lumaDelta: limit(context.blend(0, range.brightness * Scale.brightnessScale), deltaRange, "brightness"))
+        return Values(
+            hueDelta: limit(context.blend(0, range.hue * Scale.hueDegreesPerUnit), Values.hueRange, "hue"),
+            saturationDelta: limit(context.blend(0, range.saturation * Scale.saturationScale), Values.deltaRange,
+                                   "saturation"),
+            lumaDelta: limit(context.blend(0, range.brightness * Scale.brightnessScale), Values.deltaRange, "brightness"))
     }
 }

@@ -252,6 +252,9 @@ public enum NitroHSLColor: String, CaseIterable, Sendable {
 /// Nitro's per-colour HSL adjustment. Numeric keys are `<parameter>_<colour>`; 0 is neutral.
 public struct NitroHSL: Sendable, Equatable {
     public struct Values: Sendable, Equatable {
+        /// Nitro's slider ranges (N-3, `docs/nitro-format.md` §3.7): hue in degrees, the rest ±1.
+        static let hueRange = -60.0...60.0, deltaRange = -1.0...1.0
+
         /// Hue shift in degrees.
         public var hueDelta: Double
         public var saturationDelta: Double
