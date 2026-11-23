@@ -40,8 +40,8 @@ struct ConverterTests {
         #expect(abs(levels.master[1].x - 0.009124071608744393) < 1e-12)
         #expect(levels.master[1].y == 0)
         #expect(levels.master[2] == NitroCurvePoint(x: 1, y: 1, isWhitePoint: true))
-        // PT800 also has curves, selective color and light (no contrast) → four adjustments.
-        #expect(try result.preset?.adjustments.map(\.id) == ["Levels", "Curves", "HSL", "Tone"])
+        // PT800 also has curves, selective color and light (tone sliders and clarity, no contrast).
+        #expect(try result.preset?.adjustments.map(\.id) == ["Levels", "Curves", "HSL", "Tone", "Detail"])
     }
 
     @Test func warnsAboutUncentredLevelsMidtones() throws {

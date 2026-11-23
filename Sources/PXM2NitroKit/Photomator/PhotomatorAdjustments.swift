@@ -196,7 +196,18 @@ public enum ColorField: String, CaseIterable, Sendable {
     case hue = "h", saturation = "s", vibrancy = "v"
 }
 
+/// Fields of Sharpen (`S`).
+public enum SharpenField: String, CaseIterable, Sendable {
+    case intensity = "i", radius = "r"
+
+    /// Photomator's default intensity.
+    public static let defaultIntensity = 0.5
+    /// Photomator's default radius.
+    public static let defaultRadius = 2.5
+}
+
 public typealias PhotomatorLight = PhotomatorSliders<LightField>
+public typealias PhotomatorSharpen = PhotomatorSliders<SharpenField>
 public typealias PhotomatorColor = PhotomatorSliders<ColorField>
 
 extension PhotomatorAdjustments {

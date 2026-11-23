@@ -1,14 +1,14 @@
-/// Photomator Light (`l`) → Nitro Tone and Enhance. See `docs/mapping.md` §2.7.
+/// Photomator Light (`l`) → Nitro Tone, Enhance and Detail. See `docs/mapping.md` §2.7.
 ///
 /// - exposure → Tone `exposure` (EV)
 /// - highlights → Tone `highlights` (neutral 1; only recovering, i.e. lowering, has a counterpart)
 /// - shadows → Tone `shadows`
 /// - brightness → Tone `midtones` (neutral 1)
 /// - contrast → Enhance `contrast` (neutral 1); merged with Color's Enhance by the converter
+/// - clarity → Detail `clarity`; merged with Sharpen's Detail by the converter
 ///
-/// Black point is skipped: Nitro's Black slider works on RAW files only. Clarity follows with
-/// the Detail mapping; texture has no counterpart. The scale factors are not calibrated yet
-/// (`MappingConstants`).
+/// Black point is skipped: Nitro's Black slider works on RAW files only. Texture has no
+/// counterpart. The scale factors are not calibrated yet (`MappingConstants`).
 enum LightMapper: BlockMapper {
     static let block = PhotomatorBlock.light
 
@@ -16,27 +16,31 @@ enum LightMapper: BlockMapper {
         guard let light: PhotomatorLight = context.sliders(block, in: adjustments) else { return [] }
         typealias Scale = MappingConstants.Light
 
-        var tone = NitroSliders(.tone)
-        tone["exposure"] = context.blend(0, light[.exposure] * Scale.exposureEVPerUnit)
-        tone["highlights"] = context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale, block, "highlights")
-        tone["shadows"] = context.blend(0, light[.shadows] * Scale.shadowsScale)
-        tone["midtones"] = context.multiplier(light[.brightness], scale: Scale.brightnessScale, block, "brightness")
-        var enhance = NitroSliders(.enhance)
-        enhance["contrast"] = context.multiplier(light[.contrast], scale: Scale.contrastScale, block, "contrast")
+        // Sets a slider and remembers its Photomator name if it moved, for the uncalibrated note.
+        var converted: [String] = []
+        func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double, as name: String) {
+            sliders[key] = value
+            if !isNearlyEqual(value, sliders.kind.defaults[key] ?? 0) { converted.append(name) }
+        }
+
+        var tone = NitroSliders(.tone), enhance = NitroSliders(.enhance), detail = NitroSliders(.detail)
+        set(&tone, "exposure", context.blend(0, light[.exposure] * Scale.exposureEVPerUnit), as: "exposure")
+        set(&tone, "highlights", context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale,
+                                                    block, "highlights"), as: "highlights")
+        set(&tone, "shadows", context.blend(0, light[.shadows] * Scale.shadowsScale), as: "shadows")
+        set(&tone, "midtones", context.multiplier(light[.brightness], scale: Scale.brightnessScale, block, "brightness"),
+            as: "brightness")
+        set(&enhance, "contrast", context.multiplier(light[.contrast], scale: Scale.contrastScale, block, "contrast"),
+            as: "contrast")
+        set(&detail, "clarity", context.blend(0, light[.clarity] * Scale.clarityScale), as: "clarity")
 
         context.reportDropped(max(light[.highlights], 0), block,
                               "raised highlights were dropped; Nitro can only recover highlights")
         context.reportDropped(light[.blackPoint], block,
                               "black point was dropped; Nitro's Black slider works on RAW files only")
-        context.reportDropped(light[.clarity], block, "clarity is not converted yet")
         context.reportDropped(light[.texture], block, "texture was dropped; Nitro has no texture slider")
 
-        let contents = [tone, enhance].filter { !$0.isDefault }.map(NitroAdjustment.Content.sliders)
-        let converted = [("exposure", tone, "exposure"), ("highlights", tone, "highlights"), ("shadows", tone, "shadows"),
-                         ("brightness", tone, "midtones"), ("contrast", enhance, "contrast")]
-            .filter { _, sliders, key in !isNearlyEqual(sliders[key], sliders.kind.defaults[key] ?? 0) }
-            .map(\.0)
         context.reportUncalibrated(block, converted)
-        return contents
+        return [tone, enhance, detail].filter { !$0.isDefault }.map(NitroAdjustment.Content.sliders)
     }
 }

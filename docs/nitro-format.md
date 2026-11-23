@@ -186,7 +186,7 @@ been moved in those presets.
 | `colorNoise` | Farbrauschen (v8 only) | 0.5 |
 | `noiseDetail` | Rauschdetails (v8 only) | 0 |
 | `blur`, `jpegNoise`, `grainIntensity`, `grainDensity` | **not in the UI** | 0, 0, 0, 0.5 |
-| `grainSeed` | — | random float; generate a new one |
+| `grainSeed` | — | random float. The converter writes a fixed seed so its output is reproducible; it only matters with grain, which the converter does not write |
 
 🟡 `grainIntensity`/`grainDensity` look like a working film grain. A test preset with a
 non-zero value would show whether Nitro actually renders it (❓).
