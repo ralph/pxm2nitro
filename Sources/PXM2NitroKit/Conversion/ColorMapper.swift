@@ -12,7 +12,7 @@ enum ColorMapper: BlockMapper {
             context.report(.skipped, block, "a value is not a number")
             return []
         }
-        if !isNearlyEqual(color.hue, 0) {
+        if !isNearlyEqual(context.blend(0, color.hue), 0) {
             context.report(.skipped, block, "hue was dropped; Nitro has no global hue shift")
         }
 

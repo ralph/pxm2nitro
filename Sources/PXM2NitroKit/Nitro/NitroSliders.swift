@@ -38,7 +38,7 @@ public struct NitroSliders: Sendable, Equatable {
     public subscript(key: String) -> Double {
         get { numeric[key] ?? kind.defaults[key] ?? 0 }
         set {
-            assert(kind.defaults[key] != nil, "\(kind.rawValue) has no slider \(key)")
+            precondition(kind.defaults[key] != nil, "\(kind.rawValue) has no slider \(key)")
             numeric[key] = newValue
         }
     }
