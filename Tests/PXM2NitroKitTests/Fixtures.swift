@@ -42,4 +42,5 @@ extension NitroAdjustment.Content {
     var levelsCurves: NitroLevelsCurves? { if case .levelsCurves(let value) = self { value } else { nil } }
     var channelMixer: NitroChannelMixer? { if case .channelMixer(let value) = self { value } else { nil } }
     var hsl: NitroHSL? { if case .hsl(let value) = self { value } else { nil } }
+    var sliders: NitroSliders? { if case .sliders(let value) = self { value } else { nil } }
 }

@@ -11,4 +11,12 @@ enum MappingConstants {
         /// Brightness (±1 = ±100 %) → `lumaDelta`. Placeholder.
         static let brightnessScale = 1.0
     }
+
+    /// Photomator Color (`hS`, UI values stored as percent / 100) → Nitro Enhance.
+    enum Color {
+        /// Saturation (±1 = ±100 %) → `saturation` multiplier `1 + scale · s`. Placeholder.
+        static let saturationScale = 1.0
+        /// Vibrance (±1 = ±100 %) → `vibrancy`. Placeholder.
+        static let vibrancyScale = 1.0
+    }
 }

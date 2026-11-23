@@ -55,6 +55,24 @@ struct NitroPresetTests {
         #expect(curves.red == curves.channel())
     }
 
+    @Test func parsesSliderAdjustments() throws {
+        let preset = try NitroPreset(data: Data(contentsOf: Fixtures.nitroPreset("Entsättigen")))
+        let enhance = try #require(preset.adjustments.compactMap(\.content.sliders).first { $0.kind == .enhance })
+        #expect(enhance["saturation"] == 0.8)
+        #expect(enhance["vibrancy"] == -0.2)
+        #expect(!enhance.isDefault)
+    }
+
+    @Test func sliderTemplatesWriteEveryDefault() throws {
+        for kind in NitroSliderKind.allCases {
+            let sliders = NitroSliders(kind)
+            #expect(sliders.isDefault)
+            let json = try #require(NitroAdjustment(.sliders(sliders)).json.objectValue)
+            #expect(json["numeric"]?.objectValue?.keys.sorted() == kind.defaults.keys.sorted())
+            #expect(json["enabled"] == true)
+        }
+    }
+
     @Test func encodesAdjustmentsAsJSONStrings() throws {
         var curves = NitroLevelsCurves(isCurves: true)
         curves.master = curves.channel(inner: [CurvePoint(x: 0.25, y: 0.4)])

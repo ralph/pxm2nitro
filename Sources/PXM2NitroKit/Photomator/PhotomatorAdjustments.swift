@@ -166,6 +166,14 @@ public struct SelectiveColorRange: Sendable, Equatable {
     public var brightness: Double
 }
 
+/// Color (`hS`): global hue, saturation and vibrance, stored as UI percent / 100.
+public struct PhotomatorColor: Sendable, Equatable {
+    static let keys = ["h", "s", "v"]
+    public var hue: Double
+    public var saturation: Double
+    public var vibrancy: Double
+}
+
 extension PhotomatorAdjustments {
     public var curves: PhotomatorCurves? {
         enabledBlock(.curves).map {
@@ -204,6 +212,16 @@ extension PhotomatorAdjustments {
                     blue: row["blue"]?.doubleValue ?? 0,
                     constant: row["constant"]?.doubleValue ?? 0)
             }
+        }
+    }
+
+    /// Color (`hS`); `nil` if the block is disabled or one of its values is not a number.
+    public var color: PhotomatorColor? {
+        enabledBlock(.hueSaturation).flatMap { payload in
+            guard JSONValue.object(payload).isObject(withNumericFields: PhotomatorColor.keys) else { return nil }
+            return PhotomatorColor(hue: payload["h"]?.doubleValue ?? 0,
+                                   saturation: payload["s"]?.doubleValue ?? 0,
+                                   vibrancy: payload["v"]?.doubleValue ?? 0)
         }
     }
 
