@@ -18,11 +18,11 @@ enum LightMapper: BlockMapper {
 
         var tone = NitroSliders(.tone)
         tone["exposure"] = context.blend(0, light[.exposure] * Scale.exposureEVPerUnit)
-        tone["highlights"] = context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale)
+        tone["highlights"] = context.multiplier(min(light[.highlights], 0), scale: Scale.highlightsScale, block, "highlights")
         tone["shadows"] = context.blend(0, light[.shadows] * Scale.shadowsScale)
-        tone["midtones"] = context.multiplier(light[.brightness], scale: Scale.brightnessScale)
+        tone["midtones"] = context.multiplier(light[.brightness], scale: Scale.brightnessScale, block, "brightness")
         var enhance = NitroSliders(.enhance)
-        enhance["contrast"] = context.multiplier(light[.contrast], scale: Scale.contrastScale)
+        enhance["contrast"] = context.multiplier(light[.contrast], scale: Scale.contrastScale, block, "contrast")
 
         context.reportDropped(max(light[.highlights], 0), block,
                               "raised highlights were dropped; Nitro can only recover highlights")
@@ -32,9 +32,11 @@ enum LightMapper: BlockMapper {
         context.reportDropped(light[.texture], block, "texture was dropped; Nitro has no texture slider")
 
         let contents = [tone, enhance].filter { !$0.isDefault }.map(NitroAdjustment.Content.sliders)
-        if !contents.isEmpty {
-            context.reportUncalibrated(block, "exposure, highlights, shadows, brightness and contrast")
-        }
+        let converted = [("exposure", tone, "exposure"), ("highlights", tone, "highlights"), ("shadows", tone, "shadows"),
+                         ("brightness", tone, "midtones"), ("contrast", enhance, "contrast")]
+            .filter { _, sliders, key in !isNearlyEqual(sliders[key], sliders.kind.defaults[key] ?? 0) }
+            .map(\.0)
+        context.reportUncalibrated(block, converted)
         return contents
     }
 }

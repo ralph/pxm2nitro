@@ -39,11 +39,11 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Photomator block | → Nitro | quality | notes |
 |---|---|---|---|
 | `l` Light: exposure | `Tone.exposure` | 🟢 likely good | scale ❓ (EV vs %) |
-| `l` Light: highlights | `Tone.highlights` (or `Tone.recovery` for negative values) | 🟡 | ✅ Nitro neutral is 1.0. Scale ❓ |
+| `l` Light: highlights | `Tone.highlights` = 1 + k·h, negative (recover) only; raised highlights skipped | 🟡 | ✅ Nitro neutral is 1.0. Scale ❓; `Tone.recovery` may fit better |
 | `l` Light: shadows | `Tone.shadows` | 🟡 | scale ❓ |
-| `l` Light: brightness | `Enhance.lighten` (+) / `Enhance.deepen` (−) **or** `Tone.midtones` | 🟠 | decide after calibration |
+| `l` Light: brightness | `Tone.midtones` = 1 + k·b (alternative: `Enhance.lighten` / `deepen`) | 🟠 | revisit after calibration |
 | `l` Light: contrast | `Enhance.contrast` = 1 + k·c | 🟡 | |
-| `l` Light: blackPoint | `Tone.blackPointDelta` | 🟠 | sign and scale ❓ |
+| `l` Light: blackPoint | default: **skip and warn** (`Tone.blackPointDelta` is RAW only) | 🟠 | sign and scale ❓ |
 | `l` Light: clarity `C` | `Detail.clarity` | 🟡 | |
 | `l` Light: texture `T` | — | ⚪ | always 0 in the samples; skip and warn if non-zero |
 | `f` Fade | default: **skip and warn** (unless N-6 finds a Nitro Fade). Opt-in: bake into the master curve | 🟠 | semantics ❓ |

@@ -21,8 +21,13 @@ struct MappingContext {
     }
 
     /// A Nitro multiplier whose neutral is 1: `1 + scale · value` after intensity, never below 0.
-    func multiplier(_ value: Double, scale: Double) -> Double {
-        max(0, 1 + blend(0, value) * scale)
+    /// Reports `what` as approximated when the value had to be clamped to 0.
+    mutating func multiplier(_ value: Double, scale: Double, _ block: PhotomatorBlock, _ what: String) -> Double {
+        let raw = 1 + blend(0, value) * scale
+        if raw < -MappingContext.tolerance {
+            report(.approximated, block, "\(what) was clamped to Nitro's minimum")
+        }
+        return max(0, raw)
     }
 
     /// The fields of an enabled slider block. Reports an enabled block that cannot be read.
@@ -43,6 +48,12 @@ struct MappingContext {
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
+    }
+
+    /// Same for a list of converted sliders ("a, b and c"); reports nothing for an empty list.
+    mutating func reportUncalibrated(_ block: PhotomatorBlock, _ sliders: [String]) {
+        guard let last = sliders.last else { return }
+        reportUncalibrated(block, sliders.count == 1 ? last : sliders.dropLast().joined(separator: ", ") + " and " + last)
     }
 
     /// Reports channels of an enabled Curves/Levels/Channel Mixer block whose raw payload

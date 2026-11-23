@@ -29,6 +29,13 @@ struct LightMapperTests {
         #expect(enhance?["contrast"] == 0.9)
     }
 
+    @Test func clampedMultipliersAreReported() throws {
+        let (tone, _, diagnostics) = map(["E": 1, "b": -1.5])
+        #expect(try #require(tone)["midtones"] == 0)
+        #expect(diagnostics.map(\.kind) == [.approximated, .uncalibrated])
+        #expect(diagnostics.last?.message.hasPrefix("brightness use") == true)
+    }
+
     @Test func raisedHighlightsAreReported() {
         let (tone, _, diagnostics) = map(["E": 1, "h": 0.8])
         #expect(tone == nil)
