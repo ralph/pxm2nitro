@@ -4,13 +4,11 @@
 /// - highlights → Tone `highlights` (neutral 1; only recovering, i.e. lowering, has a counterpart)
 /// - shadows → Tone `shadows`
 /// - brightness → Tone `midtones` (neutral 1)
-/// - black point → Tone `blackPointDelta` (Nitro's Black slider; it acts on RAW files only,
-///   Nitro's main use case)
+/// - black point → Tone `blackPointDelta` (Nitro's Black slider, see `docs/mapping.md` §2.7)
 /// - contrast → Enhance `contrast` (neutral 1); merged with Color's Enhance by the converter
 /// - clarity → Detail `clarity`; merged with Sharpen's Detail by the converter
 ///
-/// Texture has no counterpart. The scale factors, including the black point's sign, are not
-/// calibrated yet (`MappingConstants`).
+/// Texture has no counterpart. The scale factors are not calibrated yet (`MappingConstants`).
 enum LightMapper: BlockMapper {
     static let block = PhotomatorBlock.light
 
