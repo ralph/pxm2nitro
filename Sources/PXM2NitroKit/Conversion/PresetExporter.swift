@@ -13,8 +13,10 @@ public struct PresetExporter {
 
     public struct Entry: Sendable {
         public let preset: PhotomatorPreset
-        public let diagnostics: [ConversionDiagnostic]
+        public let result: ConversionResult
         public let outcome: Outcome
+
+        public var diagnostics: [ConversionDiagnostic] { result.diagnostics }
     }
 
     public let outputDirectory: URL
@@ -30,19 +32,23 @@ public struct PresetExporter {
     /// Converts `preset` and writes it unless there is nothing to convert or the file
     /// exists (and `overwrite` is off).
     public mutating func export(_ preset: PhotomatorPreset) throws -> Entry {
-        let result = Converter.convert(preset)
+        try export(preset, result: Converter.convert(preset))
+    }
+
+    /// Like `export(_:)`, but writes a conversion of `preset` that was already computed.
+    public mutating func export(_ preset: PhotomatorPreset, result: ConversionResult) throws -> Entry {
         guard var nitro = result.preset else {
-            return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .nothingToConvert)
+            return Entry(preset: preset, result: result, outcome: .nothingToConvert)
         }
         // Keep the name shown in Nitro in step with the (de-duplicated) file name.
         nitro.name = uniqueName(for: nitro.name)
         let file = outputDirectory.appending(path: Self.fileName(for: nitro.name))
         if !overwrite, FileManager.default.fileExists(atPath: file.path) {
-            return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .fileExists(file))
+            return Entry(preset: preset, result: result, outcome: .fileExists(file))
         }
         try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
         try nitro.encoded().write(to: file, options: .atomic)
-        return Entry(preset: preset, diagnostics: result.diagnostics, outcome: .written(file))
+        return Entry(preset: preset, result: result, outcome: .written(file))
     }
 
     /// Longest file name stem in UTF-8 bytes, leaving room for the extension and a counter

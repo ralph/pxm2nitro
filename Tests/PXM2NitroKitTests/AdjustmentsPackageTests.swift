@@ -1,5 +1,6 @@
 import Foundation
 @testable import PXM2NitroKit
+import PXM2NitroTestSupport
 import Testing
 
 struct AdjustmentsPackageTests {
@@ -13,7 +14,7 @@ struct AdjustmentsPackageTests {
 
     @Test func rejectsNonPackages() {
         #expect(throws: PhotomatorError.self) {
-            try AdjustmentsPackage.load(from: Fixtures.repositoryRoot.appending(path: "docs"))
+            try AdjustmentsPackage.load(from: SampleFiles.repositoryRoot.appending(path: "docs"))
         }
     }
 

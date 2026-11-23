@@ -1,6 +1,7 @@
 /// How one enabled Photomator adjustment fared in a conversion.
 public struct BlockOutcome: Sendable, Equatable {
-    public enum Status: Sendable {
+    /// Ordered from best to worst, so `max` gives the least favourable status.
+    public enum Status: Sendable, Comparable {
         /// Converted exactly.
         case carriedOver
         /// Converted, but with diagnostics (approximated, uncalibrated or partly dropped).
@@ -37,6 +38,11 @@ public struct ConversionResult: Sendable {
     /// adjustment that changes nothing (e.g. Levels with every handle at its default) is
     /// left out of this list, since there is nothing to carry over.
     public let blocks: [BlockOutcome]
+
+    /// Whether a Nitro preset is written and every adjustment carries over exactly.
+    public var isLossless: Bool {
+        preset != nil && blocks.allSatisfy { $0.status == .carriedOver }
+    }
 }
 
 /// Converts Photomator / Pixelmator Pro presets to Nitro presets. See `docs/mapping.md`.

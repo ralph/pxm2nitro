@@ -14,8 +14,9 @@ let package = Package(
     ],
     targets: [
         .target(name: "PXM2NitroKit"),
-        /// App model and (shared) SwiftUI views for the macOS app and a later iOS/iPadOS app.
+        // App model shared by the macOS app and a later iOS/iPadOS app.
         .target(name: "PXM2NitroUI", dependencies: ["PXM2NitroKit"]),
+        .target(name: "PXM2NitroTestSupport", path: "Tests/Support"),
         .executableTarget(
             name: "pxm2nitro",
             dependencies: [
@@ -23,7 +24,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
-        .testTarget(name: "PXM2NitroKitTests", dependencies: ["PXM2NitroKit"]),
-        .testTarget(name: "PXM2NitroUITests", dependencies: ["PXM2NitroUI"]),
+        .testTarget(name: "PXM2NitroKitTests", dependencies: ["PXM2NitroKit", "PXM2NitroTestSupport"]),
+        .testTarget(name: "PXM2NitroUITests", dependencies: ["PXM2NitroUI", "PXM2NitroTestSupport"]),
     ]
 )

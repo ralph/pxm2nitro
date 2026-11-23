@@ -1,6 +1,6 @@
 import Foundation
 
-public enum PhotomatorError: Error, Equatable, CustomStringConvertible {
+public enum PhotomatorError: LocalizedError, Equatable, CustomStringConvertible {
     case notAPackage(URL)
     case malformedAdjustmentData
 
@@ -10,6 +10,8 @@ public enum PhotomatorError: Error, Equatable, CustomStringConvertible {
         case .malformedAdjustmentData: "ColorAdjustmentData is not a versioned JSON container"
         }
     }
+
+    public var errorDescription: String? { description }
 }
 
 /// One preset from a Photomator / Pixelmator Pro adjustments package.
