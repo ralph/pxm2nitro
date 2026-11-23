@@ -63,7 +63,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `b` Black & White | `BlackAndWhite` (+ `SplitToning` for tone) | 🟠 | Nitro shape ❓ |
 | `M` Color Monochrome | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `s` Sepia | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
-| `v` Vignette | `Vignette` | 🟡 | Nitro shape ❓ |
+| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: `intensity`, `radius` (both default 0.5) and `center`. Softness and black point are dropped |
 | `g` Grain | `Grain` (or `Detail.grainIntensity/grainDensity`) | 🟡 | Nitro shape ❓ |
 | `cL` LUT | `LUT` | 🟠 | needs the `.cube` file on both sides ❓ |
 | `r` Replace Color, `R` Remove Color, `i` Invert | — | ❌ skip and warn | never used in the samples |
