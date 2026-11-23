@@ -12,21 +12,23 @@ struct LightMapperTests {
         let (sliders, diagnostics) = map(["E": 1, "e": 0.5, "h": -0.25, "s": 0.2, "b": -0.1, "c": 0.3])
         let toneSliders = try #require(sliders[.tone])
         #expect(toneSliders["exposure"] == 0.5)
-        #expect(toneSliders["highlights"] == 0.875)
-        #expect(toneSliders["shadows"] == 0.1)
-        #expect(toneSliders["midtones"] == 0.9)
+        #expect(toneSliders["highlights"] == 0.9375)
+        #expect(isNearlyEqual(toneSliders["shadows"], 0.024))
+        #expect(toneSliders["midtones"] == 0.95)
         #expect(toneSliders["boost"] == 1)
         #expect(toneSliders["boostShadowSliderValue"] == 0.9)
-        #expect(try #require(sliders[.enhance])["contrast"] == 1.3)
+        #expect(isNearlyEqual(try #require(sliders[.enhance])["contrast"], 1.09))
         #expect(sliders[.detail] == nil)
-        #expect(diagnostics.map(\.kind) == [.uncalibrated])
+        #expect(diagnostics.map(\.message) == [
+            "highlights, shadows, brightness and contrast: Nitro's tone curve differs from Photomator's",
+        ])
     }
 
     @Test func appliesIntensity() throws {
         let (sliders, _) = map(["E": 1, "e": 0.4, "h": -0.5, "c": -0.2], intensity: 0.5)
         #expect(sliders[.tone]?["exposure"] == 0.2)
-        #expect(sliders[.tone]?["highlights"] == 0.875)
-        #expect(sliders[.enhance]?["contrast"] == 0.9)
+        #expect(sliders[.tone]?["highlights"] == 0.9375)
+        #expect(isNearlyEqual(try #require(sliders[.enhance])["contrast"], 0.97))
     }
 
     @Test func valuesAreClampedToNitrosRanges() throws {
@@ -37,7 +39,7 @@ struct LightMapperTests {
         #expect(diagnostics.map(\.message) == [
             "exposure was clamped to Nitro's range (-3 to 3)",
             "brightness was clamped to Nitro's range (0.5 to 1.5)",
-            "exposure and brightness: placeholder scale, not calibrated yet",
+            "brightness: Nitro's tone curve differs from Photomator's",
         ])
     }
 
@@ -50,21 +52,21 @@ struct LightMapperTests {
     @Test func textureIsReported() {
         let (sliders, diagnostics) = map(["E": 1, "e": 0.1, "T": 0.1])
         #expect(Array(sliders.keys) == [.tone])
-        #expect(diagnostics.map(\.kind) == [.skipped, .uncalibrated])
+        #expect(diagnostics.map(\.kind) == [.skipped])
     }
 
     /// Photomator's positive black point deepens the blacks; Nitro's positive Black lifts them.
     @Test func blackPointGoesToNitrosBlackSliderWithTheSignFlipped() throws {
         let (sliders, diagnostics) = map(["E": 1, "B": 0.25], intensity: 0.5)
         let tone = try #require(sliders[.tone])
-        #expect(tone["blackPointDelta"] == -0.0625)
-        #expect(diagnostics.map(\.message) == ["black point: placeholder scale, not calibrated yet"])
+        #expect(tone["blackPointDelta"] == -0.125)
+        #expect(diagnostics.isEmpty)
     }
 
     @Test func clarityGoesToDetail() throws {
         let (sliders, diagnostics) = map(["E": 1, "C": -0.2], intensity: 0.5)
         #expect(Array(sliders.keys) == [.detail])
-        #expect(sliders[.detail]?["clarity"] == -0.1)
+        #expect(isNearlyEqual(try #require(sliders[.detail])["clarity"], -0.3))
         #expect(diagnostics.map(\.message) == ["clarity: placeholder scale, not calibrated yet"])
     }
 

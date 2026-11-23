@@ -99,6 +99,27 @@ struct MappingContext {
         reportUncalibrated(block, listed(sliders))
     }
 
+    /// Sets a scaled slider like `set(_:_:_:_:_:)` and, if it moved, notes its name under how
+    /// well its `MappingConstants` scale matches.
+    mutating func set(_ sliders: inout NitroSliders, _ key: String, _ value: Double, _ block: PhotomatorBlock,
+                      _ what: String, _ match: ScaleMatch, notes: inout ScaleNotes) {
+        set(&sliders, key, value, block, what)
+        guard !isNearlyEqual(sliders[key], sliders.kind.defaults[key] ?? 0) else { return }
+        switch match {
+        case .close: break
+        case .curveDiffers: notes.curveDiffers.append(what)
+        case .placeholder: notes.placeholders.append(what)
+        }
+    }
+
+    /// Reports the noted sliders: approximated with `reason`, then the placeholders as uncalibrated.
+    mutating func report(_ notes: ScaleNotes, _ block: PhotomatorBlock, curveDiffers reason: String = "") {
+        if !notes.curveDiffers.isEmpty {
+            report(.approximated, block, listed(notes.curveDiffers) + (reason.isEmpty ? ": approximated" : ": \(reason)"))
+        }
+        reportUncalibrated(block, notes.placeholders)
+    }
+
     /// Reports channels of an enabled Curves/Levels/Channel Mixer block whose raw payload
     /// could not be (fully) read, so the block is not mistaken for neutral.
     mutating func reportUnreadableChannels<Value>(
@@ -137,6 +158,21 @@ extension ClosedRange<Double> {
     func clamping(_ value: Double) -> Double {
         Swift.min(Swift.max(value, lowerBound), upperBound)
     }
+}
+
+/// How closely a scaled slider reproduces Photomator's effect (`MappingConstants`).
+enum ScaleMatch {
+    /// Measured and close: nothing to report.
+    case close
+    /// Measured, but the two apps' curves differ in shape: reported as approximated.
+    case curveDiffers
+    /// Not measured (or no factor fits): reported as uncalibrated.
+    case placeholder
+}
+
+/// The moved sliders of one block whose scale only approximates or is a placeholder.
+struct ScaleNotes {
+    fileprivate var curveDiffers: [String] = [], placeholders: [String] = []
 }
 
 func isNearlyEqual(_ a: Double, _ b: Double) -> Bool {

@@ -11,7 +11,7 @@ struct ColorMapperTests {
         let (result, diagnostics) = enhance(["E": 1, "h": 0, "s": -0.2, "v": 0.15])
         let enhance = try #require(result)
         #expect(enhance.kind == .enhance)
-        #expect(abs(enhance["saturation"] - 0.8) < 1e-12)
+        #expect(isNearlyEqual(enhance["saturation"], 0.8))
         #expect(enhance["vibrancy"] == 0.15)
         #expect(enhance["contrast"] == 1)
         #expect(diagnostics.map(\.kind) == [.uncalibrated])
@@ -20,8 +20,19 @@ struct ColorMapperTests {
     @Test func appliesIntensity() throws {
         let (result, _) = enhance(["E": 1, "s": -0.4, "v": 0.2], intensity: 0.5)
         let enhance = try #require(result)
-        #expect(abs(enhance["saturation"] - 0.8) < 1e-12)
+        #expect(isNearlyEqual(enhance["saturation"], 0.8))
         #expect(enhance["vibrancy"] == 0.1)
+    }
+
+    @Test func raisedSaturationUsesTheMeasuredScale() throws {
+        let (result, diagnostics) = enhance(["E": 1, "s": 0.5])
+        #expect(isNearlyEqual(try #require(result)["saturation"], 1.4))
+        #expect(diagnostics.isEmpty)
+    }
+
+    @Test func fullDesaturationStaysGrey() throws {
+        let (result, _) = enhance(["E": 1, "s": -1])
+        #expect(try #require(result)["saturation"] == 0)
     }
 
     @Test func saturationDoesNotGoNegative() throws {
@@ -55,9 +66,10 @@ struct ColorMapperTests {
         let enhances = try #require(saturated.preset).adjustments.compactMap(\.content.sliders).filter { $0.kind == .enhance }
         #expect(enhances.count == 1)
         let enhance = try #require(enhances.first)
-        #expect(abs(enhance["saturation"] - 0.8) < 1e-12)
-        #expect(enhance["contrast"] == 1.25)
-        #expect(saturated.blocks.contains(BlockOutcome(.hueSaturation, .approximated)))
+        #expect(isNearlyEqual(enhance["saturation"], 0.8))
+        #expect(isNearlyEqual(enhance["contrast"], 1.075))
+        // Saturation alone is calibrated, so Color carries over without a note.
+        #expect(saturated.blocks.contains(BlockOutcome(.hueSaturation, .carriedOver)))
 
         let hueOnly = Converter.convert(try Fixtures.photomatorPreset("LS", "005"))
         #expect(hueOnly.blocks.contains(BlockOutcome(.hueSaturation, .leftOut)))

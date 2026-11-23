@@ -2,7 +2,7 @@
 ///
 /// Saturation becomes Enhance's saturation multiplier and vibrance its vibrancy. Nitro has
 /// no global hue rotation (HSL shifts single colours), so hue is skipped with a diagnostic.
-/// The scale factors are not calibrated yet (`MappingConstants`).
+/// Saturation is calibrated; vibrance is still a placeholder (`MappingConstants`).
 enum ColorMapper: BlockMapper {
     static let block = PhotomatorBlock.hueSaturation
 
@@ -11,10 +11,15 @@ enum ColorMapper: BlockMapper {
         context.reportDropped(color, .hue, block, "hue was dropped; Nitro has no global hue shift")
 
         typealias Scale = MappingConstants.Color
-        var enhance = NitroSliders(.enhance)
-        context.set(&enhance, "saturation", context.factor(color[.saturation], scale: Scale.saturationScale),
-                    block, "saturation")
-        context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale), block, "vibrance")
-        return context.uncalibrated(enhance, block, "saturation and vibrance")
+        var enhance = NitroSliders(.enhance), notes = ScaleNotes()
+        let saturation = color[.saturation]
+        let saturationScale = saturation < 0 ? Scale.desaturationScale : Scale.saturationScale
+        context.set(&enhance, "saturation", context.factor(saturation, scale: saturationScale),
+                    block, "saturation", .close, notes: &notes)
+        context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale),
+                    block, "vibrance", .placeholder, notes: &notes)
+        guard !enhance.isNoOp else { return [] }
+        context.report(notes, block)
+        return [.sliders(enhance)]
     }
 }
