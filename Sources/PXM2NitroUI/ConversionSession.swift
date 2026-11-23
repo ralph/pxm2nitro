@@ -92,6 +92,11 @@ public final class ConversionSession {
         lastExport = nil
     }
 
+    /// Goes back from the export result to the package list.
+    public func dismissExport() {
+        lastExport = nil
+    }
+
     /// Writes every convertible preset of every package into `folder`. Failures of single
     /// presets are collected in the report; nothing is thrown.
     @discardableResult

@@ -15,10 +15,23 @@ swift test
 swift run pxm2nitro --help
 ```
 
-The package has two products:
+The package has three products:
 
-- `PXM2NitroKit`: the conversion library (reused later by a SwiftUI app)
+- `PXM2NitroKit`: the conversion library
+- `PXM2NitroUI`: the app's state and SwiftUI screens, shared by all platforms
 - `pxm2nitro`: the command-line tool
+
+## Mac app
+
+Open `App/PXM2Nitro.xcodeproj` in Xcode and run the `PXM2Nitro` scheme. Drop
+`.adjustments` files onto the window (or click to pick them), check what carries over, then
+choose an output folder.
+
+The app target only holds the `@main` entry point; everything else lives in `PXM2NitroUI`,
+which also builds for iOS. To add an iPad/iPhone app later, add iOS as a supported
+destination of the `PXM2Nitro` target (or a second target using the same `PXM2NitroUI`
+product). The project uses synchronized folders, so new files in `App/PXM2Nitro/` need no
+project edits.
 
 ## Installing converted presets
 
