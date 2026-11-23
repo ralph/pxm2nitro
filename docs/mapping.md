@@ -11,7 +11,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
-| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`, black point → `blackPointDelta`; placeholder scales, reports `uncalibrated`. Texture is skipped |
+| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + k·h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + k·b, contrast → Enhance `contrast` = 1 + k·c, clarity → Detail `clarity`, black point → `blackPointDelta` (k < 0); placeholder scales (UI 100 % = 1 unit), reports `uncalibrated`. Texture is skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
@@ -178,9 +178,9 @@ exposure" equals is ❓. Calibrate visually; the first guess is 100 % ≈ 1 EV. 
   `Tone.highlights`.
 - Photomator `blackPoint` raises or lowers the black level. Nitro `blackPointDelta` is an offset to
   `baseBlackPoint` (5 in every sample, probably a constant; N-4.2). Implemented as
-  `blackPointDelta = k · blackPoint` with **k < 0**: on L1008408.DNG a positive Photomator black
+  `blackPointDelta = k · blackPoint` with **k = −0.5** (maps Photomator's ±2 onto Nitro's ±1): on L1008408.DNG a positive Photomator black
   point deepens the blacks, while a positive Nitro Black (range ±1) lifts them (−1 crushes the
-  shadows, +1 leaves no pure black). |k| is a placeholder (1); Photomator +100 % looked weaker
+  shadows, +1 leaves no pure black). |k| is a placeholder; Photomator +100 % looked weaker
   than Nitro −1. It only takes effect on RAW files, Nitro's main use case.
 
 ### 2.8 RAW

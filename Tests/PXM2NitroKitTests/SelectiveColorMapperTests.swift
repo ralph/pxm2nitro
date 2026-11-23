@@ -22,7 +22,7 @@ struct SelectiveColorMapperTests {
         let hsl = try #require(result)
         #expect(hsl[.red] == NitroHSL.Values())
         #expect(hsl[.orange].saturationDelta == -0.3)
-        #expect(hsl[.orange].lumaDelta == 0.6494239267676767)
+        #expect(hsl[.orange].lumaDelta == 0.6494239267676767 / 2)
         #expect(hsl[.cyan].saturationDelta == -0.25)
         #expect(hsl[.lightBlue].saturationDelta == (hsl[.cyan].saturationDelta + hsl[.blue].saturationDelta) / 2)
         #expect(hsl[.lightBlue].lumaDelta == (hsl[.cyan].lumaDelta + hsl[.blue].lumaDelta) / 2)

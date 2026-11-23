@@ -193,7 +193,7 @@ UI ranges from the Pixelmator guides (typed entry; option-drag can exceed the no
 | Hue & Saturation | Hue ±100 %, Saturation ±100 %, Vibrance ±200 % ✅ |
 | Light / Basic | Exposure ±400 % (slider ±200 %), Highlights ±100 %, Shadows ±100 %, Brightness ±200 %, Contrast ±200 %, Black Point ±200 %, Clarity ±100 %, Texture ±100 % ✅ |
 | Selective Clarity | Clarity / Texture ±100 % per tone range |
-| Selective Color | Hue ±100 % (stored ±4), Saturation ?, Brightness ±200 % (stored ±4) ✅ |
+| Selective Color | Hue ±100 % (stored ±4), Saturation range ? (stored % / 100), Brightness ±200 % (stored ±4) ✅ |
 | Black & White | Red/Green/Blue ±100 %, Tone ±200 %, Intensity |
 | Fade | Blacks (default 100 %) / Whites (default 0 %), 0…200 % ✅ (Photomator shows them too) |
 | Channel Mixer | Red, Green, Blue, Constant ±200 % |
