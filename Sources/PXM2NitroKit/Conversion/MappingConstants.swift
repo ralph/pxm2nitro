@@ -41,4 +41,10 @@ enum MappingConstants {
         /// Intensity (0…1, default 0.5) → `sharpen`. Placeholder.
         static let intensityScale = 1.0
     }
+
+    /// Photomator Vignette (`v`) → Nitro Vignette.
+    enum Vignette {
+        /// Exposure (vignette strength, default 0.5) → `intensity` (Nitro's default 0.5). Placeholder.
+        static let intensityScale = 1.0
+    }
 }

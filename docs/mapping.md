@@ -13,6 +13,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
 | Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + b, contrast → Enhance `contrast` = 1 + c, clarity → Detail `clarity`; placeholder scales, reports `uncalibrated`. Black point (RAW-only in Nitro) and texture are skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
+| Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
@@ -62,7 +63,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | `b` Black & White | `BlackAndWhite` (+ `SplitToning` for tone) | 🟠 | Nitro shape ❓ |
 | `M` Color Monochrome | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
 | `s` Sepia | default: **skip and warn**. Opt-in: `BlackAndWhite` + `SplitToning` | 🔴 | never used |
-| `v` Vignette | `Vignette` | 🟡 | Nitro shape ❓ |
+| `v` Vignette | `Vignette.intensity` | 🟡 | ✅ Nitro shape: `intensity`, `radius` (both default 0.5) and `center`. Softness and black point are dropped |
 | `g` Grain | `Grain` (or `Detail.grainIntensity/grainDensity`) | 🟡 | Nitro shape ❓ |
 | `cL` LUT | `LUT` | 🟠 | needs the `.cube` file on both sides ❓ |
 | `r` Replace Color, `R` Remove Color, `i` Invert | — | ❌ skip and warn | never used in the samples |

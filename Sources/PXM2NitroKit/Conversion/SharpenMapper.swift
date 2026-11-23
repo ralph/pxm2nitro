@@ -8,13 +8,10 @@ enum SharpenMapper: BlockMapper {
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
         guard let sharpen: PhotomatorSharpen = context.sliders(block, in: adjustments) else { return [] }
         var detail = NitroSliders(.detail)
-        // Missing fields are at Photomator's defaults, which (unlike other blocks) are not 0.
-        let intensity = sharpen.values[.intensity] ?? SharpenField.defaultIntensity
-        let radius = sharpen.values[.radius] ?? SharpenField.defaultRadius
-        detail["sharpen"] = context.blend(0, intensity * MappingConstants.Sharpen.intensityScale)
+        detail["sharpen"] = context.blend(0, sharpen[.intensity] * MappingConstants.Sharpen.intensityScale)
         let contents = context.uncalibrated(detail, block, "sharpening")
         if !contents.isEmpty {
-            context.reportDropped(radius, neutral: SharpenField.defaultRadius, block,
+            context.reportDropped(sharpen, .radius, block,
                                   "the radius was dropped; Nitro's sharpening has no radius")
         }
         return contents

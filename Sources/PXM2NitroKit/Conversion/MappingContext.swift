@@ -45,15 +45,21 @@ struct MappingContext {
         if !isNearlyEqual(blend(neutral, value), neutral) { report(.skipped, block, message) }
     }
 
+    /// Same for a Photomator field, which is neutral at its Photomator default.
+    mutating func reportDropped<Field>(_ sliders: PhotomatorSliders<Field>, _ field: Field,
+                                       _ block: PhotomatorBlock, _ message: String) {
+        reportDropped(sliders[field], neutral: field.defaultValue, block, message)
+    }
+
     /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
     mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
         report(.uncalibrated, block, "\(what): placeholder scale, not calibrated yet")
     }
 
-    /// The sliders as Nitro content, with their placeholder scales reported; nothing if every
-    /// slider is at its default.
+    /// The sliders as Nitro content, with their placeholder scales reported; nothing if the
+    /// adjustment changes nothing.
     mutating func uncalibrated(_ sliders: NitroSliders, _ block: PhotomatorBlock, _ what: String) -> [NitroAdjustment.Content] {
-        guard !sliders.isDefault else { return [] }
+        guard !sliders.isNoOp else { return [] }
         reportUncalibrated(block, what)
         return [.sliders(sliders)]
     }

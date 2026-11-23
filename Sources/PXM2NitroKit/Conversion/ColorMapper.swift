@@ -8,7 +8,7 @@ enum ColorMapper: BlockMapper {
 
     static func map(_ adjustments: PhotomatorAdjustments, context: inout MappingContext) -> [NitroAdjustment.Content] {
         guard let color: PhotomatorColor = context.sliders(block, in: adjustments) else { return [] }
-        context.reportDropped(color[.hue], block, "hue was dropped; Nitro has no global hue shift")
+        context.reportDropped(color, .hue, block, "hue was dropped; Nitro has no global hue shift")
 
         typealias Scale = MappingConstants.Color
         var enhance = NitroSliders(.enhance)
