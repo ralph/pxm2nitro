@@ -211,6 +211,47 @@ The Photomator side was not measured: in the background it stayed at "Wird gelad
 preview did not change when Exposure was set to +50 %. Afterwards both images were reset
 (Photomator: Standard back to 0 % and off; Nitro: *Original wiederherstellen*).
 
+## Calibration C-2: Photomator vs Nitro, Light and Color (L1008408.DNG, 2026-11-23)
+
+Same method as C-1 (preview captures, `docs/tools/screenshot_response.py`-style medians),
+Photomator in front, Nitro driven with its arrows. Metrics are the median change in
+displayed stops for dark (L 0.004–0.03), mid (0.03–0.25) and bright (0.25–0.8) pixels, the
+slope of log luminance, and the mean-saturation ratio.
+
+| app, setting | dark | mid | bright | slope | saturation |
+|---|---|---|---|---|---|
+| Photomator exposure +50 % | +0.78 | +0.66 | +0.42 | 0.90 | 0.89 |
+| Photomator exposure +100 % | +1.54 | +1.26 | +0.76 | 0.78 | 0.78 |
+| Photomator highlights −50 % | 0.00 | −0.02 | −0.14 | 0.96 | 1.01 |
+| Photomator shadows +50 % | +0.58 | +0.27 | +0.01 | 0.84 | 0.98 |
+| Photomator brightness +50 % | +1.21 | +1.18 | +0.68 | 0.82 | 0.80 |
+| Photomator contrast +50 % | −0.47 | −0.14 | +0.10 | 1.15 | 1.03 |
+| Photomator black point +50 % | −1.10 | −0.24 | −0.07 | 1.18 | 1.19 |
+| Photomator clarity +50 % | −1.12 | +0.02 | +0.11 | 1.17 | 1.02 |
+| Nitro midtones 1.25 / 1.45 | +1.88 / +3.36 | +1.18 / +1.95 | +0.55 / +0.89 | 0.66 / 0.38 | 0.73 / 0.48 |
+| Nitro contrast 1.2 / 1.5 | −1.10 / −1.83 | −0.28 / −0.77 | −0.07 / −0.18 | 1.20 / 1.50 | 1.22 / 1.56 |
+| Nitro black −0.2 / −0.5 | −0.42 / −1.04 | −0.11 / −0.28 | −0.03 / −0.08 | 1.07 / 1.19 | 1.08 / 1.20 |
+| Nitro shadows 0.3 / 0.6 | +1.28 / +2.56 | +0.75 / +1.34 | +0.28 / +0.49 | 0.75 / 0.50 | 0.94 / 0.84 |
+| Nitro highlights 0.75 / 0.5 | −0.05 / −0.08 | −0.12 / −0.24 | −0.14 / −0.27 | 0.98 / 0.95 | 1.03 / 1.06 |
+| Nitro clarity 0.3 / 0.6 | −0.11 / −0.20 | 0.00 / 0.00 | 0.00 / 0.00 | 1.02 / 1.04 | 1.01 / 1.02 |
+
+Local contrast (std of log luminance minus a box blur) rose 1.43× for Photomator clarity +50 %
+at every radius, but only 1.08–1.14× for Nitro clarity 0.6, falling with the radius.
+
+Saturation (ratio of mean HSV saturation; low = pixels with saturation 0.05–0.25, high =
+0.4–1): Photomator saturation +50 % 1.41 (low 1.39, high 1.43); vibrance +50 % 1.30 (low 1.40,
+high 1.26). Nitro saturation 1.3 / 1.5: 1.32 / 1.52 (even); vibrancy 0.3 / 0.6: 1.11 / 1.19
+(low 1.51 / 1.96, high 1.04 / 1.06).
+
+Selective Color orange hue (HSV hue of saturated pixels at 15–45°): Photomator 83 % +33.8°;
+Nitro HSL orange +24° / +36°: +4.3° / +6.3°. (The 83 % came from typing 25 into the field,
+which Photomator may read as degrees; not confirmed.)
+
+Side effect: Return in Photomator's Selective Color field also closed the editor, which
+saved the orange hue to the Photos asset (and Nitro, which reads the same asset, showed it).
+It was reset in Photomator (section reset, switched off, Fertig); Nitro was reset with
+*Original wiederherstellen*.
+
 ## Template for further samples
 
 | preset | app | adjustment | slider (UI label) | UI value | note |

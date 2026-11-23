@@ -11,11 +11,11 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
-| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + k·h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + k·b, contrast → Enhance `contrast` = 1 + k·c, clarity → Detail `clarity`, black point → `blackPointDelta` (k < 0); placeholder scales (UI 100 % = 1 unit), reports `uncalibrated`. Texture is skipped |
+| Light (`l`) | Tone + Enhance + Detail | `LightMapper` | ⚠️ exposure → `exposure` (EV), highlights → `highlights` = 1 + k·h (recovery only), shadows → `shadows`, brightness → `midtones` = 1 + k·b, contrast → Enhance `contrast` = 1 + k·c, clarity → Detail `clarity`, black point → `blackPointDelta` (k < 0). Scales measured (§3.1): exposure and black point match closely; highlights, shadows, brightness and contrast are reported `approximated` (Nitro's tone curves differ); clarity is still a placeholder and reports `uncalibrated`. Texture is skipped |
 | Sharpen (`S`) | Detail | `SharpenMapper` | ⚠️ intensity → `sharpen`; placeholder scale, reports `uncalibrated`. A non-default radius is reported (Nitro has none) |
 | Vignette (`v`) | Vignette | `VignetteMapper` | ⚠️ exposure (strength) → `intensity`, brightening (negative) included; placeholder scale, reports `uncalibrated`. Nitro's `radius` stays at its default; non-default softness and black point are reported |
 | Black & White (`b`) | BlackAndWhite | `BlackAndWhiteMapper` | ⚠️ filter colour (R/G/B offsets) tilts the Rec. 601 weights, normalised to sum 1; placeholder scale, reports `uncalibrated`. Toning, B&W intensity, filter luminance/saturation and partial preset intensity are reported. A neutral filter writes Nitro's default weights, still reported as uncalibrated (Photomator's grey mix is not known to be Rec. 601); nothing is written at zero preset or B&W intensity |
-| Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
+| Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + 0.8·s (measured, §3.1), vibrance → `vibrancy` (placeholder, reports `uncalibrated`). Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
 ## 0. Ground rules
@@ -243,13 +243,28 @@ stops for the midtones, and the mean saturation. The same numbers for the other 
 value that matches, by interpolation. Base renders differ between the apps, so only the
 *changes* are compared.
 
-Findings so far (L1008408.DNG, `sample-log.md` C-1):
+Results (L1008408.DNG, `sample-log.md` C-1 and C-2), per stored Photomator unit:
 
-- Nitro `exposure` is roughly linear: each EV shifts the displayed midtones by about 1.2 stops
-  (0.3 → +0.38, 0.6 → +0.75, 0.9 → +1.09, 1.2 → +1.40). The slope falls slightly (1.28 → 1.16
-  stops/EV) as the tone curve compresses the brighter values.
-- Photomator still needs measuring. It renders its preview only while it is the front app,
-  so the captures need full-screen control (or someone at the Mac).
+| Photomator | Nitro | factor | match |
+|---|---|---|---|
+| exposure | `exposure` | 1.0 EV (measured 1.03) | close |
+| black point | `blackPointDelta` | −1.0 | close (shadows, midtones, slope, saturation) |
+| highlights (recover) | `highlights` = 1 + k·h | 0.25 | bright tones match; Nitro also darkens the midtones |
+| shadows | `shadows` | 0.12 | Nitro is ~4× as strong and reaches further into the midtones |
+| brightness | `midtones` = 1 + k·b | 0.5 | midtones match; Nitro lifts the shadows more |
+| contrast | `contrast` = 1 + k·c | 0.3 | tone-curve slope matches; Nitro also darkens and saturates |
+| clarity | `clarity` | 3.0 (rough) | different effects: Nitro's is weak and local, Photomator's acts like contrast; Nitro +1 ≈ Photomator +30 % |
+| Color saturation | `saturation` = 1 + k·s | 0.8 | close (both scale saturation evenly) |
+| Color vibrance | `vibrancy` | 1.0 (unchanged) | no fit: Nitro boosts muted colours far more and saturated ones far less |
+| Selective Color hue (orange) | `hueDelta_orange` | 7.5°/unit (unchanged) | no fit on this image: Nitro +36° moved the wood's hue by +6°, Photomator 83 % by +34°. Needs a test chart with pure colour patches |
+
+Selective Color saturation and brightness, Sharpen, Vignette and Black & White are not
+measured yet.
+
+How the sliders are driven: Photomator renders only while it is the front app (full-screen
+control); a value is typed after a triple-click and committed with Return in Light, but in
+Selective Color Return also closes the editor and saves, so use Tab there. A double-click on a
+Photomator value resets it.
 
 Practical notes: Nitro's value fields do not commit typed values while Nitro is in the
 background; its ‹ › arrows do, in steps of 1/20 of the range (0.3 EV for exposure, 0.1 for

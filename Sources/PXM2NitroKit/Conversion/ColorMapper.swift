@@ -2,7 +2,7 @@
 ///
 /// Saturation becomes Enhance's saturation multiplier and vibrance its vibrancy. Nitro has
 /// no global hue rotation (HSL shifts single colours), so hue is skipped with a diagnostic.
-/// The scale factors are not calibrated yet (`MappingConstants`).
+/// Saturation is calibrated; vibrance is still a placeholder (`MappingConstants`).
 enum ColorMapper: BlockMapper {
     static let block = PhotomatorBlock.hueSaturation
 
@@ -15,6 +15,8 @@ enum ColorMapper: BlockMapper {
         context.set(&enhance, "saturation", context.factor(color[.saturation], scale: Scale.saturationScale),
                     block, "saturation")
         context.set(&enhance, "vibrancy", context.blend(0, color[.vibrancy] * Scale.vibrancyScale), block, "vibrance")
-        return context.uncalibrated(enhance, block, "saturation and vibrance")
+        guard !enhance.isNoOp else { return [] }
+        if !isNearlyEqual(enhance["vibrancy"], 0) { context.reportUncalibrated(block, "vibrance") }
+        return [.sliders(enhance)]
     }
 }
