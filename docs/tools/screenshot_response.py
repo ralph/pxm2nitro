@@ -6,7 +6,8 @@ Usage:
 
 Each image is a capture of the same preview region (same app, same zoom), once without
 and once with the adjustment. For the pixels whose linear luminance lies between 0.02 and
-0.35 in the base capture (and is not near white in the adjusted one), the script prints the
+0.35 in the base capture (and is neither black nor near white in any adjusted one; the same
+pixels are used for every label), the script prints the
 median change in log2 luminance (displayed stops), plus the mean luminance and saturation
 before and after. Comparing these numbers between Photomator and Nitro at several slider
 values gives the scale factor (`docs/mapping.md` §3.1).
@@ -17,19 +18,27 @@ import os, struct, subprocess, sys, tempfile
 
 import numpy as np
 
+SRGB_PROFILE = "/System/Library/ColorSync/Profiles/sRGB Profile.icc"
+
 
 def load(path):
     """RGB in [0, 1], decoded through `sips` to an uncompressed BMP."""
     fd, tmp = tempfile.mkstemp(suffix=".bmp")
     os.close(fd)
     try:
-        subprocess.run(["sips", "-s", "format", "bmp", path, "--out", tmp], check=True, capture_output=True)
-        data = open(tmp, "rb").read()
+        # Screenshots are tagged Display P3; match to sRGB so the sRGB luminance formula holds.
+        subprocess.run(["sips", "-m", SRGB_PROFILE, "-s", "format", "bmp", path, "--out", tmp],
+                       check=True, capture_output=True)
+        with open(tmp, "rb") as f:
+            data = f.read()
     finally:
         os.remove(tmp)
     offset = struct.unpack_from("<I", data, 10)[0]
     width, height = struct.unpack_from("<ii", data, 18)
-    channels = struct.unpack_from("<H", data, 28)[0] // 8
+    bits = struct.unpack_from("<H", data, 28)[0]
+    if bits not in (24, 32):
+        sys.exit(f"{path}: unsupported {bits}-bit BMP from sips")
+    channels = bits // 8
     stride = (width * channels + 3) & ~3
     rows = np.frombuffer(data, np.uint8, count=stride * abs(height), offset=offset)
     pixels = rows.reshape(abs(height), stride)[:, :width * channels].reshape(abs(height), width, channels)
@@ -50,11 +59,24 @@ def saturation(rgb):
 def main(base_path, *specs):
     base = load(base_path)
     base_l = luminance(base)
+    captures = []
     for spec in specs:
         label, path = spec.split("=", 1)
         adjusted = load(path)
-        adjusted_l = luminance(adjusted)
-        mask = (base_l > 0.02) & (base_l < 0.35) & (adjusted_l < 0.9)
+        if adjusted.shape != base.shape:
+            sys.exit(f"{path}: size {adjusted.shape[1]}x{adjusted.shape[0]} differs from base "
+                     f"{base.shape[1]}x{base.shape[0]}")
+        captures.append((label, adjusted, luminance(adjusted)))
+    # One pixel set for all labels: midtones in the base that stay unclipped (and non-black) in
+    # every capture. A per-capture mask would drop the brightest midtones only at high values
+    # and bias those medians low.
+    mask = (base_l > 0.02) & (base_l < 0.35)
+    for _, _, adjusted_l in captures:
+        mask &= (adjusted_l > 0) & (adjusted_l < 0.9)
+    if not mask.any():
+        sys.exit("no midtone pixels (base luminance 0.02-0.35) stay unclipped in all captures")
+    print(f"{mask.sum()} pixels ({mask.mean():.1%} of the region)")
+    for label, adjusted, adjusted_l in captures:
         stops = np.median(np.log2(adjusted_l[mask] / base_l[mask]))
         print(f"{label}: {stops:+.3f} stops  mean L {base_l.mean():.3f} -> {adjusted_l.mean():.3f}  "
               f"saturation {saturation(base).mean():.3f} -> {saturation(adjusted).mean():.3f}")

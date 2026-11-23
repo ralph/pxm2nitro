@@ -197,7 +197,8 @@ So Levels follows the same rule as Curves.
 ## Calibration C-1: Nitro exposure (L1008408.DNG, 2026-11-23, via computer use)
 
 Preview captures of the unedited image in Nitro's editor (image region only), exposure set
-with the ‹ › arrows, analysed with `docs/tools/screenshot_response.py`:
+with the ‹ › arrows, analysed with `docs/tools/screenshot_response.py` (117 812 pixels, 79.5 % of
+the region, unclipped in every capture):
 
 | Nitro exposure | midtones (displayed stops) | mean saturation |
 |---|---|---|

@@ -245,8 +245,10 @@ value that matches, by interpolation. Base renders differ between the apps, so o
 
 Findings so far (L1008408.DNG, `sample-log.md` C-1):
 
-- Nitro `exposure` is linear: each EV shifts the displayed midtones by about 1.2 stops
-  (0.3 → +0.38, 0.6 → +0.75, 0.9 → +1.10, 1.2 → +1.41).
+- Nitro `exposure` is roughly linear: each EV shifts the displayed midtones by about 1.2 stops
+  (0.3 → +0.38, 0.6 → +0.75, 0.9 → +1.10, 1.2 → +1.41). The slope falls slightly (1.28 → 1.18
+  stops/EV) as the tone curve compresses the brighter values; re-measuring with one shared
+  pixel set gave the same numbers.
 - Photomator still needs measuring. It renders its preview only while it is the front app,
   so the captures need full-screen control (or someone at the Mac).
 
