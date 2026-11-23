@@ -8,6 +8,8 @@ public struct NitroAdjustment: Sendable, Equatable {
         case levelsCurves(NitroLevelsCurves)
         case channelMixer(NitroChannelMixer)
         case hsl(NitroHSL)
+        /// Enhance and the other slider-only adjustments.
+        case sliders(NitroSliders)
         /// An adjustment not modelled here; `json` is its complete inner object.
         case other(id: String, json: JSONValue)
     }
@@ -30,6 +32,7 @@ public struct NitroAdjustment: Sendable, Equatable {
         case .levelsCurves(let data): data.isCurves ? "Curves" : "Levels"
         case .channelMixer: "ChannelMixer"
         case .hsl: "HSL"
+        case .sliders(let sliders): sliders.kind.rawValue
         case .other(let id, _): id
         }
     }
@@ -49,6 +52,8 @@ public struct NitroAdjustment: Sendable, Equatable {
             object = ["numeric": .object(mixer.numeric)]
         case .hsl(let hsl):
             object = ["version": 1, "numeric": .object(hsl.numeric)]
+        case .sliders(let sliders):
+            object = sliders.json
         case .other(_, let json):
             object = json.objectValue ?? [:]
         }
@@ -66,7 +71,8 @@ public struct NitroAdjustment: Sendable, Equatable {
         case "ChannelMixer": json["numeric"]?.objectValue.map { .channelMixer(NitroChannelMixer(numeric: $0)) }
         case "HSL" where (json["version"]?.intValue ?? 1) == 1:
             json["numeric"]?.objectValue.map { .hsl(NitroHSL(numeric: $0)) }
-        default: nil
+        default:
+            NitroSliderKind(rawValue: id).flatMap { NitroSliders(kind: $0, json: json) }.map { .sliders($0) }
         }
         self.init(content ?? .other(id: id, json: json),
                   isEnabled: json["enabled"]?.boolValue ?? true,

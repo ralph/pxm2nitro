@@ -53,7 +53,8 @@ public struct ConversionResult: Sendable {
 public enum Converter {
     /// The block mappers, in the order their Nitro adjustments are written.
     static var mappers: [any BlockMapper.Type] {
-        [LevelsMapper.self, CurvesMapper.self, ChannelMixerMapper.self, SelectiveColorMapper.self]
+        [LevelsMapper.self, CurvesMapper.self, ChannelMixerMapper.self, SelectiveColorMapper.self,
+         ColorMapper.self]
     }
 
     /// Photomator blocks this converter maps.

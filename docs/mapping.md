@@ -11,6 +11,7 @@ Unresolved items are marked ❓ and are listed again in [sample-requests.md](sam
 | Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
 | Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
 | Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
+| Color (`hS`) | Enhance | `ColorMapper` | ⚠️ saturation → `saturation` = 1 + s, vibrance → `vibrancy`; placeholder scales, reports `uncalibrated`. Hue is skipped |
 | everything else | — | — | skipped with a diagnostic |
 
 ## 0. Ground rules
