@@ -19,6 +19,11 @@ struct MappingContext {
     mutating func report(_ kind: ConversionDiagnostic.Kind, _ block: PhotomatorBlock?, _ message: String) {
         diagnostics.append(ConversionDiagnostic(kind, block, message))
     }
+
+    /// Call whenever a mapper emits values scaled by `MappingConstants` that are not calibrated yet.
+    mutating func reportUncalibrated(_ block: PhotomatorBlock, _ what: String) {
+        report(.uncalibrated, block, "\(what) use placeholder scale factors until calibrated")
+    }
 }
 
 /// Maps one Photomator block to zero or more Nitro adjustments.

@@ -257,6 +257,14 @@ public struct NitroHSL: Sendable, Equatable {
             self.lumaDelta = lumaDelta
             self.range = range
         }
+
+        /// The field-wise mean of two swatches.
+        public static func average(_ a: Values, _ b: Values) -> Values {
+            Values(hueDelta: (a.hueDelta + b.hueDelta) / 2,
+                   saturationDelta: (a.saturationDelta + b.saturationDelta) / 2,
+                   lumaDelta: (a.lumaDelta + b.lumaDelta) / 2,
+                   range: (a.range + b.range) / 2)
+        }
     }
 
     public var values: [NitroHSLColor: Values]

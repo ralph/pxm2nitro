@@ -39,3 +39,10 @@ enum Fixtures {
         repositoryRoot.appending(path: "nitro_sample_presets/\(name).nitropreset")
     }
 }
+
+/// Pattern-match shortcuts for tests.
+extension NitroAdjustment.Content {
+    var levelsCurves: NitroLevelsCurves? { if case .levelsCurves(let value) = self { value } else { nil } }
+    var channelMixer: NitroChannelMixer? { if case .channelMixer(let value) = self { value } else { nil } }
+    var hsl: NitroHSL? { if case .hsl(let value) = self { value } else { nil } }
+}

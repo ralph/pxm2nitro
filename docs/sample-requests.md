@@ -98,9 +98,19 @@ For each Photomator adjustment below, check whether Nitro has an equivalent cont
 | Levels output handles (output black/white) | |
 | Curves black/white handle with output ≠ 0/1 | (see N-2.4) |
 
-### N-5 Import test (later)
-Once the first converter output exists: copy a generated `.nitropreset` into the preset folder
-and check whether Nitro lists and applies it.
+### N-5 Import test (P1, possible now)
+1. Generate presets: `swift run pxm2nitro convert sample_presets_photomator/*.adjustments -o ~/Desktop/pxm2nitro-out`
+2. Copy these into Nitro's preset folder and restart Nitro:
+   - `BW 001.nitropreset` (master RGB curve with lifted black / lowered white handle → tests handle y ≠ 0/1)
+   - `filmic PT800.nitropreset` (Levels RGB black + Curves + HSL)
+   - `LS 005.nitropreset` (Channel Mixer blue row)
+   - `LS 002.nitropreset` (Levels in luminance mode, red/blue curves → tests the curve slot order)
+3. Apply each to an image and note:
+   - Does Nitro list and apply the preset at all?
+   - Curves: does the master curve start above 0 and end below 1 (handle y kept), and do red/blue
+     changes land on the red and blue curves (slot order)?
+   - Levels: black/white handles where expected? Grau vs RGB mode?
+   - HSL: plausible strength? (scales are placeholders)
 
 ---
 

@@ -3,6 +3,16 @@
 Formats: [photomator-format.md](photomator-format.md) · [nitro-format.md](nitro-format.md).
 Unresolved items are marked ❓ and are listed again in [sample-requests.md](sample-requests.md).
 
+## Implementation status
+
+| Photomator block | Nitro | code | status |
+|---|---|---|---|
+| Curves | Curves | `CurvesMapper` | ✅ implemented (slot order / handle y still to verify in Nitro) |
+| Levels | Levels | `LevelsMapper` | ✅ black/white; midtone handles reported |
+| Channel Mixer | ChannelMixer | `ChannelMixerMapper` | ✅ 1:1 |
+| Selective Color | HSL | `SelectiveColorMapper` | ⚠️ implemented with placeholder scales (`MappingConstants`), reports `uncalibrated` |
+| everything else | — | — | skipped with a diagnostic |
+
 ## 0. Ground rules
 
 1. **Only enabled Photomator blocks** (`E == 1`) are converted. A disabled block produces
@@ -105,7 +115,7 @@ the master between luminance ("Grau") and RGB.
 - `brightness` → `lumaDelta_<c>` = k_lum · brightness.
 - `range_<c>` = 0 (Nitro default; Photomator has no per-colour range).
 - Nitro has an extra `lightBlue` swatch. Options: (a) leave it at 0, (b) average cyan and blue.
-  Recommendation: (b), configurable.
+  Implemented: (b), always. Making it configurable is a later option.
   ❓ The hue centres of both apps decide which is better (calibration request).
 
 ### 2.3 Color Balance (`B`): opt-in only
