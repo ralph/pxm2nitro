@@ -136,6 +136,7 @@ public extension ColorChannels where Value == [CurvePoint] {
 
 /// The five input handles of one Levels channel.
 public struct LevelsHandles: Sendable, Equatable {
+    static let keys = ["black", "midOfBlackAndGray", "gray", "midOfGrayAndWhite", "white"]
     public var black: Double
     public var midOfBlackAndGray: Double
     public var gray: Double
@@ -148,6 +149,7 @@ public typealias PhotomatorLevels = ColorChannels<LevelsHandles>
 
 /// One output channel of the channel mixer.
 public struct ChannelMixerRow: Sendable, Equatable {
+    static let keys = ["red", "green", "blue", "constant"]
     public var red: Double
     public var green: Double
     public var blue: Double
@@ -181,7 +183,7 @@ extension PhotomatorAdjustments {
     public var levels: PhotomatorLevels? {
         enabledBlock(.levels).map {
             ColorChannels($0) { channel in
-                guard channel.objectValue != nil else { return nil }
+                guard channel.isObject(withNumericFields: LevelsHandles.keys) else { return nil }
                 return LevelsHandles(
                     black: channel["black"]?.doubleValue ?? 0,
                     midOfBlackAndGray: channel["midOfBlackAndGray"]?.doubleValue ?? 0.25,
@@ -195,7 +197,7 @@ extension PhotomatorAdjustments {
     public var channelMixer: PhotomatorChannelMixer? {
         enabledBlock(.channelMixer).map {
             ColorChannels($0) { row in
-                guard row.objectValue != nil else { return nil }
+                guard row.isObject(withNumericFields: ChannelMixerRow.keys) else { return nil }
                 return ChannelMixerRow(
                     red: row["red"]?.doubleValue ?? 0,
                     green: row["green"]?.doubleValue ?? 0,

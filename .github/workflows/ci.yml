@@ -26,5 +26,7 @@ jobs:
           restore-keys: spm-${{ runner.os }}-${{ steps.swift.outputs.hash }}-
       - name: Build
         run: swift build
+      - name: Build library for iOS
+        run: xcodebuild -scheme PXM2NitroKit -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/xcode" build -quiet
       - name: Test
         run: swift test

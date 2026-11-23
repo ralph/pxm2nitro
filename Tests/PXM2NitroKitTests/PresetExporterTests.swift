@@ -51,8 +51,7 @@ struct PresetExporterTests {
         var exporter = PresetExporter(outputDirectory: directory)
         let bw = try Fixtures.photomatorPreset("BW", "001")
         let longName = String(repeating: "x", count: 250)
-        let preset = PhotomatorPreset(id: "x", name: longName, collectionName: nil,
-                                      adjustments: bw.adjustments, otherPropertyKeys: [])
+        let preset = Fixtures.preset(longName, bw.adjustments)
 
         guard case .written(let first) = try exporter.export(preset).outcome,
               case .written(let second) = try exporter.export(preset).outcome
@@ -66,8 +65,7 @@ struct PresetExporterTests {
         let directory = temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         var exporter = PresetExporter(outputDirectory: directory)
-        let preset = PhotomatorPreset(id: "x", name: "Empty", collectionName: nil,
-                                      adjustments: nil, otherPropertyKeys: [])
+        let preset = Fixtures.preset("Empty", nil)
         #expect(try exporter.export(preset).outcome == .nothingToConvert)
         #expect(!FileManager.default.fileExists(atPath: directory.path))
     }

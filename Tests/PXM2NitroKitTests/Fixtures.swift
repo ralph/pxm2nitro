@@ -1,5 +1,5 @@
 import Foundation
-import PXM2NitroKit
+@testable import PXM2NitroKit
 import Testing
 
 /// Sample presets checked into the repository root.
@@ -28,6 +28,11 @@ enum Fixtures {
     /// The preset named `presetName` from `sample_presets_photomator/<package>.adjustments`.
     static func photomatorPreset(_ package: String, _ presetName: String) throws -> PhotomatorPreset {
         try #require(try photomatorPresets(package).first { $0.name == presetName })
+    }
+
+    /// A preset outside any collection, built in code.
+    static func preset(_ name: String, _ adjustments: PhotomatorAdjustments?) -> PhotomatorPreset {
+        PhotomatorPreset(id: "x", name: name, collectionName: nil, adjustments: adjustments, otherPropertyKeys: [])
     }
 
     /// Decoded `ColorAdjustmentData` of a sample preset.
