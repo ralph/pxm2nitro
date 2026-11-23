@@ -39,9 +39,10 @@ public struct ConversionResult: Sendable {
     /// left out of this list, since there is nothing to carry over.
     public let blocks: [BlockOutcome]
 
-    /// Whether a Nitro preset is written and every adjustment carries over exactly.
+    /// Whether a Nitro preset is written and nothing was dropped or approximated: every
+    /// adjustment carries over exactly and no other preset property (e.g. a crop) is lost.
     public var isLossless: Bool {
-        preset != nil && blocks.allSatisfy { $0.status == .carriedOver }
+        preset != nil && diagnostics.isEmpty
     }
 }
 

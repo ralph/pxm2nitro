@@ -93,4 +93,16 @@ struct ConversionSessionTests {
         session.replaceExisting = true
         #expect(await session.export(to: folder).written.count == 19)
     }
+
+    @Test func overlappingExportsDoNotOverwriteEachOther() async {
+        let session = await session("BW")
+        let folder = SampleFiles.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        async let first = session.export(to: folder)
+        async let second = session.export(to: folder)
+        let reports = await [first, second]
+        #expect(reports.map(\.written.count).sorted() == [0, 4])
+        #expect(reports.map(\.existing.count).sorted() == [0, 4])
+    }
 }

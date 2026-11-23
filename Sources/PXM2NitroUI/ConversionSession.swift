@@ -49,6 +49,9 @@ public final class ConversionSession {
     private var activeOperations = 0
     /// Bumped by `reset`, so a load that was in flight does not bring packages back.
     private var generation = 0
+    /// The most recent export; the next one waits for it, so two exports never race on
+    /// the "file exists" check in the same folder.
+    private var exportTask: Task<ExportReport, Never>?
 
     public init() {}
 
@@ -98,7 +101,13 @@ public final class ConversionSession {
         let startGeneration = generation
         let presets = packages.flatMap(\.presets)
         let replace = replaceExisting
-        let report = await Task.detached { Self.write(presets, to: folder, replacing: replace) }.value
+        let previous = exportTask
+        let task = Task.detached {
+            _ = await previous?.value
+            return Self.write(presets, to: folder, replacing: replace)
+        }
+        exportTask = task
+        let report = await task.value
         if generation == startGeneration { lastExport = report }
         return report
     }
