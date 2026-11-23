@@ -111,6 +111,10 @@ Apply two presets that differ only in `operateOnGray` (strong master S-curve) to
 and compare. Result: `true` renders like a per-channel RGB curve, `false` like a brightness-only
 curve (`sample-log.md`).
 
+### N-8 `operateOnGray` on Levels (done)
+The same for Levels, with a strong master stretch and with `LS 002`'s converted Levels.
+Result: the flag acts on Levels as on Curves (`sample-log.md`).
+
 ### N-5 Import test (P1, done for `BW 001` and `LS 002`)
 1. Generate presets: `swift run pxm2nitro convert sample_presets_photomator/*.adjustments -o ~/Desktop/pxm2nitro-out`
 2. Copy these into Nitro's preset folder and restart Nitro:
@@ -199,7 +203,7 @@ is identical and shows any extra properties Pixelmator Pro writes.
 | Nitro adjustment ID strings | ✅ N-0, N-1 |
 | Nitro neutral values (`highlights=1`?) | ✅ N-0 |
 | Nitro slider ranges | ✅ N-3 (`nitro-format.md` §3) |
-| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ N-2/N-5/N-7 |
+| Curves slot order, `operateOnGray`, `maxValue`, end-point handles | ✅ N-2/N-5/N-7/N-8 |
 | Preset application semantics | ✅ manual (per-adjustment replacement); ✅ N-4.2 for base black/white points |
 | Photomator RAW params in presets | 🟡 docs say no; P-1 confirms |
 | Selective Color index → colour, hue unit | ✅ P-2 (hue in Nitro degrees still ❓) |
