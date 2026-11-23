@@ -42,10 +42,17 @@ struct LightMapperTests {
         #expect(diagnostics.map(\.kind) == [.skipped])
     }
 
-    @Test func blackPointAndTextureAreReported() {
-        let (sliders, diagnostics) = map(["E": 1, "e": 0.1, "B": 0.2, "T": 0.1])
-        #expect(sliders.keys.sorted { $0.rawValue < $1.rawValue } == [.tone])
-        #expect(diagnostics.map(\.kind) == [.skipped, .skipped, .uncalibrated])
+    @Test func textureIsReported() {
+        let (sliders, diagnostics) = map(["E": 1, "e": 0.1, "T": 0.1])
+        #expect(Array(sliders.keys) == [.tone])
+        #expect(diagnostics.map(\.kind) == [.skipped, .uncalibrated])
+    }
+
+    @Test func blackPointGoesToNitrosBlackSlider() throws {
+        let (sliders, diagnostics) = map(["E": 1, "B": 0.25], intensity: 0.5)
+        let tone = try #require(sliders[.tone])
+        #expect(tone["blackPointDelta"] == 0.125)
+        #expect(diagnostics.map(\.message) == ["black point: placeholder scale, not calibrated yet"])
     }
 
     @Test func clarityGoesToDetail() throws {

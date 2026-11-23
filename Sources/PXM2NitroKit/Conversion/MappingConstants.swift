@@ -34,6 +34,9 @@ enum MappingConstants {
         static let contrastScale = 1.0
         /// Clarity (±1 = ±100 %) → Detail `clarity`. Placeholder.
         static let clarityScale = 1.0
+        /// Black point (±1 = ±100 %) → Tone `blackPointDelta` (Nitro's Black slider). Placeholder;
+        /// the sign is assumed to match (positive = deeper blacks).
+        static let blackPointScale = 1.0
     }
 
     /// Photomator Sharpen (`S`) → Nitro Detail.
