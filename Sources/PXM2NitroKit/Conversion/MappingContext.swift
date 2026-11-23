@@ -36,7 +36,7 @@ struct MappingContext {
                                  in adjustments: PhotomatorAdjustments) -> PhotomatorSliders<Field>? {
         guard adjustments.enabledBlock(block) != nil else { return nil }
         guard let sliders = adjustments.sliders(block, key: key, as: Field.self) else {
-            report(.skipped, block, "a value is not a number")
+            report(.skipped, block, key.map { "the sub-object \($0) is malformed" } ?? "a value is not a number")
             return nil
         }
         return sliders
