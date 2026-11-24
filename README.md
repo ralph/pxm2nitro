@@ -9,9 +9,10 @@ The format documentation and the Photomator → Nitro mapping live in [`docs/`](
 
 Every preset is converted on its own. Whatever cannot be carried over exactly is listed per
 preset (in the CLI output and in the app) as *approximated*, *uncalibrated* or *skipped*, and
-the rest of the preset is still written. The preset intensity scales every converted value
-toward neutral, and all values are clamped to Nitro's slider ranges (with a note when a value
-is cut).
+the rest of the preset is still written (a preset is only left out when nothing in it converts).
+The preset intensity scales every converted value toward neutral (except Black & White, which
+Nitro applies all or nothing; reported as *approximated*), and slider values are clamped to
+Nitro's slider ranges (with a note when a value is cut).
 
 ### Carried over exactly
 
@@ -36,7 +37,7 @@ is close rather than equal (reported as *approximated*):
 | Light: shadows | Tone shadows | Nitro reaches further into the midtones |
 | Light: brightness | Tone midtones | Nitro lifts the shadows more |
 | Light: contrast | Enhance contrast | Nitro also darkens and adds saturation |
-| Levels gray, quarter and output handles | — | dropped; Nitro's Levels only has black and white input |
+| Levels gray and quarter handles | — | dropped; Nitro's Levels only has black and white input |
 
 Converted with a placeholder scale that is not calibrated yet (reported as *uncalibrated*;
 see [`docs/mapping.md`](docs/mapping.md) §3.1 for the measurements so far):
@@ -48,7 +49,7 @@ see [`docs/mapping.md`](docs/mapping.md) §3.1 for the measurements so far):
 | Selective Color: hue, saturation, brightness | HSL per colour (Nitro's extra light blue gets the mean of cyan and blue) | not measured; the hue did not match on the test image |
 | Sharpen: intensity | Detail sharpening | not measured |
 | Vignette: strength (darkening or brightening) | Vignette intensity | not measured |
-| Black & White: filter colour | Black & White channel weights | not measured |
+| Black & White: grey mix and filter colour | Black & White channel weights | not measured |
 
 ### Dropped parts of converted adjustments
 
@@ -56,6 +57,7 @@ Reported as *skipped*, the rest of the adjustment is converted:
 
 - Light: raised highlights (Nitro can only recover highlights) and texture
 - Curves: the parametric sliders; the luminance curve when the RGB curve is also edited
+- Levels: the luminance channel when the RGB channel is also edited
 - Color: hue (Nitro has no global hue shift)
 - Sharpen: radius
 - Vignette: softness and black point (Nitro's radius stays at its default)
